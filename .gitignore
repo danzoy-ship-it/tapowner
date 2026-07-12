@@ -1,0 +1,39 @@
+# dependencies
+node_modules/
+
+# builds
+dist/
+build/
+.next/
+out/
+
+# env — never commit secrets
+.env
+.env.*
+!.env.example
+
+# expo
+.expo/
+.expo-shared/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# data artifacts (StratMap downloads are gigabytes — never commit)
+data/downloads/
+data/tmp/
+*.gdb
+*.shp
+*.shx
+*.dbf
+*.prj
+*.zip
+
+# misc
+.DS_Store
+*.log
+npm-debug.log*
+.vscode/
+.idea/

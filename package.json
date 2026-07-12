@@ -1,0 +1,12 @@
+{
+  "name": "tapowner",
+  "private": true,
+  "description": "TapOwner monorepo — mobile (Expo), api (Fastify), web (Next.js), data (StratMap ingestion). See TAPOWNER_BUILD.md.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "api:dev": "npm --prefix api run dev",
+    "mobile:start": "npm --prefix mobile run start"
+  }
+}
