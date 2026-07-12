@@ -1,0 +1,1014 @@
+[
+ {
+  "name": "anderson",
+  "fips": "48001"
+ },
+ {
+  "name": "andrews",
+  "fips": "48003"
+ },
+ {
+  "name": "angelina",
+  "fips": "48005"
+ },
+ {
+  "name": "aransas",
+  "fips": "48007"
+ },
+ {
+  "name": "archer",
+  "fips": "48009"
+ },
+ {
+  "name": "armstrong",
+  "fips": "48011"
+ },
+ {
+  "name": "atascosa",
+  "fips": "48013"
+ },
+ {
+  "name": "austin",
+  "fips": "48015"
+ },
+ {
+  "name": "bailey",
+  "fips": "48017"
+ },
+ {
+  "name": "bandera",
+  "fips": "48019"
+ },
+ {
+  "name": "bastrop",
+  "fips": "48021"
+ },
+ {
+  "name": "baylor",
+  "fips": "48023"
+ },
+ {
+  "name": "bee",
+  "fips": "48025"
+ },
+ {
+  "name": "bell",
+  "fips": "48027"
+ },
+ {
+  "name": "bexar",
+  "fips": "48029"
+ },
+ {
+  "name": "blanco",
+  "fips": "48031"
+ },
+ {
+  "name": "borden",
+  "fips": "48033"
+ },
+ {
+  "name": "bosque",
+  "fips": "48035"
+ },
+ {
+  "name": "bowie",
+  "fips": "48037"
+ },
+ {
+  "name": "brazoria",
+  "fips": "48039"
+ },
+ {
+  "name": "brazos",
+  "fips": "48041"
+ },
+ {
+  "name": "brewster",
+  "fips": "48043"
+ },
+ {
+  "name": "briscoe",
+  "fips": "48045"
+ },
+ {
+  "name": "brooks",
+  "fips": "48047"
+ },
+ {
+  "name": "brown",
+  "fips": "48049"
+ },
+ {
+  "name": "burleson",
+  "fips": "48051"
+ },
+ {
+  "name": "burnet",
+  "fips": "48053"
+ },
+ {
+  "name": "caldwell",
+  "fips": "48055"
+ },
+ {
+  "name": "calhoun",
+  "fips": "48057"
+ },
+ {
+  "name": "callahan",
+  "fips": "48059"
+ },
+ {
+  "name": "cameron",
+  "fips": "48061"
+ },
+ {
+  "name": "camp",
+  "fips": "48063"
+ },
+ {
+  "name": "carson",
+  "fips": "48065"
+ },
+ {
+  "name": "cass",
+  "fips": "48067"
+ },
+ {
+  "name": "castro",
+  "fips": "48069"
+ },
+ {
+  "name": "chambers",
+  "fips": "48071"
+ },
+ {
+  "name": "cherokee",
+  "fips": "48073"
+ },
+ {
+  "name": "childress",
+  "fips": "48075"
+ },
+ {
+  "name": "clay",
+  "fips": "48077"
+ },
+ {
+  "name": "cochran",
+  "fips": "48079"
+ },
+ {
+  "name": "coke",
+  "fips": "48081"
+ },
+ {
+  "name": "coleman",
+  "fips": "48083"
+ },
+ {
+  "name": "collin",
+  "fips": "48085"
+ },
+ {
+  "name": "collingsworth",
+  "fips": "48087"
+ },
+ {
+  "name": "colorado",
+  "fips": "48089"
+ },
+ {
+  "name": "comal",
+  "fips": "48091"
+ },
+ {
+  "name": "comanche",
+  "fips": "48093"
+ },
+ {
+  "name": "concho",
+  "fips": "48095"
+ },
+ {
+  "name": "cooke",
+  "fips": "48097"
+ },
+ {
+  "name": "coryell",
+  "fips": "48099"
+ },
+ {
+  "name": "cottle",
+  "fips": "48101"
+ },
+ {
+  "name": "crane",
+  "fips": "48103"
+ },
+ {
+  "name": "crockett",
+  "fips": "48105"
+ },
+ {
+  "name": "crosby",
+  "fips": "48107"
+ },
+ {
+  "name": "culberson",
+  "fips": "48109"
+ },
+ {
+  "name": "dallam",
+  "fips": "48111"
+ },
+ {
+  "name": "dallas",
+  "fips": "48113"
+ },
+ {
+  "name": "dawson",
+  "fips": "48115"
+ },
+ {
+  "name": "deafsmith",
+  "fips": "48117"
+ },
+ {
+  "name": "delta",
+  "fips": "48119"
+ },
+ {
+  "name": "denton",
+  "fips": "48121"
+ },
+ {
+  "name": "dewitt",
+  "fips": "48123"
+ },
+ {
+  "name": "dickens",
+  "fips": "48125"
+ },
+ {
+  "name": "dimmit",
+  "fips": "48127"
+ },
+ {
+  "name": "duval",
+  "fips": "48131"
+ },
+ {
+  "name": "eastland",
+  "fips": "48133"
+ },
+ {
+  "name": "ector",
+  "fips": "48135"
+ },
+ {
+  "name": "edwards",
+  "fips": "48137"
+ },
+ {
+  "name": "ellis",
+  "fips": "48139"
+ },
+ {
+  "name": "elpaso",
+  "fips": "48141"
+ },
+ {
+  "name": "erath",
+  "fips": "48143"
+ },
+ {
+  "name": "falls",
+  "fips": "48145"
+ },
+ {
+  "name": "fannin",
+  "fips": "48147"
+ },
+ {
+  "name": "fayette",
+  "fips": "48149"
+ },
+ {
+  "name": "fisher",
+  "fips": "48151"
+ },
+ {
+  "name": "floyd",
+  "fips": "48153"
+ },
+ {
+  "name": "foard",
+  "fips": "48155"
+ },
+ {
+  "name": "fortbend",
+  "fips": "48157"
+ },
+ {
+  "name": "franklin",
+  "fips": "48159"
+ },
+ {
+  "name": "freestone",
+  "fips": "48161"
+ },
+ {
+  "name": "frio",
+  "fips": "48163"
+ },
+ {
+  "name": "gaines",
+  "fips": "48165"
+ },
+ {
+  "name": "galveston",
+  "fips": "48167"
+ },
+ {
+  "name": "garza",
+  "fips": "48169"
+ },
+ {
+  "name": "gillespie",
+  "fips": "48171"
+ },
+ {
+  "name": "glasscock",
+  "fips": "48173"
+ },
+ {
+  "name": "goliad",
+  "fips": "48175"
+ },
+ {
+  "name": "gonzales",
+  "fips": "48177"
+ },
+ {
+  "name": "gray",
+  "fips": "48179"
+ },
+ {
+  "name": "grayson",
+  "fips": "48181"
+ },
+ {
+  "name": "gregg",
+  "fips": "48183"
+ },
+ {
+  "name": "grimes",
+  "fips": "48185"
+ },
+ {
+  "name": "guadalupe",
+  "fips": "48187"
+ },
+ {
+  "name": "hale",
+  "fips": "48189"
+ },
+ {
+  "name": "hall",
+  "fips": "48191"
+ },
+ {
+  "name": "hamilton",
+  "fips": "48193"
+ },
+ {
+  "name": "hansford",
+  "fips": "48195"
+ },
+ {
+  "name": "hardeman",
+  "fips": "48197"
+ },
+ {
+  "name": "hardin",
+  "fips": "48199"
+ },
+ {
+  "name": "harris",
+  "fips": "48201"
+ },
+ {
+  "name": "harrison",
+  "fips": "48203"
+ },
+ {
+  "name": "hartley",
+  "fips": "48205"
+ },
+ {
+  "name": "haskell",
+  "fips": "48207"
+ },
+ {
+  "name": "hays",
+  "fips": "48209"
+ },
+ {
+  "name": "hemphill",
+  "fips": "48211"
+ },
+ {
+  "name": "henderson",
+  "fips": "48213"
+ },
+ {
+  "name": "hidalgo",
+  "fips": "48215"
+ },
+ {
+  "name": "hill",
+  "fips": "48217"
+ },
+ {
+  "name": "hockley",
+  "fips": "48219"
+ },
+ {
+  "name": "hood",
+  "fips": "48221"
+ },
+ {
+  "name": "hopkins",
+  "fips": "48223"
+ },
+ {
+  "name": "houston",
+  "fips": "48225"
+ },
+ {
+  "name": "howard",
+  "fips": "48227"
+ },
+ {
+  "name": "hudspeth",
+  "fips": "48229"
+ },
+ {
+  "name": "hunt",
+  "fips": "48231"
+ },
+ {
+  "name": "hutchinson",
+  "fips": "48233"
+ },
+ {
+  "name": "irion",
+  "fips": "48235"
+ },
+ {
+  "name": "jack",
+  "fips": "48237"
+ },
+ {
+  "name": "jackson",
+  "fips": "48239"
+ },
+ {
+  "name": "jasper",
+  "fips": "48241"
+ },
+ {
+  "name": "jeffdavis",
+  "fips": "48243"
+ },
+ {
+  "name": "jefferson",
+  "fips": "48245"
+ },
+ {
+  "name": "jimhogg",
+  "fips": "48247"
+ },
+ {
+  "name": "jimwells",
+  "fips": "48249"
+ },
+ {
+  "name": "johnson",
+  "fips": "48251"
+ },
+ {
+  "name": "jones",
+  "fips": "48253"
+ },
+ {
+  "name": "karnes",
+  "fips": "48255"
+ },
+ {
+  "name": "kaufman",
+  "fips": "48257"
+ },
+ {
+  "name": "kendall",
+  "fips": "48259"
+ },
+ {
+  "name": "kenedy",
+  "fips": "48261"
+ },
+ {
+  "name": "kent",
+  "fips": "48263"
+ },
+ {
+  "name": "kerr",
+  "fips": "48265"
+ },
+ {
+  "name": "kimble",
+  "fips": "48267"
+ },
+ {
+  "name": "king",
+  "fips": "48269"
+ },
+ {
+  "name": "kinney",
+  "fips": "48271"
+ },
+ {
+  "name": "kleberg",
+  "fips": "48273"
+ },
+ {
+  "name": "knox",
+  "fips": "48275"
+ },
+ {
+  "name": "lamar",
+  "fips": "48277"
+ },
+ {
+  "name": "lamb",
+  "fips": "48279"
+ },
+ {
+  "name": "lampasas",
+  "fips": "48281"
+ },
+ {
+  "name": "lasalle",
+  "fips": "48283"
+ },
+ {
+  "name": "lavaca",
+  "fips": "48285"
+ },
+ {
+  "name": "lee",
+  "fips": "48287"
+ },
+ {
+  "name": "leon",
+  "fips": "48289"
+ },
+ {
+  "name": "liberty",
+  "fips": "48291"
+ },
+ {
+  "name": "limestone",
+  "fips": "48293"
+ },
+ {
+  "name": "lipscomb",
+  "fips": "48295"
+ },
+ {
+  "name": "liveoak",
+  "fips": "48297"
+ },
+ {
+  "name": "llano",
+  "fips": "48299"
+ },
+ {
+  "name": "loving",
+  "fips": "48301"
+ },
+ {
+  "name": "lubbock",
+  "fips": "48303"
+ },
+ {
+  "name": "lynn",
+  "fips": "48305"
+ },
+ {
+  "name": "madison",
+  "fips": "48313"
+ },
+ {
+  "name": "marion",
+  "fips": "48315"
+ },
+ {
+  "name": "martin",
+  "fips": "48317"
+ },
+ {
+  "name": "mason",
+  "fips": "48319"
+ },
+ {
+  "name": "matagorda",
+  "fips": "48321"
+ },
+ {
+  "name": "maverick",
+  "fips": "48323"
+ },
+ {
+  "name": "mcculloch",
+  "fips": "48307"
+ },
+ {
+  "name": "mclennan",
+  "fips": "48309"
+ },
+ {
+  "name": "mcmullen",
+  "fips": "48311"
+ },
+ {
+  "name": "medina",
+  "fips": "48325"
+ },
+ {
+  "name": "menard",
+  "fips": "48327"
+ },
+ {
+  "name": "midland",
+  "fips": "48329"
+ },
+ {
+  "name": "milam",
+  "fips": "48331"
+ },
+ {
+  "name": "mills",
+  "fips": "48333"
+ },
+ {
+  "name": "mitchell",
+  "fips": "48335"
+ },
+ {
+  "name": "montague",
+  "fips": "48337"
+ },
+ {
+  "name": "montgomery",
+  "fips": "48339"
+ },
+ {
+  "name": "moore",
+  "fips": "48341"
+ },
+ {
+  "name": "morris",
+  "fips": "48343"
+ },
+ {
+  "name": "motley",
+  "fips": "48345"
+ },
+ {
+  "name": "nacogdoches",
+  "fips": "48347"
+ },
+ {
+  "name": "navarro",
+  "fips": "48349"
+ },
+ {
+  "name": "newton",
+  "fips": "48351"
+ },
+ {
+  "name": "nolan",
+  "fips": "48353"
+ },
+ {
+  "name": "nueces",
+  "fips": "48355"
+ },
+ {
+  "name": "ochiltree",
+  "fips": "48357"
+ },
+ {
+  "name": "oldham",
+  "fips": "48359"
+ },
+ {
+  "name": "orange",
+  "fips": "48361"
+ },
+ {
+  "name": "palopinto",
+  "fips": "48363"
+ },
+ {
+  "name": "panola",
+  "fips": "48365"
+ },
+ {
+  "name": "parker",
+  "fips": "48367"
+ },
+ {
+  "name": "parmer",
+  "fips": "48369"
+ },
+ {
+  "name": "pecos",
+  "fips": "48371"
+ },
+ {
+  "name": "polk",
+  "fips": "48373"
+ },
+ {
+  "name": "potter",
+  "fips": "48375"
+ },
+ {
+  "name": "presidio",
+  "fips": "48377"
+ },
+ {
+  "name": "rains",
+  "fips": "48379"
+ },
+ {
+  "name": "randall",
+  "fips": "48381"
+ },
+ {
+  "name": "reagan",
+  "fips": "48383"
+ },
+ {
+  "name": "real",
+  "fips": "48385"
+ },
+ {
+  "name": "redriver",
+  "fips": "48387"
+ },
+ {
+  "name": "reeves",
+  "fips": "48389"
+ },
+ {
+  "name": "refugio",
+  "fips": "48391"
+ },
+ {
+  "name": "roberts",
+  "fips": "48393"
+ },
+ {
+  "name": "robertson",
+  "fips": "48395"
+ },
+ {
+  "name": "rockwall",
+  "fips": "48397"
+ },
+ {
+  "name": "runnels",
+  "fips": "48399"
+ },
+ {
+  "name": "rusk",
+  "fips": "48401"
+ },
+ {
+  "name": "sabine",
+  "fips": "48403"
+ },
+ {
+  "name": "sanaugustine",
+  "fips": "48405"
+ },
+ {
+  "name": "sanjacinto",
+  "fips": "48407"
+ },
+ {
+  "name": "sanpatricio",
+  "fips": "48409"
+ },
+ {
+  "name": "sansaba",
+  "fips": "48411"
+ },
+ {
+  "name": "schleicher",
+  "fips": "48413"
+ },
+ {
+  "name": "scurry",
+  "fips": "48415"
+ },
+ {
+  "name": "shackelford",
+  "fips": "48417"
+ },
+ {
+  "name": "shelby",
+  "fips": "48419"
+ },
+ {
+  "name": "sherman",
+  "fips": "48421"
+ },
+ {
+  "name": "smith",
+  "fips": "48423"
+ },
+ {
+  "name": "somervell",
+  "fips": "48425"
+ },
+ {
+  "name": "starr",
+  "fips": "48427"
+ },
+ {
+  "name": "stephens",
+  "fips": "48429"
+ },
+ {
+  "name": "sterling",
+  "fips": "48431"
+ },
+ {
+  "name": "stonewall",
+  "fips": "48433"
+ },
+ {
+  "name": "sutton",
+  "fips": "48435"
+ },
+ {
+  "name": "swisher",
+  "fips": "48437"
+ },
+ {
+  "name": "tarrant",
+  "fips": "48439"
+ },
+ {
+  "name": "taylor",
+  "fips": "48441"
+ },
+ {
+  "name": "terrell",
+  "fips": "48443"
+ },
+ {
+  "name": "terry",
+  "fips": "48445"
+ },
+ {
+  "name": "throckmorton",
+  "fips": "48447"
+ },
+ {
+  "name": "titus",
+  "fips": "48449"
+ },
+ {
+  "name": "tomgreen",
+  "fips": "48451"
+ },
+ {
+  "name": "travis",
+  "fips": "48453"
+ },
+ {
+  "name": "trinity",
+  "fips": "48455"
+ },
+ {
+  "name": "tyler",
+  "fips": "48457"
+ },
+ {
+  "name": "upshur",
+  "fips": "48459"
+ },
+ {
+  "name": "upton",
+  "fips": "48461"
+ },
+ {
+  "name": "uvalde",
+  "fips": "48463"
+ },
+ {
+  "name": "valverde",
+  "fips": "48465"
+ },
+ {
+  "name": "vanzandt",
+  "fips": "48467"
+ },
+ {
+  "name": "victoria",
+  "fips": "48469"
+ },
+ {
+  "name": "walker",
+  "fips": "48471"
+ },
+ {
+  "name": "waller",
+  "fips": "48473"
+ },
+ {
+  "name": "ward",
+  "fips": "48475"
+ },
+ {
+  "name": "washington",
+  "fips": "48477"
+ },
+ {
+  "name": "webb",
+  "fips": "48479"
+ },
+ {
+  "name": "wharton",
+  "fips": "48481"
+ },
+ {
+  "name": "wheeler",
+  "fips": "48483"
+ },
+ {
+  "name": "wichita",
+  "fips": "48485"
+ },
+ {
+  "name": "wilbarger",
+  "fips": "48487"
+ },
+ {
+  "name": "willacy",
+  "fips": "48489"
+ },
+ {
+  "name": "williamson",
+  "fips": "48491"
+ },
+ {
+  "name": "wilson",
+  "fips": "48493"
+ },
+ {
+  "name": "winkler",
+  "fips": "48495"
+ },
+ {
+  "name": "wise",
+  "fips": "48497"
+ },
+ {
+  "name": "wood",
+  "fips": "48499"
+ },
+ {
+  "name": "yoakum",
+  "fips": "48501"
+ },
+ {
+  "name": "young",
+  "fips": "48503"
+ },
+ {
+  "name": "zapata",
+  "fips": "48505"
+ },
+ {
+  "name": "zavala",
+  "fips": "48507"
+ }
+]
