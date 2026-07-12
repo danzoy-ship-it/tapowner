@@ -7,6 +7,7 @@ Technical decisions get noted here too (Claude Code decides technical, Frederick
 
 - **2026-07-12 — Phase 0 — STARTED** — Monorepo scaffolded (mobile/, api/, web/, data/), TypeScript configs, Fastify hello-world with `GET /health`, Expo blank app (TypeScript). Railway deploy pending Frederick's account (costs money — approval gate).
 - **2026-07-12 — Phase 0 — infra complete** — API deployed on Railway (`https://api-production-7d11.up.railway.app/health` → 200, 228ms). PostGIS db service live (postgis/postgis:16-3.5, volume attached, extensions loaded, DATABASE_URL wired to api over private network). Acceptance: deployed /health ✅; iPhone Expo Go render pending Frederick's rescan after SDK 54 pin.
+- **2026-07-12 — Phase 0 — PASSED ✅** — Both acceptance criteria green: deployed `GET /health` → 200; blank app rendered on Frederick's physical iPhone via Expo Go (SDK 54). Next: Phase 1 (StratMap → PostGIS pipeline).
 
 ## Technical decisions
 
