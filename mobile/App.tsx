@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -47,6 +49,16 @@ function Tabs() {
 }
 
 export default function App() {
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <AppInner />
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
+  );
+}
+
+function AppInner() {
   const [authState, setAuthState] = useState<AuthState>('checking');
   const [me, setMe] = useState<Me | null>(null);
   const [token, setToken] = useState<string | null>(null);
