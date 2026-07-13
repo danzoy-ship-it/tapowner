@@ -1,7 +1,17 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import * as Location from 'expo-location';
-import { Camera, Layer, Map, UserLocation, VectorSource } from '@maplibre/maplibre-react-native';
+import type { NativeSyntheticEvent } from 'react-native';
+import {
+  Camera,
+  Layer,
+  Map,
+  UserLocation,
+  VectorSource,
+} from '@maplibre/maplibre-react-native';
+import type { PressEventWithFeatures } from '@maplibre/maplibre-react-native';
+import { fetchParcelAt, type ParcelDetail } from './api';
+import { ParcelSheet } from './ParcelSheet';
 
 const OPENFREEMAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
 // TODO(Phase 9): move to the config service once it exists; this is an infra
@@ -14,6 +24,9 @@ type PermissionState = 'checking' | 'granted' | 'denied';
 
 export default function App() {
   const [permission, setPermission] = useState<PermissionState>('checking');
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [parcelDetail, setParcelDetail] = useState<ParcelDetail | null>(null);
+  const [loadingParcel, setLoadingParcel] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -21,6 +34,28 @@ export default function App() {
       setPermission(status === 'granted' ? 'granted' : 'denied');
     })();
   }, []);
+
+  async function handleParcelPress(event: NativeSyntheticEvent<PressEventWithFeatures>) {
+    const { lngLat, features } = event.nativeEvent;
+    const feature = features[0];
+    const id = feature?.properties?.id;
+    setSelectedId(typeof id === 'number' ? id : Number(id) || null);
+    setParcelDetail(null);
+    setLoadingParcel(true);
+    try {
+      const detail = await fetchParcelAt(lngLat[1], lngLat[0]);
+      setParcelDetail(detail);
+    } catch {
+      setParcelDetail(null);
+    } finally {
+      setLoadingParcel(false);
+    }
+  }
+
+  function closeSheet() {
+    setSelectedId(null);
+    setParcelDetail(null);
+  }
 
   if (permission === 'checking') {
     return (
@@ -51,7 +86,19 @@ export default function App() {
           tiles={[PARCEL_TILE_URL]}
           minzoom={PARCEL_MIN_ZOOM}
           maxzoom={18}
+          onPress={handleParcelPress}
         >
+          <Layer
+            id="parcels-fill"
+            type="fill"
+            source="parcels"
+            source-layer="parcels"
+            minzoom={PARCEL_MIN_ZOOM}
+            paint={{
+              'fill-color': '#2563eb',
+              'fill-opacity': ['case', ['==', ['get', 'id'], selectedId ?? -1], 0.35, 0.03],
+            }}
+          />
           <Layer
             id="parcels-outline"
             type="line"
@@ -62,6 +109,10 @@ export default function App() {
           />
         </VectorSource>
       </Map>
+
+      {selectedId !== null && (
+        <ParcelSheet loading={loadingParcel} detail={parcelDetail} onClose={closeSheet} />
+      )}
     </View>
   );
 }
