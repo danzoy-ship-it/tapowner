@@ -26,11 +26,28 @@ export async function verifyOtp(email: string, code: string): Promise<string> {
   return body.token as string;
 }
 
+const ATTRIBUTION_KEY = 'tapowner_referral';
+
+export function getStoredReferral(): { code: string; attributedAt: number } | null {
+  if (typeof window === 'undefined') return null;
+  const raw = localStorage.getItem(ATTRIBUTION_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
 export async function createCheckoutSession(email: string): Promise<string> {
+  const referral = getStoredReferral();
   const res = await fetch(`${API_BASE}/billing/checkout-session`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({
+      email,
+      ...(referral ? { referralCode: referral.code, referralAttributedAt: referral.attributedAt } : {}),
+    }),
   });
   const body = await res.json();
   if (!res.ok) {

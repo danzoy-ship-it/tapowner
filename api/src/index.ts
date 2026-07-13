@@ -6,6 +6,7 @@ import { tilesRoutes } from "./routes/tiles.js";
 import { authRoutes } from "./routes/auth.js";
 import { meRoutes } from "./routes/me.js";
 import { billingRoutes } from "./routes/billing.js";
+import { partnersRoutes } from "./routes/partners.js";
 
 const app = Fastify({ logger: true });
 
@@ -40,6 +41,7 @@ await app.register(tilesRoutes);
 await app.register(authRoutes);
 await app.register(meRoutes);
 await app.register(billingRoutes);
+await app.register(partnersRoutes);
 
 const port = Number(process.env.PORT ?? 3000);
 const host = process.env.HOST ?? "0.0.0.0";
