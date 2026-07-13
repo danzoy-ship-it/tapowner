@@ -6,14 +6,11 @@ import { requireAuth } from "../auth/middleware.js";
 import { getStripe } from "../lib/stripe.js";
 import { getProductConfig } from "../lib/config.js";
 import { createTraceProvider } from "../trace/index.js";
-
-interface Subscription {
-    id: number;
-    stripe_customer_id: string;
-    stripe_subscription_id: string;
-    tier: string;
-    included_traces_remaining: number;
-}
+import {
+    getLatestSubscription,
+    isSubscriptionUsable,
+    type SubscriptionRow as Subscription,
+} from "../lib/entitlements.js";
 
 async function chargeForTrace(
     stripe: Stripe,
@@ -31,6 +28,9 @@ async function chargeForTrace(
     const tracePriceId = process.env.STRIPE_PRICE_TRACE;
     if (!tracePriceId) {
         throw new Error("STRIPE_PRICE_TRACE is not configured");
+    }
+    if (!sub.stripe_subscription_id || !sub.stripe_customer_id) {
+        throw new Error(`Subscription ${sub.id} is usable but missing Stripe ids`);
     }
 
     const items = await stripe.subscriptionItems.list({ subscription: sub.stripe_subscription_id });
@@ -71,6 +71,14 @@ export async function traceRoutes(app: FastifyInstance) {
         if (existingRows.length > 0) {
             const row = existingRows[0];
             return reply.send({ matched: true, ...row.payload, matchQuality: row.match_quality, freeReview: true });
+        }
+
+        // New charges require a usable subscription -- checked BEFORE any vendor
+        // call so a lapsed account can never cost us per-trace vendor spend.
+        // (Free re-views above stay accessible: the user already paid for those.)
+        const sub = await getLatestSubscription(session.userId);
+        if (!isSubscriptionUsable(sub)) {
+            return reply.code(402).send({ error: "Your subscription is inactive", subscription_inactive: true });
         }
 
         const { rows: parcelRows } = await pool.query(
@@ -146,16 +154,6 @@ export async function traceRoutes(app: FastifyInstance) {
         const stripe = getStripe();
         if (!stripe) {
             return reply.code(503).send({ error: "Billing not configured yet" });
-        }
-
-        const { rows: subRows } = await pool.query(
-            `SELECT id, stripe_customer_id, stripe_subscription_id, tier, included_traces_remaining
-             FROM subscriptions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1`,
-            [session.userId]
-        );
-        const sub = subRows[0];
-        if (!sub) {
-            return reply.code(402).send({ error: "No active subscription" });
         }
 
         const { chargedVia, chargedCents } = await chargeForTrace(stripe, sub, config);

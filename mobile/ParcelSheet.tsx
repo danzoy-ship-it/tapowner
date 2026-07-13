@@ -12,11 +12,11 @@ import * as MailComposer from 'expo-mail-composer';
 import * as Contacts from 'expo-contacts';
 import { File, Paths } from 'expo-file-system';
 import {
-  DRAFT_TEMPLATES,
-  DRAFT_TONES,
   draftEmail,
+  formatCents,
   saveProperty,
   traceParcel,
+  type AppConfig,
   type ParcelDetail,
   type TraceResponse,
 } from './api';
@@ -88,13 +88,17 @@ export function ParcelSheet({
   loading,
   detail,
   token,
-  tier,
+  config,
+  features,
+  onUpgradeNeeded,
   onClose,
 }: {
   loading: boolean;
   detail: ParcelDetail | null;
   token: string | null;
-  tier: 'prospector' | 'closer' | null;
+  config: AppConfig;
+  features: { draft_email: boolean; crm: boolean };
+  onUpgradeNeeded: () => void;
   onClose: () => void;
 }) {
   const [traceState, setTraceState] = useState<TraceState>('idle');
@@ -105,6 +109,7 @@ export function ParcelSheet({
   const [templateId, setTemplateId] = useState<string | null>(null);
   const [toneId, setToneId] = useState<string>('professional');
   const [draftError, setDraftError] = useState<string | null>(null);
+  const [recipients, setRecipients] = useState<string[]>([]);
 
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const [saveNote, setSaveNote] = useState('');
@@ -120,6 +125,7 @@ export function ParcelSheet({
     setTemplateId(null);
     setToneId('professional');
     setDraftError(null);
+    setRecipients([]);
     setSaveState('idle');
     setSaveNote('');
     setSaveError(null);
@@ -134,11 +140,20 @@ export function ParcelSheet({
     try {
       const result = await traceParcel(token, detail.id);
       setTraceResult(result);
+      // Default recipient: the first traced email; user can toggle in the
+      // draft flow when the owner has several.
+      setRecipients(result.matched && result.emails[0] ? [result.emails[0].email] : []);
       setTraceState('done');
     } catch (err) {
       setTraceError(err instanceof Error ? err.message : 'Trace failed');
       setTraceState('error');
     }
+  }
+
+  function toggleRecipient(email: string) {
+    setRecipients((prev) =>
+      prev.includes(email) ? prev.filter((e) => e !== email) : [...prev, email]
+    );
   }
 
   async function handleGenerateDraft() {
@@ -147,7 +162,6 @@ export function ParcelSheet({
     setDraftError(null);
     try {
       const { subject, body } = await draftEmail(token, detail.id, templateId, toneId);
-      const recipient = traceResult?.matched ? traceResult.emails[0]?.email : undefined;
       const available = await MailComposer.isAvailableAsync();
       if (!available) {
         setDraftError('Mail is not set up on this device.');
@@ -155,7 +169,7 @@ export function ParcelSheet({
         return;
       }
       await MailComposer.composeAsync({
-        recipients: recipient ? [recipient] : undefined,
+        recipients: recipients.length > 0 ? recipients : undefined,
         subject,
         body,
       });
@@ -184,20 +198,25 @@ export function ParcelSheet({
     if (!detail || !traceResult?.matched) return;
     setContactsError(null);
     try {
-      const { status } = await Contacts.requestPermissionsAsync();
-      if (status !== 'granted') {
-        setContactsError('Contacts permission denied.');
-        return;
-      }
+      // Native "New Contact" form, prefilled -- the user reviews and taps Done
+      // themselves, so no blanket contacts permission (and none of iOS 18's
+      // "share all your contacts?" prompt) is ever needed.
       const ownerName = detail.owner_name ?? 'Property Owner';
-      await Contacts.addContactAsync({
-        contactType: Contacts.ContactTypes.Person,
-        name: ownerName,
-        firstName: ownerName,
-        company: [detail.situs_address, saveNote.trim()].filter(Boolean).join(' — '),
-        phoneNumbers: traceResult.phones.map((p) => ({ label: p.type || 'mobile', number: p.number })),
-        emails: traceResult.emails.map((e) => ({ label: 'home', email: e.email })),
-      });
+      await Contacts.presentFormAsync(
+        null,
+        {
+          contactType: Contacts.ContactTypes.Person,
+          name: ownerName,
+          firstName: ownerName,
+          company: [detail.situs_address, saveNote.trim()].filter(Boolean).join(' — '),
+          phoneNumbers: traceResult.phones.map((p) => ({
+            label: p.type || 'mobile',
+            number: p.number,
+          })),
+          emails: traceResult.emails.map((e) => ({ label: 'home', email: e.email })),
+        },
+        { isNew: true }
+      );
       setContactsSaved(true);
     } catch (err) {
       setContactsError(err instanceof Error ? err.message : 'Failed to save contact');
@@ -286,7 +305,9 @@ export function ParcelSheet({
               {traceState === 'loading' ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.ctaButtonText}>Get Contact Info — $0.29</Text>
+                <Text style={styles.ctaButtonText}>
+                  Get Contact Info — {formatCents(config.trace_price_cents)}
+                </Text>
               )}
             </TouchableOpacity>
           )}
@@ -330,21 +351,20 @@ export function ParcelSheet({
                 </View>
               ))}
 
-              {tier !== 'closer' && (
-                <Text style={styles.draftLockedText}>Draft Email is available on the Closer plan</Text>
-              )}
-
-              {tier === 'closer' && draftState === 'idle' && (
-                <TouchableOpacity style={styles.draftButton} onPress={() => setDraftState('picking')}>
+              {draftState === 'idle' && (
+                <TouchableOpacity
+                  style={styles.draftButton}
+                  onPress={() => (features.draft_email ? setDraftState('picking') : onUpgradeNeeded())}
+                >
                   <Text style={styles.draftButtonText}>Draft Email</Text>
                 </TouchableOpacity>
               )}
 
-              {tier === 'closer' && (draftState === 'picking' || draftState === 'generating' || draftState === 'error') && (
+              {features.draft_email && (draftState === 'picking' || draftState === 'generating' || draftState === 'error') && (
                 <View style={styles.draftPicker}>
                   <Text style={styles.label}>Template</Text>
                   <View style={styles.pickerRow}>
-                    {DRAFT_TEMPLATES.map((t) => (
+                    {config.draft.templates.map((t) => (
                       <TouchableOpacity
                         key={t.id}
                         style={[styles.pickerChip, templateId === t.id && styles.pickerChipSelected]}
@@ -364,7 +384,7 @@ export function ParcelSheet({
 
                   <Text style={styles.label}>Tone</Text>
                   <View style={styles.pickerRow}>
-                    {DRAFT_TONES.map((t) => (
+                    {config.draft.tones.map((t) => (
                       <TouchableOpacity
                         key={t.id}
                         style={[styles.pickerChip, toneId === t.id && styles.pickerChipSelected]}
@@ -378,6 +398,33 @@ export function ParcelSheet({
                       </TouchableOpacity>
                     ))}
                   </View>
+
+                  {traceResult.emails.length > 1 && (
+                    <>
+                      <Text style={styles.label}>Send to</Text>
+                      <View style={styles.pickerRow}>
+                        {traceResult.emails.map((e) => (
+                          <TouchableOpacity
+                            key={e.email}
+                            style={[
+                              styles.pickerChip,
+                              recipients.includes(e.email) && styles.pickerChipSelected,
+                            ]}
+                            onPress={() => toggleRecipient(e.email)}
+                          >
+                            <Text
+                              style={[
+                                styles.pickerChipText,
+                                recipients.includes(e.email) && styles.pickerChipTextSelected,
+                              ]}
+                            >
+                              {e.email}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    </>
+                  )}
 
                   {draftError && <Text style={styles.traceErrorText}>{draftError}</Text>}
 
@@ -405,10 +452,10 @@ export function ParcelSheet({
                   />
                 )}
 
-                {tier === 'closer' && saveState !== 'saved' && (
+                {saveState !== 'saved' && (
                   <TouchableOpacity
                     style={styles.saveButton}
-                    onPress={handleSaveProperty}
+                    onPress={() => (features.crm ? handleSaveProperty() : onUpgradeNeeded())}
                     disabled={saveState === 'saving'}
                   >
                     {saveState === 'saving' ? (
@@ -418,25 +465,18 @@ export function ParcelSheet({
                     )}
                   </TouchableOpacity>
                 )}
-                {tier !== 'closer' && (
-                  <Text style={styles.draftLockedText}>
-                    Saving properties is available on the Closer plan
-                  </Text>
-                )}
                 {saveState === 'saved' && <Text style={styles.savedText}>Saved ✓</Text>}
                 {saveState === 'error' && <Text style={styles.traceErrorText}>{saveError}</Text>}
 
-                {tier === 'closer' && (
-                  <TouchableOpacity
-                    style={styles.secondaryButton}
-                    onPress={handleSaveToContacts}
-                    disabled={contactsSaved}
-                  >
-                    <Text style={styles.secondaryButtonText}>
-                      {contactsSaved ? 'Added to Contacts ✓' : 'Save to Contacts'}
-                    </Text>
-                  </TouchableOpacity>
-                )}
+                <TouchableOpacity
+                  style={styles.secondaryButton}
+                  onPress={() => (features.crm ? handleSaveToContacts() : onUpgradeNeeded())}
+                  disabled={contactsSaved}
+                >
+                  <Text style={styles.secondaryButtonText}>
+                    {contactsSaved ? 'Added to Contacts ✓' : 'Save to Contacts'}
+                  </Text>
+                </TouchableOpacity>
                 {contactsError && <Text style={styles.traceErrorText}>{contactsError}</Text>}
 
                 <TouchableOpacity style={styles.secondaryButton} onPress={handleExportVCard}>
@@ -592,11 +632,6 @@ const styles = StyleSheet.create({
   },
   badgeTcpa: {
     backgroundColor: '#fef3c7',
-  },
-  draftLockedText: {
-    marginTop: 12,
-    fontSize: 12,
-    color: '#9ca3af',
   },
   draftButton: {
     marginTop: 12,

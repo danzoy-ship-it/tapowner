@@ -14,11 +14,19 @@ export class ResendEmailProvider implements EmailProvider {
     }
 
     async sendOtpEmail(email: string, code: string): Promise<void> {
+        await this.sendEmail(
+            email,
+            `Your TapOwner code: ${code}`,
+            `<p>Your TapOwner verification code is <strong>${code}</strong>.</p><p>It expires in 10 minutes.</p>`
+        );
+    }
+
+    async sendEmail(to: string, subject: string, html: string): Promise<void> {
         const { error } = await this.resend.emails.send({
             from: FROM_ADDRESS,
-            to: email,
-            subject: `Your TapOwner code: ${code}`,
-            html: `<p>Your TapOwner verification code is <strong>${code}</strong>.</p><p>It expires in 10 minutes.</p>`,
+            to,
+            subject,
+            html,
         });
         if (error) {
             throw new Error(`Resend send failed: ${error.message}`);

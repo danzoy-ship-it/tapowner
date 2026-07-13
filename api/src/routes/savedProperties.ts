@@ -1,6 +1,7 @@
-import type { FastifyInstance, FastifyReply } from "fastify";
+import type { FastifyInstance } from "fastify";
 import { pool } from "../db.js";
 import { requireAuth } from "../auth/middleware.js";
+import { requireFeature } from "../lib/entitlements.js";
 
 const STATUSES = ["new", "contacted", "follow_up", "appointment", "listed", "dead"] as const;
 type Status = (typeof STATUSES)[number];
@@ -9,18 +10,6 @@ const PARCEL_FIELDS = `
     p.owner_name, p.situs_address, p.situs_city, p.situs_state, p.situs_zip,
     p.is_absentee, p.is_protected
 `;
-
-async function requireCloser(userId: string | number, reply: FastifyReply): Promise<boolean> {
-    const { rows } = await pool.query(
-        `SELECT tier FROM subscriptions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1`,
-        [userId]
-    );
-    if (rows[0]?.tier !== "closer") {
-        reply.code(403).send({ error: "Saved properties are a Closer feature" });
-        return false;
-    }
-    return true;
-}
 
 async function loadOwnedSavedProperty(userId: string | number, savedPropertyId: number) {
     const { rows } = await pool.query(`SELECT * FROM saved_properties WHERE id = $1 AND user_id = $2`, [
@@ -34,7 +23,7 @@ export async function savedPropertiesRoutes(app: FastifyInstance) {
     app.post<{ Body: { parcel_id?: number; note?: string } }>("/saved-properties", async (request, reply) => {
         const session = await requireAuth(request, reply);
         if (!session) return;
-        if (!(await requireCloser(session.userId, reply))) return;
+        if (!(await requireFeature(session.userId, "crm", reply))) return;
 
         const parcelId = Number(request.body.parcel_id);
         if (!Number.isInteger(parcelId)) {
@@ -72,7 +61,7 @@ export async function savedPropertiesRoutes(app: FastifyInstance) {
     app.get<{ Querystring: { status?: string } }>("/saved-properties", async (request, reply) => {
         const session = await requireAuth(request, reply);
         if (!session) return;
-        if (!(await requireCloser(session.userId, reply))) return;
+        if (!(await requireFeature(session.userId, "crm", reply))) return;
 
         const status = request.query.status;
         if (status && !STATUSES.includes(status as Status)) {
@@ -96,7 +85,7 @@ export async function savedPropertiesRoutes(app: FastifyInstance) {
     app.get<{ Params: { id: string } }>("/saved-properties/:id", async (request, reply) => {
         const session = await requireAuth(request, reply);
         if (!session) return;
-        if (!(await requireCloser(session.userId, reply))) return;
+        if (!(await requireFeature(session.userId, "crm", reply))) return;
 
         const savedPropertyId = Number(request.params.id);
         const savedProperty = await loadOwnedSavedProperty(session.userId, savedPropertyId);
@@ -121,7 +110,7 @@ export async function savedPropertiesRoutes(app: FastifyInstance) {
         async (request, reply) => {
             const session = await requireAuth(request, reply);
             if (!session) return;
-            if (!(await requireCloser(session.userId, reply))) return;
+            if (!(await requireFeature(session.userId, "crm", reply))) return;
 
             const savedPropertyId = Number(request.params.id);
             const status = request.body.status;
@@ -148,7 +137,7 @@ export async function savedPropertiesRoutes(app: FastifyInstance) {
         async (request, reply) => {
             const session = await requireAuth(request, reply);
             if (!session) return;
-            if (!(await requireCloser(session.userId, reply))) return;
+            if (!(await requireFeature(session.userId, "crm", reply))) return;
 
             const savedPropertyId = Number(request.params.id);
             const body = request.body.body?.trim();

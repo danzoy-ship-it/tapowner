@@ -12,4 +12,11 @@ export class ConsoleEmailProvider implements EmailProvider {
             "No email provider configured (RESEND_API_KEY unset) -- OTP logged instead of sent"
         );
     }
+
+    async sendEmail(to: string, subject: string, html: string): Promise<void> {
+        this.log.warn(
+            { to, subject, html },
+            "No email provider configured (RESEND_API_KEY unset) -- email logged instead of sent"
+        );
+    }
 }

@@ -18,11 +18,21 @@ import {
   type CameraRef,
 } from '@maplibre/maplibre-react-native';
 import type { PressEventWithFeatures } from '@maplibre/maplibre-react-native';
-import { API_BASE, fetchParcelAt, geocodeAddress, type ParcelDetail } from './api';
+import {
+  API_BASE,
+  FALLBACK_CONFIG,
+  fetchConfig,
+  fetchParcelAt,
+  geocodeAddress,
+  type AppConfig,
+  type ParcelDetail,
+} from './api';
 import { ParcelSheet } from './ParcelSheet';
 import { LoginScreen } from './LoginScreen';
 import { SettingsScreen } from './SettingsScreen';
 import { SavedPropertiesScreen } from './SavedPropertiesScreen';
+import { UpgradeSheet } from './UpgradeSheet';
+import { ExpiryScreen } from './ExpiryScreen';
 import { clearToken, fetchMe, getStoredToken, storeToken, type Me } from './auth';
 
 const OPENFREEMAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
@@ -42,6 +52,8 @@ export default function App() {
   const [loadingParcel, setLoadingParcel] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showSaved, setShowSaved] = useState(false);
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const [config, setConfig] = useState<AppConfig>(FALLBACK_CONFIG);
   const [searchText, setSearchText] = useState('');
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -52,6 +64,14 @@ export default function App() {
       const { status } = await Location.requestForegroundPermissionsAsync();
       setPermission(status === 'granted' ? 'granted' : 'denied');
     })();
+  }, []);
+
+  useEffect(() => {
+    // Config drives prices, templates, and feature gates; the bundled fallback
+    // keeps the app usable if the fetch fails at launch.
+    fetchConfig()
+      .then(setConfig)
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -87,6 +107,18 @@ export default function App() {
     setMe(null);
     setAuthState('loggedOut');
   }
+
+  async function refreshMe() {
+    if (!token) return;
+    const result = await fetchMe(token);
+    if (result) setMe(result);
+  }
+
+  const subscriptionUsable = me?.status === 'trialing' || me?.status === 'active';
+  const tierFeatures = (me?.tier && config.tiers[me.tier]?.features) || {
+    draft_email: false,
+    crm: false,
+  };
 
   async function handleParcelPress(event: NativeSyntheticEvent<PressEventWithFeatures>) {
     const { lngLat, features } = event.nativeEvent;
@@ -136,6 +168,10 @@ export default function App() {
 
   if (authState === 'loggedOut') {
     return <LoginScreen onLoggedIn={handleLoggedIn} />;
+  }
+
+  if (me && !subscriptionUsable) {
+    return <ExpiryScreen config={config} onRecheck={refreshMe} onLogout={handleLogout} />;
   }
 
   if (permission === 'checking') {
@@ -210,11 +246,13 @@ export default function App() {
 
       <View style={styles.topBar}>
         <View style={styles.accountBar}>
-          <Text style={styles.accountText}>
+          <Text style={styles.accountText} numberOfLines={1}>
             {me?.email} · {me?.tier ?? 'no plan'}
           </Text>
           <View style={styles.accountActions}>
-            <TouchableOpacity onPress={() => setShowSaved(true)}>
+            <TouchableOpacity
+              onPress={() => (tierFeatures.crm ? setShowSaved(true) : setShowUpgrade(true))}
+            >
               <Text style={styles.settingsText}>Saved</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setShowSettings(true)}>
@@ -251,10 +289,14 @@ export default function App() {
           loading={loadingParcel}
           detail={parcelDetail}
           token={token}
-          tier={me?.tier ?? null}
+          config={config}
+          features={tierFeatures}
+          onUpgradeNeeded={() => setShowUpgrade(true)}
           onClose={closeSheet}
         />
       )}
+
+      {showUpgrade && <UpgradeSheet config={config} onClose={() => setShowUpgrade(false)} />}
 
       {showSettings && me && (
         <SettingsScreen
@@ -312,6 +354,8 @@ const styles = StyleSheet.create({
   accountText: {
     fontSize: 13,
     color: '#374151',
+    flexShrink: 1,
+    marginRight: 10,
   },
   accountActions: {
     flexDirection: 'row',

@@ -11,6 +11,9 @@ import { traceRoutes } from "./routes/trace.js";
 import { draftRoutes } from "./routes/draft.js";
 import { savedPropertiesRoutes } from "./routes/savedProperties.js";
 import { geocodeRoutes } from "./routes/geocode.js";
+import { configRoutes } from "./routes/config.js";
+import { createEmailProvider } from "./email/index.js";
+import { startTrialReminderJob } from "./jobs/trialReminder.js";
 
 const app = Fastify({ logger: true });
 
@@ -50,6 +53,9 @@ await app.register(traceRoutes);
 await app.register(draftRoutes);
 await app.register(savedPropertiesRoutes);
 await app.register(geocodeRoutes);
+await app.register(configRoutes);
+
+startTrialReminderJob(createEmailProvider(app.log), app.log);
 
 const port = Number(process.env.PORT ?? 3000);
 const host = process.env.HOST ?? "0.0.0.0";

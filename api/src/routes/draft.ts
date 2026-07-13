@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { pool } from "../db.js";
 import { requireAuth } from "../auth/middleware.js";
 import { getProductConfig } from "../lib/config.js";
+import { requireFeature } from "../lib/entitlements.js";
 import { DRAFT_TEMPLATES, DRAFT_TONES, buildDraftPrompt, type DraftTone } from "../draft/templates.js";
 
 const ANTHROPIC_MODEL = "claude-haiku-4-5-20251001";
@@ -63,13 +64,7 @@ export async function draftRoutes(app: FastifyInstance) {
                 return reply.code(400).send({ error: "Invalid tone" });
             }
 
-            const { rows: subRows } = await pool.query(
-                `SELECT tier FROM subscriptions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1`,
-                [session.userId]
-            );
-            if (subRows[0]?.tier !== "closer") {
-                return reply.code(403).send({ error: "Draft Email is a Closer feature" });
-            }
+            if (!(await requireFeature(session.userId, "draft_email", reply))) return;
 
             const { rows: traceRows } = await pool.query(
                 `SELECT 1 FROM user_traces WHERE user_id = $1 AND parcel_id = $2`,

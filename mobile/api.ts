@@ -30,6 +30,65 @@ export interface ParcelDetail {
   last_sale_price: string | null;
 }
 
+export interface TierConfig {
+  price_cents: number;
+  included_traces: number;
+  features: { draft_email: boolean; crm: boolean };
+}
+
+export interface AppConfig {
+  version: string;
+  trial_days: number;
+  trace_price_cents: number;
+  closer_included_traces: number;
+  tiers: { prospector?: TierConfig; closer?: TierConfig };
+  draft: {
+    templates: DraftTemplate[];
+    tones: { id: string; label: string }[];
+    rate_limit_per_day: number;
+  };
+  manage_plan_url_text: string;
+}
+
+export const FALLBACK_CONFIG: AppConfig = {
+  version: 'fallback',
+  trial_days: 30,
+  trace_price_cents: 29,
+  closer_included_traces: 10,
+  tiers: {
+    prospector: { price_cents: 999, included_traces: 0, features: { draft_email: false, crm: false } },
+    closer: { price_cents: 1999, included_traces: 10, features: { draft_email: true, crm: true } },
+  },
+  draft: {
+    templates: [
+      { id: 'just_sold_farming', label: 'Just Sold (Farming)' },
+      { id: 'absentee_owner', label: 'Absentee Owner' },
+      { id: 'expired_listing', label: 'Expired Listing' },
+      { id: 'fsbo', label: 'FSBO Outreach' },
+      { id: 'open_house_neighbor_invite', label: 'Open House Neighbor Invite' },
+    ],
+    tones: [
+      { id: 'professional', label: 'Professional' },
+      { id: 'friendly', label: 'Friendly' },
+      { id: 'direct', label: 'Direct' },
+    ],
+    rate_limit_per_day: 30,
+  },
+  manage_plan_url_text: 'Manage your plan at tapowner.com',
+};
+
+export async function fetchConfig(): Promise<AppConfig> {
+  const res = await fetch(`${API_BASE}/config`);
+  if (!res.ok) {
+    throw new Error(`Config fetch failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+export function formatCents(cents: number): string {
+  return `$${(cents / 100).toFixed(2)}`;
+}
+
 export interface GeocodeResult {
   lat: number;
   lng: number;
@@ -93,25 +152,6 @@ export interface DraftTemplate {
   id: string;
   label: string;
 }
-
-export const DRAFT_TEMPLATES: DraftTemplate[] = [
-  { id: 'just_sold_farming', label: 'Just Sold (Farming)' },
-  { id: 'absentee_owner', label: 'Absentee Owner' },
-  { id: 'expired_listing', label: 'Expired Listing' },
-  { id: 'fsbo', label: 'FSBO Outreach' },
-  { id: 'open_house_neighbor_invite', label: 'Open House Neighbor Invite' },
-];
-
-export interface DraftTone {
-  id: 'professional' | 'friendly' | 'direct';
-  label: string;
-}
-
-export const DRAFT_TONES: DraftTone[] = [
-  { id: 'professional', label: 'Professional' },
-  { id: 'friendly', label: 'Friendly' },
-  { id: 'direct', label: 'Direct' },
-];
 
 export interface DraftResponse {
   subject: string;
