@@ -29,8 +29,31 @@ One product-design note: 8-10% of addresses returned *neither* phone nor email (
 
 **Note on BatchData's $6.30:** an address-matching bug in my own test script (whitespace-formatting difference between our data and BatchData's echoed address) caused a bad first read of the results; I fixed it and re-ran, but because BatchData bills per real match at the time of the API call (not based on how I parse the response afterward), the first run's ~$6.37 in genuine matches was already billed before I caught the bug. Real total spent testing BatchData across both runs: ~$12.67, not $6.30 — the $6.30 figure above reflects only the second (correct) run's cost, which is the right number for evaluating BatchData's real per-hit economics going forward.
 
+## BatchData V3 vs V1 (both same $0.07/hit — V3 is strictly better)
+
+Frederick's BatchData key supports both API versions. V3 returns **up to 3 distinct persons per property** (e.g. both co-owners on a joint deed) for the *same* per-match billing as V1 (billed per matched property, not per person). Same 100 addresses, V3:
+
+| Metric | V1 | V3 |
+|---|---|---|
+| Phone match rate | 88% | 89% |
+| Email match rate | 80% | 80% |
+| Hits returning >1 person | n/a (always 1) | 25/90 = 27.8% |
+| Multi-owner properties: name overlap vs ground truth | not separately measurable (only 1 name returned) | **90.3%** (28/31) |
+| Clean single-owner accuracy | 73.2% | 78.0% |
+
+Checking against *all* returned persons instead of just one resolves most of the "multi-owner mismatch" noise that made V1's and Tracerfy's raw accuracy numbers look weaker than they really were — on joint-owned properties, V3 usually returns the actual correct co-owner as one of its up-to-3 results. **There's no reason to use V1 over V3** given identical pricing; V3 strictly dominates.
+
 ## Recommendation
 
-Both vendors pass the gate. If cost-per-trace is the deciding factor (it directly sets your margin per the build doc's unit economics: $0.29 charge − vendor cost = margin), **BatchData's $0.07/hit vs Tracerfy's $0.10/hit means ~$0.03 more margin per trace** at the same $0.29 price point (~13% margin improvement). This is the one number that's genuinely different between them; everything else (accuracy, match rate) is a wash.
+Both vendors clear the ≥70% phone-match gate. Updated comparison using BatchData V3 (its real integration target):
+
+| | Tracerfy | BatchData (V3) |
+|---|---|---|
+| Phone match | 90% | 89% |
+| Email match | 80% | 80% |
+| Cost per hit | $0.10 | $0.07 |
+| Extra: co-owner contacts included free | No | Yes (28% of hits) |
+
+Match rate and single-owner accuracy are a wash between vendors. **BatchData is ~30% cheaper per hit** (~$0.03 more margin per trace at the $0.29 price point, ~13% margin improvement) **and** returns extra legitimate contacts on joint-owned properties at no extra cost — a real product edge for TapOwner specifically, since more verified contacts per trace is exactly what the product sells.
 
 This is your call, not a technical one — signing the reseller/redistribution addendum only needs to happen with whichever vendor you actually pick, before real users see traced data.
