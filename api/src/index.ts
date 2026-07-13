@@ -2,6 +2,9 @@ import Fastify from "fastify";
 import rateLimit from "@fastify/rate-limit";
 import { parcelsRoutes } from "./routes/parcels.js";
 import { tilesRoutes } from "./routes/tiles.js";
+import { authRoutes } from "./routes/auth.js";
+import { meRoutes } from "./routes/me.js";
+import { billingRoutes } from "./routes/billing.js";
 
 const app = Fastify({ logger: true });
 
@@ -20,6 +23,9 @@ app.get("/health", async () => ({
 
 await app.register(parcelsRoutes);
 await app.register(tilesRoutes);
+await app.register(authRoutes);
+await app.register(meRoutes);
+await app.register(billingRoutes);
 
 const port = Number(process.env.PORT ?? 3000);
 const host = process.env.HOST ?? "0.0.0.0";
