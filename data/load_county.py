@@ -126,6 +126,8 @@ def compute_is_absentee(situs_city, situs_state, mail_city, mail_state):
 
 
 def to_multipolygon_wkt(geom_geojson):
+    if geom_geojson is None:
+        return None
     geom = shape(geom_geojson)
     if geom.geom_type == "Polygon":
         geom = MultiPolygon([geom])
