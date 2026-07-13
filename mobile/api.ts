@@ -40,3 +40,36 @@ export async function fetchParcelAt(lat: number, lng: number): Promise<ParcelDet
   }
   return res.json();
 }
+
+export interface TracePhone {
+  number: string;
+  type: string;
+  carrier?: string;
+  dnc: boolean;
+  tcpa: boolean;
+}
+
+export interface TraceEmail {
+  email: string;
+}
+
+export interface TraceResponse {
+  matched: boolean;
+  phones: TracePhone[];
+  emails: TraceEmail[];
+  matchQuality?: string;
+  freeReview?: boolean;
+  message?: string;
+}
+
+export async function traceParcel(token: string, parcelId: number): Promise<TraceResponse> {
+  const res = await fetch(`${API_BASE}/trace/${parcelId}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const body = await res.json();
+  if (!res.ok) {
+    throw new Error(body.error ?? 'Trace failed');
+  }
+  return body;
+}

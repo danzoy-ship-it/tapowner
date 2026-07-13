@@ -1,5 +1,6 @@
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import type { ParcelDetail } from './api';
+import { traceParcel, type ParcelDetail, type TraceResponse } from './api';
 
 function formatNumber(value: string | number | null): string | null {
   if (value === null) return null;
@@ -45,15 +46,42 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
+type TraceState = 'idle' | 'loading' | 'done' | 'error';
+
 export function ParcelSheet({
   loading,
   detail,
+  token,
   onClose,
 }: {
   loading: boolean;
   detail: ParcelDetail | null;
+  token: string | null;
   onClose: () => void;
 }) {
+  const [traceState, setTraceState] = useState<TraceState>('idle');
+  const [traceResult, setTraceResult] = useState<TraceResponse | null>(null);
+  const [traceError, setTraceError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setTraceState('idle');
+    setTraceResult(null);
+    setTraceError(null);
+  }, [detail?.id]);
+
+  async function handleTracePress() {
+    if (!token || !detail) return;
+    setTraceState('loading');
+    setTraceError(null);
+    try {
+      const result = await traceParcel(token, detail.id);
+      setTraceResult(result);
+      setTraceState('done');
+    } catch (err) {
+      setTraceError(err instanceof Error ? err.message : 'Trace failed');
+      setTraceState('error');
+    }
+  }
   return (
     <View style={styles.sheet}>
       <View style={styles.handle} />
@@ -117,10 +145,60 @@ export function ParcelSheet({
             <Row label="Assessed value" value={formatCurrency(detail.assessed_total_value)!} />
           )}
 
-          <TouchableOpacity style={styles.ctaButton} disabled>
-            <Text style={styles.ctaButtonText}>Get Contact Info — $0.29</Text>
-            <Text style={styles.ctaButtonSubtext}>Coming in beta</Text>
-          </TouchableOpacity>
+          {traceState !== 'done' && (
+            <TouchableOpacity
+              style={styles.ctaButton}
+              onPress={handleTracePress}
+              disabled={traceState === 'loading' || !token}
+            >
+              {traceState === 'loading' ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.ctaButtonText}>Get Contact Info — $0.29</Text>
+              )}
+            </TouchableOpacity>
+          )}
+
+          {traceState === 'error' && (
+            <Text style={styles.traceErrorText}>{traceError}</Text>
+          )}
+
+          {traceState === 'done' && traceResult && !traceResult.matched && (
+            <Text style={styles.traceErrorText}>
+              {traceResult.message ?? 'No verified contact found.'}
+            </Text>
+          )}
+
+          {traceState === 'done' && traceResult?.matched && (
+            <View style={styles.traceResults}>
+              {traceResult.freeReview && (
+                <Text style={styles.freeReviewText}>Already unlocked — no charge</Text>
+              )}
+              {traceResult.phones.map((phone) => (
+                <View key={phone.number} style={styles.contactRow}>
+                  <Text style={styles.contactValue}>{phone.number}</Text>
+                  <View style={styles.badgeRow}>
+                    <Text style={styles.contactMeta}>{phone.type}</Text>
+                    {phone.dnc && (
+                      <View style={[styles.badge, styles.badgeDnc]}>
+                        <Text style={styles.badgeText}>DNC</Text>
+                      </View>
+                    )}
+                    {phone.tcpa && (
+                      <View style={[styles.badge, styles.badgeTcpa]}>
+                        <Text style={styles.badgeText}>TCPA risk</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              ))}
+              {traceResult.emails.map((email) => (
+                <View key={email.email} style={styles.contactRow}>
+                  <Text style={styles.contactValue}>{email.email}</Text>
+                </View>
+              ))}
+            </View>
+          )}
         </>
       )}
     </View>
@@ -226,18 +304,52 @@ const styles = StyleSheet.create({
   },
   ctaButton: {
     marginTop: 16,
-    backgroundColor: '#e5e7eb',
+    backgroundColor: '#2563eb',
     borderRadius: 10,
     paddingVertical: 14,
     alignItems: 'center',
   },
   ctaButtonText: {
     fontWeight: '600',
-    color: '#9ca3af',
+    color: '#fff',
   },
   ctaButtonSubtext: {
     fontSize: 12,
     color: '#9ca3af',
     marginTop: 2,
+  },
+  traceErrorText: {
+    marginTop: 16,
+    color: '#b91c1c',
+    fontSize: 13,
+  },
+  traceResults: {
+    marginTop: 16,
+    gap: 8,
+  },
+  freeReviewText: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginBottom: 4,
+  },
+  contactRow: {
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6',
+  },
+  contactValue: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  contactMeta: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
+  badgeDnc: {
+    backgroundColor: '#fee2e2',
+  },
+  badgeTcpa: {
+    backgroundColor: '#fef3c7',
   },
 });

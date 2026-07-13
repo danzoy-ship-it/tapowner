@@ -1,24 +1,16 @@
 import type { FastifyInstance } from "fastify";
 import Stripe from "stripe";
 import { pool } from "../db.js";
+import { getStripe } from "../lib/stripe.js";
+import { getProductConfig } from "../lib/config.js";
 
 const REFERRAL_COUPON_ID = "user-referral-free-month";
-
-function getStripe(): Stripe | null {
-    const key = process.env.STRIPE_SECRET_KEY;
-    return key ? new Stripe(key) : null;
-}
 
 function tierForPriceId(priceId: string | undefined): string | null {
     if (!priceId) return null;
     if (priceId === process.env.STRIPE_PRICE_PROSPECTOR) return "prospector";
     if (priceId === process.env.STRIPE_PRICE_CLOSER) return "closer";
     return null;
-}
-
-async function getProductConfig(): Promise<Record<string, any>> {
-    const { rows } = await pool.query(`SELECT config FROM products WHERE id = 'tapowner'`);
-    return rows[0]?.config ?? {};
 }
 
 async function upsertSubscriptionFromStripe(

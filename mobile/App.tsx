@@ -25,6 +25,7 @@ type AuthState = 'checking' | 'loggedOut' | 'loggedIn';
 export default function App() {
   const [authState, setAuthState] = useState<AuthState>('checking');
   const [me, setMe] = useState<Me | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [permission, setPermission] = useState<PermissionState>('checking');
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [parcelDetail, setParcelDetail] = useState<ParcelDetail | null>(null);
@@ -39,13 +40,14 @@ export default function App() {
 
   useEffect(() => {
     (async () => {
-      const token = await getStoredToken();
-      if (!token) {
+      const storedToken = await getStoredToken();
+      if (!storedToken) {
         setAuthState('loggedOut');
         return;
       }
-      const result = await fetchMe(token);
+      const result = await fetchMe(storedToken);
       if (result) {
+        setToken(storedToken);
         setMe(result);
         setAuthState('loggedIn');
       } else {
@@ -55,15 +57,17 @@ export default function App() {
     })();
   }, []);
 
-  async function handleLoggedIn(token: string) {
-    await storeToken(token);
-    const result = await fetchMe(token);
+  async function handleLoggedIn(newToken: string) {
+    await storeToken(newToken);
+    const result = await fetchMe(newToken);
+    setToken(newToken);
     setMe(result);
     setAuthState('loggedIn');
   }
 
   async function handleLogout() {
     await clearToken();
+    setToken(null);
     setMe(null);
     setAuthState('loggedOut');
   }
@@ -165,7 +169,7 @@ export default function App() {
       </View>
 
       {selectedId !== null && (
-        <ParcelSheet loading={loadingParcel} detail={parcelDetail} onClose={closeSheet} />
+        <ParcelSheet loading={loadingParcel} detail={parcelDetail} token={token} onClose={closeSheet} />
       )}
     </View>
   );
