@@ -192,6 +192,27 @@ Save property → `saved_properties` with status enum (New / Contacted / Follow-
 
 ---
 
+## APPENDIX — PRE-LAUNCH LEGAL & COMPLIANCE GATE (hard gate: no public launch until every item below is done)
+
+Researched 2026-07-13 (primary sources: Texas SOS/AG on the Data Broker Act; BatchData ToS/privacy policy). Context: TapOwner resells licensed contact data. The compliance model below matches how the entire category (DealMachine, BatchLeads, etc.) operates, adapted to TapOwner's lower-risk design.
+
+**Structural advantages to PRESERVE (these are risk decisions, not just features):**
+- NO dialer, NO mass texting, NO bulk list export in v1. Manual one-at-a-time lookups + one-to-one emails from the user's own mail account keep TapOwner out of the TCPA epicenter (autodialers/robocalls/mass texts). Adding any of these later = re-run this legal review first.
+- DNC + litigator flags displayed in the trace UI (Phase 6) — keep mandatory, never config-off.
+
+**The compliance stack (build/do before launch):**
+1. **Vendor redistribution addendum.** The winning skip-trace vendor's standard self-serve ToS covers internal use only — embedding results in TapOwner for end users requires their API-partner/reseller terms. Sequencing: the Phase 6 bakeoff is fine under standard terms (internal evaluation); sign the addendum with the WINNER before any real user sees traced data. Frederick action (money/contract).
+2. **TapOwner user ToS (Phase 10, one checkbox at signup — not a wall of disclaimers):** must include (a) lawful-use only; (b) NO FCRA uses — no tenant screening, employment, credit, insurance eligibility decisions; (c) user is solely responsible for their own outreach compliance (TCPA/DNC for calls, CAN-SPAM for email); (d) user must honor opt-outs; (e) no harassment/stalking use. Mirror the vendor's flow-down obligations verbatim where the addendum requires it.
+3. **Texas Data Broker Act registration** (Bus. & Com. Code ch. 509/510): register with the Texas SOS (Form 4001, $300/yr), post the SOS-prescribed conspicuous "data broker" notice on tapowner.com and in the app, and maintain a written comprehensive information security program (12 statutory safeguards). Trigger analysis: the >50,000-individuals prong has no revenue-percentage floor, so TapOwner crosses it at modest scale. Default plan: register proactively at launch; attorney confirms timing. Penalty for skipping: up to $10k/12mo, actively enforced by the Texas AG.
+4. **Insurance:** E&O + cyber liability quote for a micro-SaaS (~$500–1,500/yr est.). Frederick action.
+5. **Attorney review (one engagement, ~$1,000–2,500):** ToS + privacy policy + data-broker registration timing + the vendor addendum. This is the gate-keeper item — no launch without it.
+
+**Estimated total first-year compliance cost: ~$2,000–4,500.** Line item, not a blocker.
+
+**Claude Code implementation hooks:** Phase 10's privacy-policy/ToS drafts must cover item 2's clauses; the web footer + app settings screen need the item-3 notice slot (config-driven text); signup flow = ONE terms checkbox (competitor-standard, friction-free). Nothing else in the build changes.
+
+---
+
 ## APPENDIX — FLAGGED FUTURE IDEA (roofing vertical, NOT v1, legal-gated — do not build without explicit sign-off)
 
 **Probate/estate-sale lead trigger.** Concept: properties entering probate administration are likely to be sold soon, often need a pre-sale roof assessment/replacement, and the timing advantage of reaching out early (before a listing or estate-sale sign appears) is real and valuable — same shape as the storm-swath and neighbor-just-replaced plays.
