@@ -1,5 +1,12 @@
-import { useEffect, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import * as Location from 'expo-location';
 import type { NativeSyntheticEvent } from 'react-native';
 import {
@@ -8,9 +15,10 @@ import {
   Map,
   UserLocation,
   VectorSource,
+  type CameraRef,
 } from '@maplibre/maplibre-react-native';
 import type { PressEventWithFeatures } from '@maplibre/maplibre-react-native';
-import { API_BASE, fetchParcelAt, type ParcelDetail } from './api';
+import { API_BASE, fetchParcelAt, geocodeAddress, type ParcelDetail } from './api';
 import { ParcelSheet } from './ParcelSheet';
 import { LoginScreen } from './LoginScreen';
 import { SettingsScreen } from './SettingsScreen';
@@ -34,6 +42,10 @@ export default function App() {
   const [loadingParcel, setLoadingParcel] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showSaved, setShowSaved] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const cameraRef = useRef<CameraRef>(null);
 
   useEffect(() => {
     (async () => {
@@ -98,6 +110,22 @@ export default function App() {
     setParcelDetail(null);
   }
 
+  async function handleSearch() {
+    const query = searchText.trim();
+    if (!query) return;
+    setSearching(true);
+    setSearchError(null);
+    try {
+      const result = await geocodeAddress(query);
+      cameraRef.current?.flyTo({ center: [result.lng, result.lat], zoom: 17, duration: 1200 });
+      closeSheet();
+    } catch (err) {
+      setSearchError(err instanceof Error ? err.message : 'Address search failed');
+    } finally {
+      setSearching(false);
+    }
+  }
+
   if (authState === 'checking') {
     return (
       <View style={styles.center}>
@@ -132,7 +160,7 @@ export default function App() {
   return (
     <View style={styles.container}>
       <Map style={styles.map} mapStyle={OPENFREEMAP_STYLE}>
-        <Camera trackUserLocation="default" initialViewState={{ zoom: 17 }} />
+        <Camera ref={cameraRef} trackUserLocation="default" initialViewState={{ zoom: 17 }} />
         <UserLocation />
         <VectorSource
           id="parcels"
@@ -160,24 +188,62 @@ export default function App() {
             minzoom={PARCEL_MIN_ZOOM}
             paint={{ 'line-color': '#2563eb', 'line-width': 1.5, 'line-opacity': 0.85 }}
           />
+          <Layer
+            id="parcels-labels"
+            type="symbol"
+            source="parcels"
+            source-layer="parcels"
+            minzoom={18}
+            layout={{
+              'text-field': ['get', 'label'],
+              'text-size': 11,
+              'text-anchor': 'center',
+            }}
+            paint={{
+              'text-color': '#1e293b',
+              'text-halo-color': '#ffffff',
+              'text-halo-width': 1.2,
+            }}
+          />
         </VectorSource>
       </Map>
 
-      <View style={styles.accountBar}>
-        <Text style={styles.accountText}>
-          {me?.email} · {me?.tier ?? 'no plan'}
-        </Text>
-        <View style={styles.accountActions}>
-          <TouchableOpacity onPress={() => setShowSaved(true)}>
-            <Text style={styles.settingsText}>Saved</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setShowSettings(true)}>
-            <Text style={styles.settingsText}>Settings</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleLogout}>
-            <Text style={styles.logoutText}>Log out</Text>
+      <View style={styles.topBar}>
+        <View style={styles.accountBar}>
+          <Text style={styles.accountText}>
+            {me?.email} · {me?.tier ?? 'no plan'}
+          </Text>
+          <View style={styles.accountActions}>
+            <TouchableOpacity onPress={() => setShowSaved(true)}>
+              <Text style={styles.settingsText}>Saved</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setShowSettings(true)}>
+              <Text style={styles.settingsText}>Settings</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleLogout}>
+              <Text style={styles.logoutText}>Log out</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.searchBar}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search an address…"
+            value={searchText}
+            onChangeText={setSearchText}
+            onSubmitEditing={handleSearch}
+            returnKeyType="search"
+          />
+          <TouchableOpacity style={styles.searchButton} onPress={handleSearch} disabled={searching}>
+            {searching ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <Text style={styles.searchButtonText}>Go</Text>
+            )}
           </TouchableOpacity>
         </View>
+        {searchError && <Text style={styles.searchErrorText}>{searchError}</Text>}
       </View>
 
       {selectedId !== null && (
@@ -222,11 +288,14 @@ const styles = StyleSheet.create({
   deniedText: {
     textAlign: 'center',
   },
-  accountBar: {
+  topBar: {
     position: 'absolute',
     top: 56,
     left: 16,
     right: 16,
+    gap: 8,
+  },
+  accountBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -257,5 +326,42 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#2563eb',
     fontWeight: '600',
+  },
+  searchBar: {
+    flexDirection: 'row',
+    gap: 8,
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    paddingHorizontal: 8,
+  },
+  searchButton: {
+    backgroundColor: '#2563eb',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    justifyContent: 'center',
+  },
+  searchButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 13,
+  },
+  searchErrorText: {
+    color: '#b91c1c',
+    fontSize: 12,
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
   },
 });

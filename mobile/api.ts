@@ -30,6 +30,21 @@ export interface ParcelDetail {
   last_sale_price: string | null;
 }
 
+export interface GeocodeResult {
+  lat: number;
+  lng: number;
+  formatted_address: string;
+}
+
+export async function geocodeAddress(address: string): Promise<GeocodeResult> {
+  const res = await fetch(`${API_BASE}/geocode?address=${encodeURIComponent(address)}`);
+  const body = await res.json();
+  if (!res.ok) {
+    throw new Error(body.error ?? 'Address search failed');
+  }
+  return body;
+}
+
 export async function fetchParcelAt(lat: number, lng: number): Promise<ParcelDetail | null> {
   const res = await fetch(`${API_BASE}/parcels/at?lat=${lat}&lng=${lng}`);
   if (res.status === 404) {

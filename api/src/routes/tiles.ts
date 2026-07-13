@@ -19,7 +19,8 @@ const TILE_QUERY = `
                 ST_TileEnvelope($1, $2, $3),
                 4096, 64, true
             ) AS geom,
-            id, apn, owner_name, situs_address, is_absentee, is_protected
+            id, apn, owner_name, situs_address, is_absentee, is_protected,
+            trim(split_part(situs_address, ',', 1)) AS label
         FROM parcels
         WHERE geom && ST_Transform(ST_TileEnvelope($1, $2, $3), 4326)
     )

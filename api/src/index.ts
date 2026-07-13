@@ -10,6 +10,7 @@ import { partnersRoutes } from "./routes/partners.js";
 import { traceRoutes } from "./routes/trace.js";
 import { draftRoutes } from "./routes/draft.js";
 import { savedPropertiesRoutes } from "./routes/savedProperties.js";
+import { geocodeRoutes } from "./routes/geocode.js";
 
 const app = Fastify({ logger: true });
 
@@ -48,6 +49,7 @@ await app.register(partnersRoutes);
 await app.register(traceRoutes);
 await app.register(draftRoutes);
 await app.register(savedPropertiesRoutes);
+await app.register(geocodeRoutes);
 
 const port = Number(process.env.PORT ?? 3000);
 const host = process.env.HOST ?? "0.0.0.0";
