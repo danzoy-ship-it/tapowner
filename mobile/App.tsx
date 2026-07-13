@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import * as Location from 'expo-location';
 import type { NativeSyntheticEvent } from 'react-native';
 import {
@@ -10,19 +10,21 @@ import {
   VectorSource,
 } from '@maplibre/maplibre-react-native';
 import type { PressEventWithFeatures } from '@maplibre/maplibre-react-native';
-import { fetchParcelAt, type ParcelDetail } from './api';
+import { API_BASE, fetchParcelAt, type ParcelDetail } from './api';
 import { ParcelSheet } from './ParcelSheet';
+import { LoginScreen } from './LoginScreen';
+import { clearToken, fetchMe, getStoredToken, storeToken, type Me } from './auth';
 
 const OPENFREEMAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
-// TODO(Phase 9): move to the config service once it exists; this is an infra
-// endpoint, not a tunable business value, so a constant is fine for now.
-const API_BASE = 'https://api-production-7d11.up.railway.app';
 const PARCEL_TILE_URL = `${API_BASE}/tiles/{z}/{x}/{y}.mvt`;
 const PARCEL_MIN_ZOOM = 16;
 
 type PermissionState = 'checking' | 'granted' | 'denied';
+type AuthState = 'checking' | 'loggedOut' | 'loggedIn';
 
 export default function App() {
+  const [authState, setAuthState] = useState<AuthState>('checking');
+  const [me, setMe] = useState<Me | null>(null);
   const [permission, setPermission] = useState<PermissionState>('checking');
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [parcelDetail, setParcelDetail] = useState<ParcelDetail | null>(null);
@@ -34,6 +36,37 @@ export default function App() {
       setPermission(status === 'granted' ? 'granted' : 'denied');
     })();
   }, []);
+
+  useEffect(() => {
+    (async () => {
+      const token = await getStoredToken();
+      if (!token) {
+        setAuthState('loggedOut');
+        return;
+      }
+      const result = await fetchMe(token);
+      if (result) {
+        setMe(result);
+        setAuthState('loggedIn');
+      } else {
+        await clearToken();
+        setAuthState('loggedOut');
+      }
+    })();
+  }, []);
+
+  async function handleLoggedIn(token: string) {
+    await storeToken(token);
+    const result = await fetchMe(token);
+    setMe(result);
+    setAuthState('loggedIn');
+  }
+
+  async function handleLogout() {
+    await clearToken();
+    setMe(null);
+    setAuthState('loggedOut');
+  }
 
   async function handleParcelPress(event: NativeSyntheticEvent<PressEventWithFeatures>) {
     const { lngLat, features } = event.nativeEvent;
@@ -55,6 +88,18 @@ export default function App() {
   function closeSheet() {
     setSelectedId(null);
     setParcelDetail(null);
+  }
+
+  if (authState === 'checking') {
+    return (
+      <View style={styles.center}>
+        <Text>Loading…</Text>
+      </View>
+    );
+  }
+
+  if (authState === 'loggedOut') {
+    return <LoginScreen onLoggedIn={handleLoggedIn} />;
   }
 
   if (permission === 'checking') {
@@ -110,6 +155,15 @@ export default function App() {
         </VectorSource>
       </Map>
 
+      <View style={styles.accountBar}>
+        <Text style={styles.accountText}>
+          {me?.email} · {me?.tier ?? 'no plan'}
+        </Text>
+        <TouchableOpacity onPress={handleLogout}>
+          <Text style={styles.logoutText}>Log out</Text>
+        </TouchableOpacity>
+      </View>
+
       {selectedId !== null && (
         <ParcelSheet loading={loadingParcel} detail={parcelDetail} onClose={closeSheet} />
       )}
@@ -132,5 +186,32 @@ const styles = StyleSheet.create({
   },
   deniedText: {
     textAlign: 'center',
+  },
+  accountBar: {
+    position: 'absolute',
+    top: 56,
+    left: 16,
+    right: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  accountText: {
+    fontSize: 13,
+    color: '#374151',
+  },
+  logoutText: {
+    fontSize: 13,
+    color: '#2563eb',
+    fontWeight: '600',
   },
 });
