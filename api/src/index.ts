@@ -1,4 +1,5 @@
 import Fastify from "fastify";
+import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
 import { parcelsRoutes } from "./routes/parcels.js";
 import { tilesRoutes } from "./routes/tiles.js";
@@ -7,6 +8,19 @@ import { meRoutes } from "./routes/me.js";
 import { billingRoutes } from "./routes/billing.js";
 
 const app = Fastify({ logger: true });
+
+// The mobile app (React Native) isn't subject to browser CORS; this is only
+// for web/ calling the API from a browser context.
+const webOrigins = [
+    process.env.WEB_BASE_URL,
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:3002",
+].filter((origin): origin is string => Boolean(origin));
+
+await app.register(cors, {
+    origin: webOrigins,
+});
 
 // Per-IP rate limiting pre-auth (Phase 2). Per-user limiting layers on top
 // once sessions exist (Phase 5) -- not a rewrite, just an additional keyGenerator.
