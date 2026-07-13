@@ -30,6 +30,16 @@ export const DRAFT_TEMPLATES: DraftTemplate[] = [
         label: "Open House Neighbor Invite",
         goal: "Invite the owner, as a neighbor, to an upcoming open house nearby, since neighbors are often curious about local home values and may know someone looking to move to the area.",
     },
+    {
+        id: "adjacent_lot",
+        label: "Adjacent Lot Interest",
+        goal: "The agent represents a buyer purchasing (or who owns) the property next door, and that buyer is interested in also acquiring this adjacent lot/property -- often a vacant or under-used lot they'd fold into their own yard or plans. Ask, without pressure, whether the owner would ever consider selling it, and note the agent can bring a ready buyer.",
+    },
+    {
+        id: "buyer_neighborhood_match",
+        label: "Buyer Loves the Neighborhood",
+        goal: "The agent has a real, active buyer who recently toured a home in this neighborhood -- it wasn't quite the right fit, but the buyer fell in love with the area and asked the agent to find something similar. This property matches what they're looking for. Ask whether the owner has ever considered selling, since the agent has a motivated buyer ready to look.",
+    },
 ];
 
 export const DRAFT_TONES = ["professional", "friendly", "direct"] as const;
@@ -62,7 +72,10 @@ Property details: ${detailsLine}
 Goal of this email: ${template.goal}
 
 Rules:
-- Address the recipient by name if given, otherwise a generic respectful greeting.
+- The recipient name comes straight from county appraisal records and is usually in LASTNAME FIRSTNAME order, sometimes with a co-owner after "&" (e.g. "DANZOY FREDERICK & MELISSA A" means Frederick Danzoy and Melissa A. Danzoy). Work out the natural name(s) before greeting -- NEVER greet with the raw county-order string.
+- Greeting by tone: professional or direct -> "Dear Mr./Ms. {last name}" when the first name makes the honorific obvious (couples: "Dear Mr. and Mrs. {last name}"), otherwise "Dear {First} {Last}". Friendly -> first name(s) only, and a natural common short form is fine (e.g. Frederick -> Fred).
+- If the owner is clearly a business, LLC, trust, or government entity, use a generic greeting ("Hello,") instead of guessing a person's name.
+- If no recipient name was given, use a generic respectful greeting.
 - Reference the actual property address naturally.
 - Keep it under 150 words, no more than 2 short paragraphs.
 - Do NOT include a sign-off, closing, or signature block (no "Best regards," no agent name/brokerage/phone at the end) -- that gets appended separately, verbatim, after your response. End the body right after the last sentence of the message itself.

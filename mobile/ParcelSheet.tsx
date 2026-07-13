@@ -480,7 +480,7 @@ export function ParcelSheet({
                 {contactsError && <Text style={styles.traceErrorText}>{contactsError}</Text>}
 
                 <TouchableOpacity style={styles.secondaryButton} onPress={handleExportVCard}>
-                  <Text style={styles.secondaryButtonText}>Export Contact (vCard)</Text>
+                  <Text style={styles.secondaryButtonText}>Share Contact</Text>
                 </TouchableOpacity>
               </View>
             </View>
