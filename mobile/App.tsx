@@ -257,9 +257,12 @@ export default function App() {
             type="symbol"
             source="parcels"
             source-layer="parcels"
-            minzoom={18}
+            minzoom={17}
             layout={{
               'text-field': ['get', 'label'],
+              // Must be a stack the basemap's glyph server hosts (Noto only) --
+              // the default (Open Sans/Arial Unicode) 404s and labels vanish.
+              'text-font': ['Noto Sans Regular'],
               'text-size': 11,
               'text-anchor': 'center',
             }}
