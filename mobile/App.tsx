@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Keyboard,
   StyleSheet,
   Text,
   TextInput,
@@ -148,6 +149,7 @@ export default function App() {
   async function handleSearch() {
     const query = searchText.trim();
     if (!query) return;
+    Keyboard.dismiss();
     setSearching(true);
     setSearchError(null);
     try {

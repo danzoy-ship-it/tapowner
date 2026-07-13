@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Keyboard,
+  ScrollView,
   Share,
   StyleSheet,
   Text,
@@ -171,11 +172,17 @@ export function ParcelSheet({
         setDraftState('error');
         return;
       }
-      await MailComposer.composeAsync({
-        recipients: recipients.length > 0 ? recipients : undefined,
-        subject,
-        body,
-      });
+      // One composer per recipient, sequentially -- each email goes out
+      // individually (and gets its own human review) instead of one email
+      // addressed to everyone at once.
+      const sendTo = recipients.length > 0 ? recipients : [undefined];
+      for (const recipient of sendTo) {
+        await MailComposer.composeAsync({
+          recipients: recipient ? [recipient] : undefined,
+          subject,
+          body,
+        });
+      }
       setDraftState('idle');
       setTemplateId(null);
     } catch (err) {
@@ -244,6 +251,12 @@ export function ParcelSheet({
         <Text style={styles.closeButtonText}>✕</Text>
       </TouchableOpacity>
 
+      <ScrollView
+        style={styles.sheetScroll}
+        contentContainerStyle={styles.sheetScrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={true}
+      >
       {loading && (
         <View style={styles.loadingRow}>
           <ActivityIndicator />
@@ -454,8 +467,20 @@ export function ParcelSheet({
                     {draftState === 'generating' ? (
                       <ActivityIndicator color="#fff" />
                     ) : (
-                      <Text style={styles.draftButtonText}>Generate</Text>
+                      <Text style={styles.draftButtonText}>
+                        {recipients.length > 1 ? `Generate (${recipients.length} separate emails)` : 'Generate'}
+                      </Text>
                     )}
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.draftCancelButton}
+                    onPress={() => {
+                      setDraftState('idle');
+                      setDraftError(null);
+                    }}
+                    disabled={draftState === 'generating'}
+                  >
+                    <Text style={styles.draftCancelText}>Cancel</Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -505,6 +530,7 @@ export function ParcelSheet({
           )}
         </>
       )}
+      </ScrollView>
     </View>
   );
 }
@@ -515,17 +541,23 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+    maxHeight: '75%',
     backgroundColor: '#fff',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
-    paddingHorizontal: 20,
     paddingTop: 12,
-    paddingBottom: 32,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 8,
+  },
+  sheetScroll: {
+    flexGrow: 0,
+  },
+  sheetScrollContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 32,
   },
   handle: {
     alignSelf: 'center',
@@ -540,6 +572,7 @@ const styles = StyleSheet.create({
     top: 12,
     right: 16,
     padding: 4,
+    zIndex: 2,
   },
   closeButtonText: {
     fontSize: 18,
@@ -673,6 +706,16 @@ const styles = StyleSheet.create({
   },
   draftPicker: {
     marginTop: 12,
+  },
+  draftCancelButton: {
+    marginTop: 8,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  draftCancelText: {
+    color: '#6b7280',
+    fontWeight: '600',
+    fontSize: 13,
   },
   label: {
     color: '#374151',

@@ -76,7 +76,7 @@ Rules:
 - Greeting by tone: professional or direct -> "Dear Mr./Ms. {last name}" when the first name makes the honorific obvious (couples: "Dear Mr. and Mrs. {last name}"), otherwise "Dear {First} {Last}". Friendly -> first name(s) only, and a natural common short form is fine (e.g. Frederick -> Fred).
 - If the owner is clearly a business, LLC, trust, or government entity, use a generic greeting ("Hello,") instead of guessing a person's name.
 - If no recipient name was given, use a generic respectful greeting.
-- Reference the actual property address naturally.
+- Reference the actual property address naturally. County records abbreviate street suffixes -- spell them out when writing the address (XING -> Crossing, CV -> Cove, TRL -> Trail, LN -> Lane, CT -> Court, PKWY -> Parkway, BLVD -> Boulevard, HWY -> Highway, ST -> Street, DR -> Drive, RD -> Road, AVE -> Avenue), and use normal capitalization ("1806 Rowan Crossing", never "1806 ROWAN XING").
 - Keep it under 150 words, no more than 2 short paragraphs.
 - Do NOT include a sign-off, closing, or signature block (no "Best regards," no agent name/brokerage/phone at the end) -- that gets appended separately, verbatim, after your response. End the body right after the last sentence of the message itself.
 - No markdown, no placeholders like [Owner Name] -- use the real values given above.
