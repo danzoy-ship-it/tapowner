@@ -23,6 +23,7 @@ import zipfile
 import fiona
 import psycopg2
 import psycopg2.extras
+from shapely import force_2d
 from shapely.geometry import shape, MultiPolygon
 
 S3_BASE = "https://tnris-data-warehouse.s3.us-east-1.amazonaws.com/LCD/collection"
@@ -128,7 +129,9 @@ def compute_is_absentee(situs_city, situs_state, mail_city, mail_state):
 def to_multipolygon_wkt(geom_geojson):
     if geom_geojson is None:
         return None
-    geom = shape(geom_geojson)
+    # Some counties (first seen: Erath 48143) ship PolygonZ -- the geom column
+    # is 2D, so drop any Z dimension before generating WKT.
+    geom = force_2d(shape(geom_geojson))
     if geom.geom_type == "Polygon":
         geom = MultiPolygon([geom])
     elif geom.geom_type != "MultiPolygon":
