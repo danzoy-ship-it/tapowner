@@ -105,7 +105,19 @@ def parse_source_date(raw):
         return None
 
 
+def to_num(v):
+    """Rural CADs put junk like '*' in numeric fields (first seen: Jones 48253).
+    Anything that doesn't parse as a number becomes NULL."""
+    if v is None or isinstance(v, (int, float)):
+        return v
+    try:
+        return float(str(v).strip())
+    except ValueError:
+        return None
+
+
 def parse_lot_size_sqft(area, unit):
+    area = to_num(area)
     if area is None:
         return None
     u = (unit or "").strip().lower()
@@ -209,9 +221,9 @@ def _load_rows_one(shp_path):
                 parse_source_date(p.get("DATE_ACQ")),
                 parse_year_built(p.get("YEAR_BUILT")),
                 parse_lot_size_sqft(p.get("GIS_AREA"), p.get("GIS_AREA_U")),
-                p.get("LAND_VALUE"),
-                p.get("IMP_VALUE"),
-                p.get("MKT_VALUE"),
+                to_num(p.get("LAND_VALUE")),
+                to_num(p.get("IMP_VALUE")),
+                to_num(p.get("MKT_VALUE")),
             )
 
 
