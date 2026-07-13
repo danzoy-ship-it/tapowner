@@ -16,6 +16,7 @@ import {
   UserLocation,
   VectorSource,
   type CameraRef,
+  type TrackUserLocation,
 } from '@maplibre/maplibre-react-native';
 import type { PressEventWithFeatures } from '@maplibre/maplibre-react-native';
 import {
@@ -57,6 +58,8 @@ export default function App() {
   const [searchText, setSearchText] = useState('');
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [trackUser, setTrackUser] = useState<TrackUserLocation | undefined>('default');
+  const [flyTarget, setFlyTarget] = useState<[number, number] | null>(null);
   const cameraRef = useRef<CameraRef>(null);
 
   useEffect(() => {
@@ -149,13 +152,31 @@ export default function App() {
     setSearchError(null);
     try {
       const result = await geocodeAddress(query);
-      cameraRef.current?.flyTo({ center: [result.lng, result.lat], zoom: 17, duration: 1200 });
+      // Location tracking fights programmatic camera moves (it snaps the
+      // camera back to the blue dot) -- turn it off before flying. The
+      // actual flyTo happens in the effect below, after the prop change
+      // has reached the native map.
+      setTrackUser(undefined);
+      setFlyTarget([result.lng, result.lat]);
       closeSheet();
     } catch (err) {
       setSearchError(err instanceof Error ? err.message : 'Address search failed');
     } finally {
       setSearching(false);
     }
+  }
+
+  useEffect(() => {
+    if (!flyTarget) return;
+    const timer = setTimeout(() => {
+      cameraRef.current?.flyTo({ center: flyTarget, zoom: 17, duration: 1200 });
+      setFlyTarget(null);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [flyTarget]);
+
+  function handleRecenter() {
+    setTrackUser('default');
   }
 
   if (authState === 'checking') {
@@ -196,7 +217,14 @@ export default function App() {
   return (
     <View style={styles.container}>
       <Map style={styles.map} mapStyle={OPENFREEMAP_STYLE}>
-        <Camera ref={cameraRef} trackUserLocation="default" initialViewState={{ zoom: 17 }} />
+        <Camera
+          ref={cameraRef}
+          trackUserLocation={trackUser}
+          onTrackUserLocationChange={(e) =>
+            setTrackUser(e.nativeEvent.trackUserLocation ?? undefined)
+          }
+          initialViewState={{ zoom: 17 }}
+        />
         <UserLocation />
         <VectorSource
           id="parcels"
@@ -294,6 +322,12 @@ export default function App() {
           onUpgradeNeeded={() => setShowUpgrade(true)}
           onClose={closeSheet}
         />
+      )}
+
+      {!trackUser && selectedId === null && (
+        <TouchableOpacity style={styles.recenterButton} onPress={handleRecenter}>
+          <Text style={styles.recenterButtonText}>📍 My location</Text>
+        </TouchableOpacity>
       )}
 
       {showUpgrade && <UpgradeSheet config={config} onClose={() => setShowUpgrade(false)} />}
@@ -407,5 +441,24 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 4,
+  },
+  recenterButton: {
+    position: 'absolute',
+    bottom: 40,
+    right: 16,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  recenterButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#374151',
   },
 });
