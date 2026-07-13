@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Keyboard,
   Share,
   StyleSheet,
   Text,
@@ -116,6 +117,7 @@ export function ParcelSheet({
   const [saveError, setSaveError] = useState<string | null>(null);
   const [contactsSaved, setContactsSaved] = useState(false);
   const [contactsError, setContactsError] = useState<string | null>(null);
+  const [showAllPhones, setShowAllPhones] = useState(false);
 
   useEffect(() => {
     setTraceState('idle');
@@ -131,6 +133,7 @@ export function ParcelSheet({
     setSaveError(null);
     setContactsSaved(false);
     setContactsError(null);
+    setShowAllPhones(false);
   }, [detail?.id]);
 
   async function handleTracePress() {
@@ -183,6 +186,7 @@ export function ParcelSheet({
 
   async function handleSaveProperty() {
     if (!token || !detail) return;
+    Keyboard.dismiss();
     setSaveState('saving');
     setSaveError(null);
     try {
@@ -327,11 +331,16 @@ export function ParcelSheet({
               {traceResult.freeReview && (
                 <Text style={styles.freeReviewText}>Already unlocked — no charge</Text>
               )}
-              {traceResult.phones.map((phone) => (
+              {(showAllPhones ? traceResult.phones : traceResult.phones.slice(0, 2)).map((phone) => (
                 <View key={phone.number} style={styles.contactRow}>
                   <Text style={styles.contactValue}>{phone.number}</Text>
                   <View style={styles.badgeRow}>
                     <Text style={styles.contactMeta}>{phone.type}</Text>
+                    {phone.reachable && (
+                      <View style={[styles.badge, styles.badgeVerified]}>
+                        <Text style={styles.badgeText}>Verified</Text>
+                      </View>
+                    )}
                     {phone.dnc && (
                       <View style={[styles.badge, styles.badgeDnc]}>
                         <Text style={styles.badgeText}>DNC</Text>
@@ -345,6 +354,15 @@ export function ParcelSheet({
                   </View>
                 </View>
               ))}
+              {traceResult.phones.length > 2 && (
+                <TouchableOpacity onPress={() => setShowAllPhones(!showAllPhones)}>
+                  <Text style={styles.showMoreText}>
+                    {showAllPhones
+                      ? 'Show fewer numbers'
+                      : `Show ${traceResult.phones.length - 2} more numbers`}
+                  </Text>
+                </TouchableOpacity>
+              )}
               {traceResult.emails.map((email) => (
                 <View key={email.email} style={styles.contactRow}>
                   <Text style={styles.contactValue}>{email.email}</Text>
@@ -632,6 +650,15 @@ const styles = StyleSheet.create({
   },
   badgeTcpa: {
     backgroundColor: '#fef3c7',
+  },
+  badgeVerified: {
+    backgroundColor: '#dcfce7',
+  },
+  showMoreText: {
+    color: '#2563eb',
+    fontWeight: '600',
+    fontSize: 13,
+    paddingVertical: 6,
   },
   draftButton: {
     marginTop: 12,

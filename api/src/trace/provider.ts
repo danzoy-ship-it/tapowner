@@ -4,6 +4,10 @@ export interface TracePhone {
     carrier?: string;
     dnc: boolean;
     tcpa: boolean;
+    /** Vendor's own confidence ordering -- 1 is best. */
+    rank?: number;
+    reachable?: boolean;
+    tested?: boolean;
 }
 
 export interface TraceEmail {

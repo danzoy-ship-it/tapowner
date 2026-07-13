@@ -9,7 +9,16 @@ const ENDPOINT = "https://api.batchdata.com/api/v3/property/skip-trace";
 interface BatchDataV3Person {
     propertyOwner?: boolean;
     name?: { full?: string };
-    phones?: Array<{ number: string; type?: string; carrier?: string; dnc?: boolean; tcpa?: boolean }>;
+    phones?: Array<{
+        number: string;
+        type?: string;
+        carrier?: string;
+        dnc?: boolean;
+        tcpa?: boolean;
+        rank?: number;
+        reachable?: boolean;
+        tested?: boolean;
+    }>;
     emails?: Array<{ email: string }>;
 }
 
@@ -75,7 +84,23 @@ export class BatchDataProvider implements TraceProvider {
                 ...(p.carrier ? { carrier: p.carrier } : {}),
                 dnc: p.dnc ?? false,
                 tcpa: p.tcpa ?? false,
-            }));
+                ...(p.rank !== undefined ? { rank: p.rank } : {}),
+                ...(p.reachable !== undefined ? { reachable: p.reachable } : {}),
+                ...(p.tested !== undefined ? { tested: p.tested } : {}),
+            }))
+            // Best numbers first: vendor-verified reachable ones, then by the
+            // vendor's own rank, mobile over landline as the tiebreak.
+            .sort((a, b) => {
+                const reachA = a.reachable === true ? 0 : 1;
+                const reachB = b.reachable === true ? 0 : 1;
+                if (reachA !== reachB) return reachA - reachB;
+                const rankA = a.rank ?? 99;
+                const rankB = b.rank ?? 99;
+                if (rankA !== rankB) return rankA - rankB;
+                const mobA = a.type === "Mobile" ? 0 : 1;
+                const mobB = b.type === "Mobile" ? 0 : 1;
+                return mobA - mobB;
+            });
 
         const emailSeen = new Set<string>();
         const emails = persons

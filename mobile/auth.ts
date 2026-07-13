@@ -1,5 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
-import { API_BASE } from './api';
+import { API_BASE, timedFetch } from './api';
 
 const TOKEN_KEY = 'tapowner_session_token';
 
@@ -16,7 +16,7 @@ export async function clearToken(): Promise<void> {
 }
 
 export async function requestOtp(email: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/auth/otp/request`, {
+  const res = await timedFetch(`${API_BASE}/auth/otp/request`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email }),
@@ -28,7 +28,7 @@ export async function requestOtp(email: string): Promise<void> {
 }
 
 export async function verifyOtp(email: string, code: string): Promise<string> {
-  const res = await fetch(`${API_BASE}/auth/otp/verify`, {
+  const res = await timedFetch(`${API_BASE}/auth/otp/verify`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, code }),
@@ -52,7 +52,7 @@ export interface Me {
 }
 
 export async function fetchMe(token: string): Promise<Me | null> {
-  const res = await fetch(`${API_BASE}/me`, {
+  const res = await timedFetch(`${API_BASE}/me`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) {

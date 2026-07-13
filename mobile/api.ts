@@ -1,6 +1,23 @@
 // TODO(Phase 9): move to the config service once it exists.
 export const API_BASE = 'https://api-production-7d11.up.railway.app';
 
+// A hung connection (server restart, dead Wi-Fi) must fail visibly, never
+// leave a spinner frozen forever.
+export async function timedFetch(url: string, init?: RequestInit, timeoutMs = 15000): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new Error('Request timed out — check your connection and try again');
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export interface ParcelDetail {
   id: number;
   apn: string | null;
@@ -78,7 +95,7 @@ export const FALLBACK_CONFIG: AppConfig = {
 };
 
 export async function fetchConfig(): Promise<AppConfig> {
-  const res = await fetch(`${API_BASE}/config`);
+  const res = await timedFetch(`${API_BASE}/config`);
   if (!res.ok) {
     throw new Error(`Config fetch failed: ${res.status}`);
   }
@@ -96,7 +113,7 @@ export interface GeocodeResult {
 }
 
 export async function geocodeAddress(address: string): Promise<GeocodeResult> {
-  const res = await fetch(`${API_BASE}/geocode?address=${encodeURIComponent(address)}`);
+  const res = await timedFetch(`${API_BASE}/geocode?address=${encodeURIComponent(address)}`);
   const body = await res.json();
   if (!res.ok) {
     throw new Error(body.error ?? 'Address search failed');
@@ -105,7 +122,7 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult> {
 }
 
 export async function fetchParcelAt(lat: number, lng: number): Promise<ParcelDetail | null> {
-  const res = await fetch(`${API_BASE}/parcels/at?lat=${lat}&lng=${lng}`);
+  const res = await timedFetch(`${API_BASE}/parcels/at?lat=${lat}&lng=${lng}`);
   if (res.status === 404) {
     return null;
   }
@@ -121,6 +138,9 @@ export interface TracePhone {
   carrier?: string;
   dnc: boolean;
   tcpa: boolean;
+  rank?: number;
+  reachable?: boolean;
+  tested?: boolean;
 }
 
 export interface TraceEmail {
@@ -137,7 +157,7 @@ export interface TraceResponse {
 }
 
 export async function traceParcel(token: string, parcelId: number): Promise<TraceResponse> {
-  const res = await fetch(`${API_BASE}/trace/${parcelId}`, {
+  const res = await timedFetch(`${API_BASE}/trace/${parcelId}`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -164,7 +184,7 @@ export async function draftEmail(
   templateId: string,
   tone: string
 ): Promise<DraftResponse> {
-  const res = await fetch(`${API_BASE}/draft`, {
+  const res = await timedFetch(`${API_BASE}/draft`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ parcel_id: parcelId, template_id: templateId, tone }),
@@ -180,7 +200,7 @@ export async function updateAgentProfile(
   token: string,
   profile: { name: string; brokerage: string; phone: string }
 ): Promise<void> {
-  const res = await fetch(`${API_BASE}/me/profile`, {
+  const res = await timedFetch(`${API_BASE}/me/profile`, {
     method: 'PUT',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(profile),
@@ -241,7 +261,7 @@ export async function saveProperty(
   parcelId: number,
   note?: string
 ): Promise<SavedPropertySummary> {
-  const res = await fetch(`${API_BASE}/saved-properties`, {
+  const res = await timedFetch(`${API_BASE}/saved-properties`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ parcel_id: parcelId, note }),
@@ -256,12 +276,12 @@ export async function listSavedProperties(
   const url = status
     ? `${API_BASE}/saved-properties?status=${status}`
     : `${API_BASE}/saved-properties`;
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  const res = await timedFetch(url, { headers: { Authorization: `Bearer ${token}` } });
   return handleJson(res);
 }
 
 export async function getSavedProperty(token: string, id: number): Promise<SavedPropertyDetail> {
-  const res = await fetch(`${API_BASE}/saved-properties/${id}`, {
+  const res = await timedFetch(`${API_BASE}/saved-properties/${id}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return handleJson(res);
@@ -272,7 +292,7 @@ export async function updateSavedPropertyStatus(
   id: number,
   status: SavedPropertyStatus
 ): Promise<SavedPropertySummary> {
-  const res = await fetch(`${API_BASE}/saved-properties/${id}`, {
+  const res = await timedFetch(`${API_BASE}/saved-properties/${id}`, {
     method: 'PATCH',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ status }),
@@ -285,7 +305,7 @@ export async function addSavedPropertyNote(
   id: number,
   body: string
 ): Promise<SavedPropertyNote> {
-  const res = await fetch(`${API_BASE}/saved-properties/${id}/notes`, {
+  const res = await timedFetch(`${API_BASE}/saved-properties/${id}/notes`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ body }),

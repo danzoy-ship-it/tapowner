@@ -81,6 +81,7 @@ Rules:
 - Do NOT include a sign-off, closing, or signature block (no "Best regards," no agent name/brokerage/phone at the end) -- that gets appended separately, verbatim, after your response. End the body right after the last sentence of the message itself.
 - No markdown, no placeholders like [Owner Name] -- use the real values given above.
 - Do not fabricate property facts beyond what's given above.
+- If the property details above are sparse (or say "no additional details available"), do NOT stretch or pad them -- no vague filler like "strong foundation" or "great bones." Skip property specifics entirely and write about the location, the neighborhood, and the reason for reaching out instead. A shorter, specific email beats a longer padded one.
 
 Respond with ONLY a JSON object of the exact shape {"subject": "...", "body": "..."} and nothing else -- no code fences, no commentary.`;
 }
