@@ -313,11 +313,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#fff',
   },
-  ctaButtonSubtext: {
-    fontSize: 12,
-    color: '#9ca3af',
-    marginTop: 2,
-  },
   traceErrorText: {
     marginTop: 16,
     color: '#b91c1c',
