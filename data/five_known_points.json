@@ -1,0 +1,52 @@
+[
+ {
+  "county_fips": "48029",
+  "county_name": "BEXAR",
+  "id": 197374,
+  "apn": "00530-014-0030",
+  "owner_name": "MCNEAL WILLIE M  ETAL",
+  "situs_address": "504  LAMAR , SAN ANTONIO, TX 78202",
+  "lng": -98.47295134457289,
+  "lat": 29.431153459493085
+ },
+ {
+  "county_fips": "48113",
+  "county_name": "DALLAS",
+  "id": 2430556,
+  "apn": null,
+  "owner_name": "SAM JOE VILAYIL &",
+  "situs_address": "1218  CREEKWOOD DR   ,GARLAND (DALLAS CO), TX 750442420",
+  "lng": -96.64586841934138,
+  "lat": 32.98400408000006
+ },
+ {
+  "county_fips": "48201",
+  "county_name": "HARRIS",
+  "id": 906915,
+  "apn": null,
+  "owner_name": "GREIF BROS COOPERAGE CORP",
+  "situs_address": "10700 STRANG RD, LA PORTE, TX 77571",
+  "lng": -95.06423458283136,
+  "lat": 29.700750113000055
+ },
+ {
+  "county_fips": "48439",
+  "county_name": "TARRANT",
+  "id": 4709489,
+  "apn": null,
+  "owner_name": "FORT WORTH CITY OF",
+  "situs_address": "117 E BELKNAP ST",
+  "lng": -97.3329291202606,
+  "lat": 32.75830050500005
+ },
+ {
+  "county_fips": "48453",
+  "county_name": "TRAVIS",
+  "id": 3880716,
+  "apn": "102050151",
+  "owner_name": "NORTH STREET DESIGN BUILD LLC",
+  "situs_address": ", TX 78704",
+  "lng": -97.77028116479408,
+  "lat": 30.25570923743037
+ }
+]
