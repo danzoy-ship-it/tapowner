@@ -35,6 +35,12 @@ data/tmp/
 *.prj
 *.zip
 
+# real people's names/addresses/skip-trace data — never commit, even though
+# the source data is public record (county records ≠ appropriate for a
+# public GitHub repo). Aggregate reports with no PII are fine to commit.
+data/bakeoff_*_addresses.json
+data/bakeoff_results_*.json
+
 # misc
 .DS_Store
 *.log
