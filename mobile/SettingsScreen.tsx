@@ -15,11 +15,13 @@ import type { Me } from './auth';
 export function SettingsScreen({
   token,
   me,
+  notice,
   onClose,
   onSaved,
 }: {
   token: string;
   me: Me;
+  notice?: string;
   onClose: () => void;
   onSaved: (profile: { name: string; brokerage: string; phone: string }) => void;
 }) {
@@ -86,6 +88,11 @@ export function SettingsScreen({
         <TouchableOpacity style={styles.button} onPress={handleSave} disabled={saving || !name.trim()}>
           {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Save</Text>}
         </TouchableOpacity>
+
+        <Text style={styles.legalText}>
+          Terms of Service and Privacy Policy: tapowner.com/terms · tapowner.com/privacy
+        </Text>
+        {!!notice && <Text style={styles.legalText}>{notice}</Text>}
       </KeyboardAvoidingView>
     </View>
   );
@@ -157,5 +164,11 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
     fontSize: 16,
+  },
+  legalText: {
+    marginTop: 14,
+    fontSize: 11,
+    color: '#9ca3af',
+    textAlign: 'center',
   },
 });

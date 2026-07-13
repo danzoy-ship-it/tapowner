@@ -18,6 +18,7 @@ import {
   formatCents,
   saveProperty,
   traceParcel,
+  trackEvent,
   type AppConfig,
   type ParcelDetail,
   type TraceResponse,
@@ -229,6 +230,7 @@ export function ParcelSheet({
         { isNew: true }
       );
       setContactsSaved(true);
+      if (token) trackEvent(token, 'contact_saved', { parcel_id: detail.id });
     } catch (err) {
       setContactsError(err instanceof Error ? err.message : 'Failed to save contact');
     }

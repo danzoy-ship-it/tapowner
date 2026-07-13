@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import { pool } from "../db.js";
 import { getStripe } from "../lib/stripe.js";
 import { getProductConfig } from "../lib/config.js";
+import { logEvent } from "../lib/events.js";
 
 const REFERRAL_COUPON_ID = "user-referral-free-month";
 
@@ -79,6 +80,9 @@ async function handleCheckoutCompleted(stripe: Stripe, session: Stripe.Checkout.
 
     const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
     await upsertSubscriptionFromStripe(userId, session.customer as string, subscription);
+    await logEvent(userId, "signup_completed", {
+        tier: tierForPriceId(subscription.items.data[0]?.price.id) ?? "closer",
+    });
 
     const partnerId = session.metadata?.referral_partner_id;
     if (partnerId) {
@@ -93,12 +97,21 @@ async function handleCheckoutCompleted(stripe: Stripe, session: Stripe.Checkout.
 
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     const { rows } = await pool.query(
-        `SELECT user_id FROM subscriptions WHERE stripe_subscription_id = $1`,
+        `SELECT user_id, status, tier FROM subscriptions WHERE stripe_subscription_id = $1`,
         [subscription.id]
     );
-    const userId = rows[0]?.user_id;
+    const prior = rows[0];
+    const userId = prior?.user_id;
     if (!userId) return;
     await upsertSubscriptionFromStripe(userId, subscription.customer as string, subscription);
+
+    const newTier = tierForPriceId(subscription.items.data[0]?.price.id) ?? "closer";
+    if (prior.status === "trialing" && subscription.status === "active") {
+        await logEvent(userId, "trial_converted", { tier: newTier });
+    }
+    if (prior.tier === "prospector" && newTier === "closer") {
+        await logEvent(userId, "upgrade_prospector_to_closer", {});
+    }
 }
 
 // Credits `partnerUserId`'s own Stripe customer balance by the value of one
@@ -244,6 +257,10 @@ export async function billingRoutes(app: FastifyInstance) {
             if (!email) {
                 return reply.code(400).send({ error: "email is required" });
             }
+
+            // The users row doesn't exist until the checkout webhook fires,
+            // so the funnel start is keyed by email only.
+            await logEvent(null, "signup_started", { email });
 
             const config = await getProductConfig();
             const trialDays = config.trial_days ?? 30;

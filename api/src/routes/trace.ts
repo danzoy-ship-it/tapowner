@@ -11,6 +11,7 @@ import {
     isSubscriptionUsable,
     type SubscriptionRow as Subscription,
 } from "../lib/entitlements.js";
+import { logEvent } from "../lib/events.js";
 
 async function chargeForTrace(
     stripe: Stripe,
@@ -132,6 +133,7 @@ export async function traceRoutes(app: FastifyInstance) {
             });
 
             if (!result.matched) {
+                await logEvent(session.userId, "trace_no_match", { parcel_id: parcelId });
                 return reply.send({
                     matched: false,
                     phones: [],
@@ -164,6 +166,12 @@ export async function traceRoutes(app: FastifyInstance) {
             [session.userId, parcelId, traceResultId, chargedCents, chargedVia]
         );
 
+        await logEvent(session.userId, "trace_purchased", {
+            parcel_id: parcelId,
+            charged_via: chargedVia,
+            charged_cents: chargedCents,
+            vendor_called: vendorCalled,
+        });
         app.log.info({ parcelId, userId: session.userId, vendorCalled, chargedVia }, "trace completed");
 
         return reply.send({ matched: true, ...payload, matchQuality });

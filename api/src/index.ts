@@ -12,6 +12,7 @@ import { draftRoutes } from "./routes/draft.js";
 import { savedPropertiesRoutes } from "./routes/savedProperties.js";
 import { geocodeRoutes } from "./routes/geocode.js";
 import { configRoutes } from "./routes/config.js";
+import { eventsRoutes } from "./routes/events.js";
 import { createEmailProvider } from "./email/index.js";
 import { startTrialReminderJob } from "./jobs/trialReminder.js";
 
@@ -54,6 +55,7 @@ await app.register(draftRoutes);
 await app.register(savedPropertiesRoutes);
 await app.register(geocodeRoutes);
 await app.register(configRoutes);
+await app.register(eventsRoutes);
 
 startTrialReminderJob(createEmailProvider(app.log), app.log);
 

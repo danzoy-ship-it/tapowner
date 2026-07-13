@@ -65,6 +65,7 @@ export interface AppConfig {
     rate_limit_per_day: number;
   };
   manage_plan_url_text: string;
+  data_broker_notice?: string;
 }
 
 export const FALLBACK_CONFIG: AppConfig = {
@@ -92,6 +93,7 @@ export const FALLBACK_CONFIG: AppConfig = {
     rate_limit_per_day: 30,
   },
   manage_plan_url_text: 'Manage your plan at tapowner.com',
+  data_broker_notice: '',
 };
 
 export async function fetchConfig(): Promise<AppConfig> {
@@ -104,6 +106,15 @@ export async function fetchConfig(): Promise<AppConfig> {
 
 export function formatCents(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`;
+}
+
+export function trackEvent(token: string, name: string, props: Record<string, unknown> = {}): void {
+  // Fire-and-forget -- metrics must never block or break the UI.
+  timedFetch(`${API_BASE}/events`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, props }),
+  }).catch(() => {});
 }
 
 export interface GeocodeResult {

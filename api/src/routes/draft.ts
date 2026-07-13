@@ -89,7 +89,7 @@ export async function draftRoutes(app: FastifyInstance) {
             const dailyLimit = config.draft_rate_limit_per_day ?? 30;
             const { rows: countRows } = await pool.query(
                 `SELECT count(*) FROM events
-                 WHERE user_id = $1 AND name = 'draft_generated' AND created_at > now() - interval '1 day'`,
+                 WHERE user_id = $1 AND name = 'draft_created' AND created_at > now() - interval '1 day'`,
                 [session.userId]
             );
             if (Number(countRows[0].count) >= dailyLimit) {
@@ -176,7 +176,7 @@ export async function draftRoutes(app: FastifyInstance) {
             const outputPrice = config.draft_output_price_per_mtok ?? 5.0;
             const costUsd = (inputTokens / 1_000_000) * inputPrice + (outputTokens / 1_000_000) * outputPrice;
 
-            await pool.query(`INSERT INTO events (user_id, name, props) VALUES ($1, 'draft_generated', $2)`, [
+            await pool.query(`INSERT INTO events (user_id, name, props) VALUES ($1, 'draft_created', $2)`, [
                 session.userId,
                 JSON.stringify({
                     parcel_id: parcelId,

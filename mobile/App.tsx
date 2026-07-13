@@ -26,6 +26,7 @@ import {
   fetchConfig,
   fetchParcelAt,
   geocodeAddress,
+  trackEvent,
   type AppConfig,
   type ParcelDetail,
 } from './api';
@@ -90,6 +91,7 @@ export default function App() {
         setToken(storedToken);
         setMe(result);
         setAuthState('loggedIn');
+        trackEvent(storedToken, 'app_open');
       } else {
         await clearToken();
         setAuthState('loggedOut');
@@ -103,6 +105,7 @@ export default function App() {
     setToken(newToken);
     setMe(result);
     setAuthState('loggedIn');
+    trackEvent(newToken, 'app_open');
   }
 
   async function handleLogout() {
@@ -341,6 +344,7 @@ export default function App() {
         <SettingsScreen
           token={token!}
           me={me}
+          notice={config.data_broker_notice}
           onClose={() => setShowSettings(false)}
           onSaved={(profile) => setMe({ ...me, agent_profile: profile })}
         />

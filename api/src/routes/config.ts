@@ -21,6 +21,11 @@ function buildPayload(config: Record<string, any>): Record<string, unknown> {
             rate_limit_per_day: config.draft_rate_limit_per_day ?? 30,
         },
         manage_plan_url_text: "Manage your plan at tapowner.com",
+        // Texas Data Broker Act conspicuous-notice slot (compliance appendix
+        // item 3): empty until registration; the SOS-prescribed text goes into
+        // products.config.data_broker_notice and appears on web + app with no
+        // code change.
+        data_broker_notice: config.data_broker_notice ?? "",
     };
     const version = createHash("sha256").update(JSON.stringify(payload)).digest("hex").slice(0, 12);
     return { version, ...payload };
