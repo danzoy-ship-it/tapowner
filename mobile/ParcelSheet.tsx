@@ -1,14 +1,40 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Share,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import * as MailComposer from 'expo-mail-composer';
+import * as Contacts from 'expo-contacts';
+import { File, Paths } from 'expo-file-system';
 import {
   DRAFT_TEMPLATES,
   DRAFT_TONES,
   draftEmail,
+  saveProperty,
   traceParcel,
   type ParcelDetail,
   type TraceResponse,
 } from './api';
+
+function buildVCard(detail: ParcelDetail, trace: TraceResponse): string {
+  const lines = ['BEGIN:VCARD', 'VERSION:3.0', `FN:${detail.owner_name ?? 'Property Owner'}`];
+  if (detail.situs_address) {
+    lines.push(`ADR;TYPE=home:;;${detail.situs_address};;;;`);
+  }
+  for (const phone of trace.phones) {
+    lines.push(`TEL;TYPE=${phone.type === 'Mobile' ? 'CELL' : 'HOME'}:${phone.number}`);
+  }
+  for (const email of trace.emails) {
+    lines.push(`EMAIL:${email.email}`);
+  }
+  lines.push('END:VCARD');
+  return lines.join('\r\n');
+}
 
 function formatNumber(value: string | number | null): string | null {
   if (value === null) return null;
@@ -56,6 +82,7 @@ function Row({ label, value }: { label: string; value: string }) {
 
 type TraceState = 'idle' | 'loading' | 'done' | 'error';
 type DraftState = 'idle' | 'picking' | 'generating' | 'error';
+type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 
 export function ParcelSheet({
   loading,
@@ -79,6 +106,12 @@ export function ParcelSheet({
   const [toneId, setToneId] = useState<string>('professional');
   const [draftError, setDraftError] = useState<string | null>(null);
 
+  const [saveState, setSaveState] = useState<SaveState>('idle');
+  const [saveNote, setSaveNote] = useState('');
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [contactsSaved, setContactsSaved] = useState(false);
+  const [contactsError, setContactsError] = useState<string | null>(null);
+
   useEffect(() => {
     setTraceState('idle');
     setTraceResult(null);
@@ -87,6 +120,11 @@ export function ParcelSheet({
     setTemplateId(null);
     setToneId('professional');
     setDraftError(null);
+    setSaveState('idle');
+    setSaveNote('');
+    setSaveError(null);
+    setContactsSaved(false);
+    setContactsError(null);
   }, [detail?.id]);
 
   async function handleTracePress() {
@@ -128,6 +166,54 @@ export function ParcelSheet({
       setDraftState('error');
     }
   }
+
+  async function handleSaveProperty() {
+    if (!token || !detail) return;
+    setSaveState('saving');
+    setSaveError(null);
+    try {
+      await saveProperty(token, detail.id, saveNote.trim() || undefined);
+      setSaveState('saved');
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Save failed');
+      setSaveState('error');
+    }
+  }
+
+  async function handleSaveToContacts() {
+    if (!detail || !traceResult?.matched) return;
+    setContactsError(null);
+    try {
+      const { status } = await Contacts.requestPermissionsAsync();
+      if (status !== 'granted') {
+        setContactsError('Contacts permission denied.');
+        return;
+      }
+      const ownerName = detail.owner_name ?? 'Property Owner';
+      await Contacts.addContactAsync({
+        contactType: Contacts.ContactTypes.Person,
+        name: ownerName,
+        firstName: ownerName,
+        company: [detail.situs_address, saveNote.trim()].filter(Boolean).join(' — '),
+        phoneNumbers: traceResult.phones.map((p) => ({ label: p.type || 'mobile', number: p.number })),
+        emails: traceResult.emails.map((e) => ({ label: 'home', email: e.email })),
+      });
+      setContactsSaved(true);
+    } catch (err) {
+      setContactsError(err instanceof Error ? err.message : 'Failed to save contact');
+    }
+  }
+
+  async function handleExportVCard() {
+    if (!detail || !traceResult?.matched) return;
+    const vcard = buildVCard(detail, traceResult);
+    const safeName = (detail.owner_name ?? 'contact').replace(/[^a-z0-9]+/gi, '_');
+    const file = new File(Paths.cache, `${safeName}.vcf`);
+    file.create({ overwrite: true });
+    file.write(vcard);
+    await Share.share({ url: file.uri });
+  }
+
   return (
     <View style={styles.sheet}>
       <View style={styles.handle} />
@@ -308,6 +394,55 @@ export function ParcelSheet({
                   </TouchableOpacity>
                 </View>
               )}
+
+              <View style={styles.saveSection}>
+                {saveState !== 'saved' && (
+                  <TextInput
+                    style={styles.noteInput}
+                    placeholder="Add a note (optional)"
+                    value={saveNote}
+                    onChangeText={setSaveNote}
+                  />
+                )}
+
+                {tier === 'closer' && saveState !== 'saved' && (
+                  <TouchableOpacity
+                    style={styles.saveButton}
+                    onPress={handleSaveProperty}
+                    disabled={saveState === 'saving'}
+                  >
+                    {saveState === 'saving' ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Text style={styles.saveButtonText}>Save Property</Text>
+                    )}
+                  </TouchableOpacity>
+                )}
+                {tier !== 'closer' && (
+                  <Text style={styles.draftLockedText}>
+                    Saving properties is available on the Closer plan
+                  </Text>
+                )}
+                {saveState === 'saved' && <Text style={styles.savedText}>Saved ✓</Text>}
+                {saveState === 'error' && <Text style={styles.traceErrorText}>{saveError}</Text>}
+
+                {tier === 'closer' && (
+                  <TouchableOpacity
+                    style={styles.secondaryButton}
+                    onPress={handleSaveToContacts}
+                    disabled={contactsSaved}
+                  >
+                    <Text style={styles.secondaryButtonText}>
+                      {contactsSaved ? 'Added to Contacts ✓' : 'Save to Contacts'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                {contactsError && <Text style={styles.traceErrorText}>{contactsError}</Text>}
+
+                <TouchableOpacity style={styles.secondaryButton} onPress={handleExportVCard}>
+                  <Text style={styles.secondaryButtonText}>Export Contact (vCard)</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           )}
         </>
@@ -506,5 +641,42 @@ const styles = StyleSheet.create({
   },
   pickerChipTextSelected: {
     color: '#fff',
+  },
+  saveSection: {
+    marginTop: 16,
+    gap: 8,
+  },
+  noteInput: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  saveButton: {
+    backgroundColor: '#2563eb',
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  savedText: {
+    color: '#16a34a',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  secondaryButton: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  secondaryButtonText: {
+    color: '#374151',
+    fontWeight: '600',
   },
 });

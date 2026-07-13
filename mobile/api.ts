@@ -135,3 +135,105 @@ export async function updateAgentProfile(
     throw new Error(body.error ?? 'Failed to save profile');
   }
 }
+
+export const SAVED_PROPERTY_STATUSES = [
+  { id: 'new', label: 'New' },
+  { id: 'contacted', label: 'Contacted' },
+  { id: 'follow_up', label: 'Follow-up' },
+  { id: 'appointment', label: 'Appointment' },
+  { id: 'listed', label: 'Listed' },
+  { id: 'dead', label: 'Dead' },
+] as const;
+
+export type SavedPropertyStatus = (typeof SAVED_PROPERTY_STATUSES)[number]['id'];
+
+export interface SavedPropertySummary {
+  id: number;
+  parcel_id: number;
+  status: SavedPropertyStatus;
+  created_at: string;
+  owner_name: string | null;
+  situs_address: string | null;
+  situs_city: string | null;
+  situs_state: string | null;
+  situs_zip: string | null;
+  is_absentee: boolean | null;
+  is_protected: boolean;
+  note_count: string;
+  latest_note: string | null;
+}
+
+export interface SavedPropertyNote {
+  id: number;
+  body: string;
+  created_at: string;
+}
+
+export interface SavedPropertyDetail extends Omit<SavedPropertySummary, 'note_count' | 'latest_note'> {
+  notes: SavedPropertyNote[];
+}
+
+async function handleJson<T>(res: Response): Promise<T> {
+  const body = await res.json();
+  if (!res.ok) {
+    throw new Error(body.error ?? 'Request failed');
+  }
+  return body;
+}
+
+export async function saveProperty(
+  token: string,
+  parcelId: number,
+  note?: string
+): Promise<SavedPropertySummary> {
+  const res = await fetch(`${API_BASE}/saved-properties`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ parcel_id: parcelId, note }),
+  });
+  return handleJson(res);
+}
+
+export async function listSavedProperties(
+  token: string,
+  status?: SavedPropertyStatus
+): Promise<SavedPropertySummary[]> {
+  const url = status
+    ? `${API_BASE}/saved-properties?status=${status}`
+    : `${API_BASE}/saved-properties`;
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  return handleJson(res);
+}
+
+export async function getSavedProperty(token: string, id: number): Promise<SavedPropertyDetail> {
+  const res = await fetch(`${API_BASE}/saved-properties/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return handleJson(res);
+}
+
+export async function updateSavedPropertyStatus(
+  token: string,
+  id: number,
+  status: SavedPropertyStatus
+): Promise<SavedPropertySummary> {
+  const res = await fetch(`${API_BASE}/saved-properties/${id}`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  });
+  return handleJson(res);
+}
+
+export async function addSavedPropertyNote(
+  token: string,
+  id: number,
+  body: string
+): Promise<SavedPropertyNote> {
+  const res = await fetch(`${API_BASE}/saved-properties/${id}/notes`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ body }),
+  });
+  return handleJson(res);
+}

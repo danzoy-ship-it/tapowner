@@ -14,6 +14,7 @@ import { API_BASE, fetchParcelAt, type ParcelDetail } from './api';
 import { ParcelSheet } from './ParcelSheet';
 import { LoginScreen } from './LoginScreen';
 import { SettingsScreen } from './SettingsScreen';
+import { SavedPropertiesScreen } from './SavedPropertiesScreen';
 import { clearToken, fetchMe, getStoredToken, storeToken, type Me } from './auth';
 
 const OPENFREEMAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
@@ -32,6 +33,7 @@ export default function App() {
   const [parcelDetail, setParcelDetail] = useState<ParcelDetail | null>(null);
   const [loadingParcel, setLoadingParcel] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showSaved, setShowSaved] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -166,6 +168,9 @@ export default function App() {
           {me?.email} · {me?.tier ?? 'no plan'}
         </Text>
         <View style={styles.accountActions}>
+          <TouchableOpacity onPress={() => setShowSaved(true)}>
+            <Text style={styles.settingsText}>Saved</Text>
+          </TouchableOpacity>
           <TouchableOpacity onPress={() => setShowSettings(true)}>
             <Text style={styles.settingsText}>Settings</Text>
           </TouchableOpacity>
@@ -192,6 +197,10 @@ export default function App() {
           onClose={() => setShowSettings(false)}
           onSaved={(profile) => setMe({ ...me, agent_profile: profile })}
         />
+      )}
+
+      {showSaved && token && (
+        <SavedPropertiesScreen token={token} onClose={() => setShowSaved(false)} />
       )}
     </View>
   );

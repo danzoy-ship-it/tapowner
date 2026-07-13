@@ -38,7 +38,13 @@
         }
       ],
       "expo-secure-store",
-      "expo-mail-composer"
+      "expo-mail-composer",
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "TapOwner saves property owners to your contacts when you choose."
+        }
+      ]
     ],
     "extra": {
       "eas": {
