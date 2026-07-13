@@ -37,6 +37,14 @@
           "locationWhenInUsePermission": "TapOwner uses your location to show properties around you."
         }
       ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 260,
+          "backgroundColor": "#ffffff"
+        }
+      ],
       "expo-secure-store",
       "expo-mail-composer",
       [
