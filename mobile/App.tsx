@@ -225,7 +225,7 @@ export default function App() {
           onTrackUserLocationChange={(e) =>
             setTrackUser(e.nativeEvent.trackUserLocation ?? undefined)
           }
-          initialViewState={{ center: [-98.49, 29.42], zoom: 10 }}
+          initialViewState={{ center: [-98.49, 29.42], zoom: 17 }}
         />
         <UserLocation />
         <VectorSource
