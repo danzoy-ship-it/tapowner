@@ -8,6 +8,7 @@ import { meRoutes } from "./routes/me.js";
 import { billingRoutes } from "./routes/billing.js";
 import { partnersRoutes } from "./routes/partners.js";
 import { traceRoutes } from "./routes/trace.js";
+import { draftRoutes } from "./routes/draft.js";
 
 const app = Fastify({ logger: true });
 
@@ -44,6 +45,7 @@ await app.register(meRoutes);
 await app.register(billingRoutes);
 await app.register(partnersRoutes);
 await app.register(traceRoutes);
+await app.register(draftRoutes);
 
 const port = Number(process.env.PORT ?? 3000);
 const host = process.env.HOST ?? "0.0.0.0";

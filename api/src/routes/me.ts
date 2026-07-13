@@ -34,4 +34,26 @@ export async function meRoutes(app: FastifyInstance) {
             period_end: row.period_end,
         });
     });
+
+    app.put<{ Body: { name?: string; brokerage?: string; phone?: string } }>(
+        "/me/profile",
+        async (request, reply) => {
+            const session = await requireAuth(request, reply);
+            if (!session) return;
+
+            const name = request.body.name?.trim();
+            if (!name) {
+                return reply.code(400).send({ error: "name is required" });
+            }
+            const brokerage = request.body.brokerage?.trim() ?? null;
+            const phone = request.body.phone?.trim() ?? null;
+
+            const { rows } = await pool.query(
+                `UPDATE users SET agent_profile = $2 WHERE id = $1 RETURNING agent_profile`,
+                [session.userId, JSON.stringify({ name, brokerage, phone })]
+            );
+
+            return reply.send({ agent_profile: rows[0].agent_profile });
+        }
+    );
 }

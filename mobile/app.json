@@ -37,7 +37,8 @@
           "locationWhenInUsePermission": "TapOwner uses your location to show properties around you."
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-mail-composer"
     ],
     "extra": {
       "eas": {

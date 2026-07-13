@@ -13,6 +13,7 @@ import type { PressEventWithFeatures } from '@maplibre/maplibre-react-native';
 import { API_BASE, fetchParcelAt, type ParcelDetail } from './api';
 import { ParcelSheet } from './ParcelSheet';
 import { LoginScreen } from './LoginScreen';
+import { SettingsScreen } from './SettingsScreen';
 import { clearToken, fetchMe, getStoredToken, storeToken, type Me } from './auth';
 
 const OPENFREEMAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
@@ -30,6 +31,7 @@ export default function App() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [parcelDetail, setParcelDetail] = useState<ParcelDetail | null>(null);
   const [loadingParcel, setLoadingParcel] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -163,13 +165,33 @@ export default function App() {
         <Text style={styles.accountText}>
           {me?.email} · {me?.tier ?? 'no plan'}
         </Text>
-        <TouchableOpacity onPress={handleLogout}>
-          <Text style={styles.logoutText}>Log out</Text>
-        </TouchableOpacity>
+        <View style={styles.accountActions}>
+          <TouchableOpacity onPress={() => setShowSettings(true)}>
+            <Text style={styles.settingsText}>Settings</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleLogout}>
+            <Text style={styles.logoutText}>Log out</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {selectedId !== null && (
-        <ParcelSheet loading={loadingParcel} detail={parcelDetail} token={token} onClose={closeSheet} />
+        <ParcelSheet
+          loading={loadingParcel}
+          detail={parcelDetail}
+          token={token}
+          tier={me?.tier ?? null}
+          onClose={closeSheet}
+        />
+      )}
+
+      {showSettings && me && (
+        <SettingsScreen
+          token={token!}
+          me={me}
+          onClose={() => setShowSettings(false)}
+          onSaved={(profile) => setMe({ ...me, agent_profile: profile })}
+        />
       )}
     </View>
   );
@@ -212,6 +234,15 @@ const styles = StyleSheet.create({
   accountText: {
     fontSize: 13,
     color: '#374151',
+  },
+  accountActions: {
+    flexDirection: 'row',
+    gap: 14,
+  },
+  settingsText: {
+    fontSize: 13,
+    color: '#2563eb',
+    fontWeight: '600',
   },
   logoutText: {
     fontSize: 13,

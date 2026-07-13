@@ -73,3 +73,65 @@ export async function traceParcel(token: string, parcelId: number): Promise<Trac
   }
   return body;
 }
+
+export interface DraftTemplate {
+  id: string;
+  label: string;
+}
+
+export const DRAFT_TEMPLATES: DraftTemplate[] = [
+  { id: 'just_sold_farming', label: 'Just Sold (Farming)' },
+  { id: 'absentee_owner', label: 'Absentee Owner' },
+  { id: 'expired_listing', label: 'Expired Listing' },
+  { id: 'fsbo', label: 'FSBO Outreach' },
+  { id: 'open_house_neighbor_invite', label: 'Open House Neighbor Invite' },
+];
+
+export interface DraftTone {
+  id: 'professional' | 'friendly' | 'direct';
+  label: string;
+}
+
+export const DRAFT_TONES: DraftTone[] = [
+  { id: 'professional', label: 'Professional' },
+  { id: 'friendly', label: 'Friendly' },
+  { id: 'direct', label: 'Direct' },
+];
+
+export interface DraftResponse {
+  subject: string;
+  body: string;
+}
+
+export async function draftEmail(
+  token: string,
+  parcelId: number,
+  templateId: string,
+  tone: string
+): Promise<DraftResponse> {
+  const res = await fetch(`${API_BASE}/draft`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ parcel_id: parcelId, template_id: templateId, tone }),
+  });
+  const body = await res.json();
+  if (!res.ok) {
+    throw new Error(body.error ?? 'Draft failed');
+  }
+  return body;
+}
+
+export async function updateAgentProfile(
+  token: string,
+  profile: { name: string; brokerage: string; phone: string }
+): Promise<void> {
+  const res = await fetch(`${API_BASE}/me/profile`, {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(profile),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? 'Failed to save profile');
+  }
+}

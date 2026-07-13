@@ -1,6 +1,14 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { traceParcel, type ParcelDetail, type TraceResponse } from './api';
+import * as MailComposer from 'expo-mail-composer';
+import {
+  DRAFT_TEMPLATES,
+  DRAFT_TONES,
+  draftEmail,
+  traceParcel,
+  type ParcelDetail,
+  type TraceResponse,
+} from './api';
 
 function formatNumber(value: string | number | null): string | null {
   if (value === null) return null;
@@ -47,26 +55,38 @@ function Row({ label, value }: { label: string; value: string }) {
 }
 
 type TraceState = 'idle' | 'loading' | 'done' | 'error';
+type DraftState = 'idle' | 'picking' | 'generating' | 'error';
 
 export function ParcelSheet({
   loading,
   detail,
   token,
+  tier,
   onClose,
 }: {
   loading: boolean;
   detail: ParcelDetail | null;
   token: string | null;
+  tier: 'prospector' | 'closer' | null;
   onClose: () => void;
 }) {
   const [traceState, setTraceState] = useState<TraceState>('idle');
   const [traceResult, setTraceResult] = useState<TraceResponse | null>(null);
   const [traceError, setTraceError] = useState<string | null>(null);
 
+  const [draftState, setDraftState] = useState<DraftState>('idle');
+  const [templateId, setTemplateId] = useState<string | null>(null);
+  const [toneId, setToneId] = useState<string>('professional');
+  const [draftError, setDraftError] = useState<string | null>(null);
+
   useEffect(() => {
     setTraceState('idle');
     setTraceResult(null);
     setTraceError(null);
+    setDraftState('idle');
+    setTemplateId(null);
+    setToneId('professional');
+    setDraftError(null);
   }, [detail?.id]);
 
   async function handleTracePress() {
@@ -80,6 +100,32 @@ export function ParcelSheet({
     } catch (err) {
       setTraceError(err instanceof Error ? err.message : 'Trace failed');
       setTraceState('error');
+    }
+  }
+
+  async function handleGenerateDraft() {
+    if (!token || !detail || !templateId) return;
+    setDraftState('generating');
+    setDraftError(null);
+    try {
+      const { subject, body } = await draftEmail(token, detail.id, templateId, toneId);
+      const recipient = traceResult?.matched ? traceResult.emails[0]?.email : undefined;
+      const available = await MailComposer.isAvailableAsync();
+      if (!available) {
+        setDraftError('Mail is not set up on this device.');
+        setDraftState('error');
+        return;
+      }
+      await MailComposer.composeAsync({
+        recipients: recipient ? [recipient] : undefined,
+        subject,
+        body,
+      });
+      setDraftState('idle');
+      setTemplateId(null);
+    } catch (err) {
+      setDraftError(err instanceof Error ? err.message : 'Draft failed');
+      setDraftState('error');
     }
   }
   return (
@@ -197,6 +243,71 @@ export function ParcelSheet({
                   <Text style={styles.contactValue}>{email.email}</Text>
                 </View>
               ))}
+
+              {tier !== 'closer' && (
+                <Text style={styles.draftLockedText}>Draft Email is available on the Closer plan</Text>
+              )}
+
+              {tier === 'closer' && draftState === 'idle' && (
+                <TouchableOpacity style={styles.draftButton} onPress={() => setDraftState('picking')}>
+                  <Text style={styles.draftButtonText}>Draft Email</Text>
+                </TouchableOpacity>
+              )}
+
+              {tier === 'closer' && (draftState === 'picking' || draftState === 'generating' || draftState === 'error') && (
+                <View style={styles.draftPicker}>
+                  <Text style={styles.label}>Template</Text>
+                  <View style={styles.pickerRow}>
+                    {DRAFT_TEMPLATES.map((t) => (
+                      <TouchableOpacity
+                        key={t.id}
+                        style={[styles.pickerChip, templateId === t.id && styles.pickerChipSelected]}
+                        onPress={() => setTemplateId(t.id)}
+                      >
+                        <Text
+                          style={[
+                            styles.pickerChipText,
+                            templateId === t.id && styles.pickerChipTextSelected,
+                          ]}
+                        >
+                          {t.label}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+
+                  <Text style={styles.label}>Tone</Text>
+                  <View style={styles.pickerRow}>
+                    {DRAFT_TONES.map((t) => (
+                      <TouchableOpacity
+                        key={t.id}
+                        style={[styles.pickerChip, toneId === t.id && styles.pickerChipSelected]}
+                        onPress={() => setToneId(t.id)}
+                      >
+                        <Text
+                          style={[styles.pickerChipText, toneId === t.id && styles.pickerChipTextSelected]}
+                        >
+                          {t.label}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+
+                  {draftError && <Text style={styles.traceErrorText}>{draftError}</Text>}
+
+                  <TouchableOpacity
+                    style={styles.draftButton}
+                    onPress={handleGenerateDraft}
+                    disabled={!templateId || draftState === 'generating'}
+                  >
+                    {draftState === 'generating' ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Text style={styles.draftButtonText}>Generate</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
           )}
         </>
@@ -346,5 +457,54 @@ const styles = StyleSheet.create({
   },
   badgeTcpa: {
     backgroundColor: '#fef3c7',
+  },
+  draftLockedText: {
+    marginTop: 12,
+    fontSize: 12,
+    color: '#9ca3af',
+  },
+  draftButton: {
+    marginTop: 12,
+    backgroundColor: '#111827',
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  draftButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  draftPicker: {
+    marginTop: 12,
+  },
+  label: {
+    color: '#374151',
+    fontWeight: '600',
+    marginBottom: 6,
+    fontSize: 13,
+  },
+  pickerRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 12,
+  },
+  pickerChip: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  pickerChipSelected: {
+    backgroundColor: '#111827',
+    borderColor: '#111827',
+  },
+  pickerChipText: {
+    fontSize: 12,
+    color: '#374151',
+  },
+  pickerChipTextSelected: {
+    color: '#fff',
   },
 });
