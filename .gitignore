@@ -11,6 +11,10 @@ out/
 .env
 .env.*
 !.env.example
+!.env.local.example
+
+# ephemeral QR codes generated for sending to Frederick, not project assets
+phase*-*-qr.png
 
 # expo
 .expo/
