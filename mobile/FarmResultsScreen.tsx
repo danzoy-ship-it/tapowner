@@ -86,8 +86,8 @@ function rowFacts(p: FarmParcel): string {
   return parts.join(' · ');
 }
 
-const BED_OPTIONS = [0, 2, 3, 4, 5] as const;
-const BATH_OPTIONS = [0, 2, 3] as const;
+const BED_OPTIONS = [0, 2, 3, 4, 5, 6] as const;
+const BATH_OPTIONS = [0, 2, 3, 4, 5, 6] as const;
 
 // Farm results with the reverse-prospecting layer: filter the drawn area by
 // home criteria, export the matches (mail-merge), draft the one letter that
@@ -182,10 +182,11 @@ export function FarmResultsScreen() {
       Alert.alert('All set', 'You already have contact info for every home in this list.');
       return;
     }
+    const already = filtered.length - targets.length;
     const maxCost = ((targets.length * config.trace_price_cents) / 100).toFixed(2);
     Alert.alert(
-      `Get contacts for ${targets.length} home${targets.length === 1 ? '' : 's'}?`,
-      `Up to $${maxCost}. Included traces are used first, homes you already unlocked are free, and a no-match is never charged.`,
+      `Get contacts for ${targets.length} of ${filtered.length} home${filtered.length === 1 ? '' : 's'}?`,
+      `${already > 0 ? `${already} already unlocked (free). ` : ''}Up to $${maxCost} for the rest — included traces are used first, and a no-match is never charged.`,
       [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Get contacts', onPress: () => void runBulkTrace(targets) },
@@ -338,6 +339,17 @@ export function FarmResultsScreen() {
           <Text style={styles.filterHint}>
             Homes missing a value are excluded while that filter is on.
           </Text>
+          <TouchableOpacity
+            style={styles.applyButton}
+            onPress={() => {
+              Keyboard.dismiss();
+              setFiltersOpen(false);
+            }}
+          >
+            <Text style={styles.applyButtonText}>
+              Show {filtered.length} {filtered.length === 1 ? 'home' : 'homes'}
+            </Text>
+          </TouchableOpacity>
         </View>
       )}
 
@@ -514,6 +526,17 @@ const styles = StyleSheet.create({
   filterHint: {
     fontSize: 11,
     color: '#9ca3af',
+  },
+  applyButton: {
+    backgroundColor: '#16a34a',
+    borderRadius: 10,
+    paddingVertical: 11,
+    alignItems: 'center',
+  },
+  applyButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
   },
   actionRow: {
     flexDirection: 'row',
