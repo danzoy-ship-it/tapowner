@@ -26,7 +26,7 @@ import type { RootStackParamList } from './navigation';
 export function PipelineDetailScreen() {
   const route = useRoute<RouteProp<RootStackParamList, 'PipelineDetail'>>();
   const { savedPropertyId } = route.params;
-  const { token } = useApp();
+  const { token, readOnly } = useApp();
 
   const [detail, setDetail] = useState<SavedPropertyDetail | null>(null);
   const [noteText, setNoteText] = useState('');
@@ -90,19 +90,27 @@ export function PipelineDetailScreen() {
         {detail.owner_name && <Text style={styles.owner}>{detail.owner_name}</Text>}
 
         <Text style={styles.sectionLabel}>Status</Text>
-        <View style={styles.chipWrap}>
-          {SAVED_PROPERTY_STATUSES.map((s) => (
-            <TouchableOpacity
-              key={s.id}
-              style={[styles.chip, detail.status === s.id && styles.chipSelected]}
-              onPress={() => handleStatusChange(s.id)}
-            >
-              <Text style={[styles.chipText, detail.status === s.id && styles.chipTextSelected]}>
-                {s.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        {readOnly ? (
+          <View style={[styles.chip, styles.chipSelected, styles.statusBadgeRO]}>
+            <Text style={styles.chipTextSelected}>
+              {SAVED_PROPERTY_STATUSES.find((s) => s.id === detail.status)?.label ?? detail.status}
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.chipWrap}>
+            {SAVED_PROPERTY_STATUSES.map((s) => (
+              <TouchableOpacity
+                key={s.id}
+                style={[styles.chip, detail.status === s.id && styles.chipSelected]}
+                onPress={() => handleStatusChange(s.id)}
+              >
+                <Text style={[styles.chipText, detail.status === s.id && styles.chipTextSelected]}>
+                  {s.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
         <Text style={styles.sectionLabel}>Notes</Text>
         <FlatList
@@ -120,17 +128,19 @@ export function PipelineDetailScreen() {
 
         {error && <Text style={styles.errorText}>{error}</Text>}
 
-        <View style={styles.noteInputRow}>
-          <TextInput
-            style={styles.noteInput}
-            placeholder="Add a note…"
-            value={noteText}
-            onChangeText={setNoteText}
-          />
-          <TouchableOpacity style={styles.addNoteButton} onPress={handleAddNote} disabled={saving}>
-            {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.addNoteButtonText}>Add</Text>}
-          </TouchableOpacity>
-        </View>
+        {!readOnly && (
+          <View style={styles.noteInputRow}>
+            <TextInput
+              style={styles.noteInput}
+              placeholder="Add a note…"
+              value={noteText}
+              onChangeText={setNoteText}
+            />
+            <TouchableOpacity style={styles.addNoteButton} onPress={handleAddNote} disabled={saving}>
+              {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.addNoteButtonText}>Add</Text>}
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     </KeyboardAvoidingView>
   );
@@ -182,6 +192,9 @@ const styles = StyleSheet.create({
   chipSelected: {
     backgroundColor: '#111827',
     borderColor: '#111827',
+  },
+  statusBadgeRO: {
+    alignSelf: 'flex-start',
   },
   chipText: {
     fontSize: 12,

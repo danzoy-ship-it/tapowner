@@ -12,6 +12,10 @@ export interface AppContextValue {
   me: Me | null;
   config: AppConfig;
   features: TierFeatures;
+  // True when the subscription is not usable (canceled / past_due / expired).
+  // The app stays open in read-only mode: saved data + already-traced contacts
+  // are viewable, but new traces, drafts, and saves are blocked.
+  readOnly: boolean;
   refreshMe: () => Promise<void>;
   logout: () => Promise<void>;
   showUpgrade: () => void;

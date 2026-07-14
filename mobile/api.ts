@@ -298,6 +298,15 @@ export async function getSavedProperty(token: string, id: number): Promise<Saved
   return handleJson(res);
 }
 
+// Returns the whole pipeline as CSV text (the server sets a download filename).
+export async function exportSavedPropertiesCsv(token: string): Promise<string> {
+  const res = await timedFetch(`${API_BASE}/saved-properties/export`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Export failed');
+  return res.text();
+}
+
 export async function updateSavedPropertyStatus(
   token: string,
   id: number,

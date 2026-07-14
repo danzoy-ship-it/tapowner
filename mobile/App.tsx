@@ -18,7 +18,6 @@ import { ContactScreen } from './ContactScreen';
 import { DraftEmailScreen } from './DraftEmailScreen';
 import { LoginScreen } from './LoginScreen';
 import { UpgradeSheet } from './UpgradeSheet';
-import { ExpiryScreen } from './ExpiryScreen';
 import { ErrorBoundary } from './ErrorBoundary';
 import { clearToken, fetchMe, getStoredToken, storeToken, type Me } from './auth';
 
@@ -124,7 +123,11 @@ function AppInner() {
 
   const contextValue = useMemo<AppContextValue | null>(() => {
     if (!token) return null;
-    const features = (me?.tier && config.tiers[me.tier]?.features) || {
+    // Features come from the tier ONLY while the subscription is usable -- a
+    // canceled/past_due Closer keeps read-only access (below) but loses the
+    // ability to trace, draft, or save.
+    const usable = me?.status === 'trialing' || me?.status === 'active';
+    const features = (usable && me?.tier && config.tiers[me.tier]?.features) || {
       draft_email: false,
       crm: false,
     };
@@ -133,6 +136,7 @@ function AppInner() {
       me,
       config,
       features,
+      readOnly: !usable,
       refreshMe: async () => {
         const result = await fetchMe(token);
         if (result) setMe(result);
@@ -157,17 +161,6 @@ function AppInner() {
 
   if (authState === 'loggedOut' || !contextValue) {
     return <LoginScreen onLoggedIn={handleLoggedIn} />;
-  }
-
-  const subscriptionUsable = me?.status === 'trialing' || me?.status === 'active';
-  if (me && !subscriptionUsable) {
-    return (
-      <ExpiryScreen
-        config={config}
-        onRecheck={contextValue.refreshMe}
-        onLogout={contextValue.logout}
-      />
-    );
   }
 
   return (

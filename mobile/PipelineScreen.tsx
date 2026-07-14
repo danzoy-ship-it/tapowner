@@ -1,15 +1,19 @@
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
+  Share,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { File, Paths } from 'expo-file-system';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import {
   SAVED_PROPERTY_STATUSES,
+  exportSavedPropertiesCsv,
   listSavedProperties,
   type SavedPropertyStatus,
   type SavedPropertySummary,
@@ -23,14 +27,20 @@ export function statusLabel(status: SavedPropertyStatus): string {
 
 export function PipelineScreen() {
   const navigation = useNavigation<RootNav>();
-  const { token, features, showUpgrade } = useApp();
+  const { token, features, readOnly, showUpgrade } = useApp();
   const [filter, setFilter] = useState<SavedPropertyStatus | null>(null);
   const [properties, setProperties] = useState<SavedPropertySummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+
+  // An active Closer gets the full CRM; a lapsed/inactive user still gets
+  // read-only access to what they saved. Only an active non-Closer sees the
+  // upgrade wall.
+  const canView = features.crm || readOnly;
 
   useFocusEffect(
     useCallback(() => {
-      if (!features.crm) return;
+      if (!canView) return;
       let cancelled = false;
       setError(null);
       listSavedProperties(token, filter ?? undefined)
@@ -43,10 +53,25 @@ export function PipelineScreen() {
       return () => {
         cancelled = true;
       };
-    }, [token, filter, features.crm])
+    }, [token, filter, canView])
   );
 
-  if (!features.crm) {
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const csv = await exportSavedPropertiesCsv(token);
+      const file = new File(Paths.cache, 'tapowner-crm.csv');
+      file.create({ overwrite: true });
+      file.write(csv);
+      await Share.share({ url: file.uri });
+    } catch (err) {
+      Alert.alert('Export failed', err instanceof Error ? err.message : 'Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  if (!canView) {
     return (
       <View style={styles.lockedContainer}>
         <Text style={styles.lockedTitle}>CRM is a Closer feature</Text>
@@ -62,6 +87,15 @@ export function PipelineScreen() {
 
   return (
     <View style={styles.container}>
+      {readOnly && (
+        <TouchableOpacity style={styles.roBanner} onPress={showUpgrade} activeOpacity={0.8}>
+          <Text style={styles.roBannerText}>
+            Read-only — your plan is inactive. Your saved contacts stay available; reactivate at
+            tapowner.com to trace and save again.
+          </Text>
+        </TouchableOpacity>
+      )}
+
       <FlatList
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -80,6 +114,16 @@ export function PipelineScreen() {
           </TouchableOpacity>
         )}
       />
+
+      {properties && properties.length > 0 && (
+        <TouchableOpacity
+          style={styles.exportButton}
+          onPress={handleExport}
+          disabled={exporting}
+        >
+          <Text style={styles.exportButtonText}>{exporting ? 'Exporting…' : '⬇  Export CSV'}</Text>
+        </TouchableOpacity>
+      )}
 
       {error && <Text style={styles.errorText}>{error}</Text>}
 
@@ -134,6 +178,32 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     paddingHorizontal: 20,
+  },
+  roBanner: {
+    backgroundColor: '#fef3c7',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginTop: 12,
+  },
+  roBannerText: {
+    fontSize: 12,
+    color: '#92400e',
+    lineHeight: 17,
+  },
+  exportButton: {
+    alignSelf: 'flex-end',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginBottom: 8,
+  },
+  exportButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#2563eb',
   },
   filterRow: {
     flexGrow: 0,

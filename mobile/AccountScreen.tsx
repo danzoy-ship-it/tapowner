@@ -13,7 +13,7 @@ import { formatCents, updateAgentProfile } from './api';
 import { useApp } from './AppContext';
 
 export function AccountScreen() {
-  const { token, me, config, refreshMe, logout } = useApp();
+  const { token, me, config, readOnly, refreshMe, logout } = useApp();
   const existing = (me?.agent_profile ?? {}) as { name?: string; brokerage?: string; phone?: string };
 
   const [name, setName] = useState(existing.name ?? '');
@@ -22,6 +22,16 @@ export function AccountScreen() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    try {
+      await refreshMe();
+    } finally {
+      setRefreshing(false);
+    }
+  }
 
   const tier = me?.tier ? config.tiers[me.tier] : undefined;
   const planLine = me?.tier
@@ -70,6 +80,21 @@ export function AccountScreen() {
           </Text>
         )}
         <Text style={styles.planManage}>{config.manage_plan_url_text}</Text>
+        {readOnly && (
+          <>
+            <Text style={styles.planInactive}>
+              Plan inactive — reactivate at tapowner.com to trace and save. Your saved contacts stay
+              available in read-only mode.
+            </Text>
+            <TouchableOpacity style={styles.refreshButton} onPress={handleRefresh} disabled={refreshing}>
+              {refreshing ? (
+                <ActivityIndicator color="#2563eb" />
+              ) : (
+                <Text style={styles.refreshButtonText}>I reactivated — refresh</Text>
+              )}
+            </TouchableOpacity>
+          </>
+        )}
       </View>
 
       <Text style={styles.sectionLabel}>Agent profile</Text>
@@ -147,6 +172,28 @@ const styles = StyleSheet.create({
     color: '#2563eb',
     fontWeight: '600',
     marginTop: 4,
+  },
+  planInactive: {
+    fontSize: 12,
+    color: '#92400e',
+    backgroundColor: '#fef3c7',
+    borderRadius: 8,
+    padding: 8,
+    marginTop: 8,
+    lineHeight: 17,
+  },
+  refreshButton: {
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#2563eb',
+    borderRadius: 8,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  refreshButtonText: {
+    color: '#2563eb',
+    fontWeight: '600',
+    fontSize: 13,
   },
   hint: {
     fontSize: 12,
