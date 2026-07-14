@@ -172,10 +172,13 @@ every owner inside → export/mail-merge (design below in roadmap).
   purchase, social handles, App Store Connect record.
 
 ## ROADMAP (agreed 2026-07-14)
-1. **Property attributes (CAD ingestion):** StratMap carries no living-area/pool/stories/etc.
-   for any county (verified Phase 1). Plan: ingest each metro CAD's own public export and
-   join onto parcels by APN — Bexar first, then Harris/Dallas/Tarrant/Travis. Per-county
-   format work; refresh quarterly per build doc §6.
+1. **Property attributes (CAD ingestion):** ✅ Bexar DONE (617,058 parcels: sqft/stories/
+   year-built via the county's free ArcGIS layer — `data/load_bexar_attributes.py`). Next:
+   Harris/Dallas/Tarrant/Travis (instant public downloads). Pool/casita need BCAD's
+   improvement-detail export — **open-records request SENT by Frederick 2026-07-14**
+   (statutory response ≤10 business days). Note: the GIS `Detached` field is NOT a
+   casita/structure count — Frederick ground-truthed his own home (Detached=3 ≈ levels);
+   do not surface it. Refresh quarterly per build doc §6.
 2. **Farm mode (bulk area prospecting):** draw an area on the map (tap-to-drop corners) →
    `POST /parcels/within` (PostGIS polygon query, protected records excluded, capped) →
    results list with owners + absentee badges → v1 action: **Export CSV of owner names +
