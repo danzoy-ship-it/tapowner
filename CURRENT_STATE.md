@@ -11,16 +11,21 @@ but isn't in the "Verified" table here with evidence, treat it as unverified.
 
 ## THE ONE-LINE TRUTH
 
-**✅ The production app LAUNCHES and the top backlog is largely cleared.** The startup hang is
-fixed and CONFIRMED on-device; email login is live (Resend). Since the re-eval, the entire A
-(boot-trust), most of B (billing), and several C/D/E items have been fixed, deployed, and
-where possible live-verified. A 2nd production build (EAS `e70ef8d4`, build #auto) is in flight
-carrying five mobile UX fixes incl. the location-denial fix (E5).
+**✅ Core product is solid: app launches, backlog cleared, builds flowing.** Build #5 is
+confirmed working on-device; build #6 (in flight, auto-submits) adds the keyboard fix,
+read-only CRM + Export CSV, and the draft-email/vCard fixes. The re-eval backlog is done
+except two deliberate deferrals. DB password rotated (C1 ✅). B5 superseded by the shipped
+read-only mode. Stripe Customer Portal configured by Frederick (2026-07-14) — plan
+switching/cancel work once the "Manage billing" web page ships.
 
-**Still open (deliberately):** C1 (rotate DB password — infra), C2 (auth on `/tiles`,
-`/parcels/at`, `/geocode` — needs a coordinated backend+client ship), D1 (reload 51
-mis-projected counties — ~half-day data job), B5 (past_due read-only grace — product decision
-for Frederick), plus minor polish (E4 draft edges, E7 Android vCard, F hygiene).
+**Still open (deliberately):** C2 (auth on `/tiles`, `/parcels/at`, `/geocode` — needs a
+coordinated backend+client ship + signed-tile scheme), D1 (reload 51 mis-projected counties —
+~half-day data job), "Manage billing" web page, F hygiene.
+
+**Next up (Frederick priorities, 2026-07-14):** (1) property attributes — sqft, pool,
+stories, etc. via per-county CAD exports (StratMap doesn't carry them for ANY county;
+documented Phase-1 gap; start with Bexar); (2) **Farm mode** — draw an area on the map →
+every owner inside → export/mail-merge (design below in roadmap).
 
 ---
 
@@ -155,10 +160,25 @@ for Frederick), plus minor polish (E4 draft edges, E7 Android vCard, F hygiene).
 
 ## FREDERICK'S ACTION LIST (only he can do)
 - **✅ Done 2026-07-13:** Resend domain verified via Cloudflare; login codes email for real.
+- **✅ Done 2026-07-14:** Stripe Customer Portal configured (plan switching incl. Prospector,
+  cancellations) — reachable once the Manage-billing web page + tapowner.com DNS land.
 - **Next:** point tapowner.com at the web app; business inbox (Apple support contact); activate
-  Stripe live mode; the legal gate items above.
+  Stripe live mode; the legal gate items above; static-code demo account for Apple review.
 - **Done:** Apple Developer, Expo/EAS, Railway, Anthropic, BatchData, Google Geocoding, domain
   purchase, social handles, App Store Connect record.
+
+## ROADMAP (agreed 2026-07-14)
+1. **Property attributes (CAD ingestion):** StratMap carries no living-area/pool/stories/etc.
+   for any county (verified Phase 1). Plan: ingest each metro CAD's own public export and
+   join onto parcels by APN — Bexar first, then Harris/Dallas/Tarrant/Travis. Per-county
+   format work; refresh quarterly per build doc §6.
+2. **Farm mode (bulk area prospecting):** draw an area on the map (tap-to-drop corners) →
+   `POST /parcels/within` (PostGIS polygon query, protected records excluded, capped) →
+   results list with owners + absentee badges → v1 action: **Export CSV of owner names +
+   mailing addresses** (mail-merge an open-house postcard/letter; zero trace cost). v1.5: AI
+   one-letter template for the area. v2 (guardrails): bulk-trace selected homes with explicit
+   cost confirm + the $25 cap; bulk email stays per-recipient. Rationale: for "invite the
+   neighborhood," mailing addresses are already free data — no reason to pay per-trace.
 
 ## WORKING RULES RE-AFFIRMED (these broke this session)
 1. **No "PASSED" without device verification** for anything user-facing. Server-verified ≠ done.
