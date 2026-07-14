@@ -384,6 +384,12 @@ function CreatePartner({
       onSubmit={handleCreate}
       className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950"
     >
+      <p className="mb-4 text-xs text-zinc-500 dark:text-zinc-400">
+        <span className="font-medium text-zinc-700 dark:text-zinc-300">Type</span> = which program.{' '}
+        <span className="font-medium text-zinc-700 dark:text-zinc-300">Comp model</span> = how an
+        affiliate is paid — 25% of subs for 12 months, or a $20 flat bounty. Founding agents &amp;
+        user referrals are give-a-month, so they have no comp model.
+      </p>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <label className="flex flex-col gap-1 text-xs text-zinc-500">
           Type
