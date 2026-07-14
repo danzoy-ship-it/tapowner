@@ -15,6 +15,23 @@ export async function authRoutes(app: FastifyInstance) {
             return reply.code(400).send({ error: "A valid email is required" });
         }
 
+        // Anti-abuse (real email delivery is live): 1 send per email per 60s,
+        // and at most 5 unconsumed codes per email per hour. Respond 200 either
+        // way so the endpoint doesn't reveal whether a throttle fired.
+        const { rows: recent } = await pool.query(
+            `SELECT
+                 count(*) FILTER (WHERE created_at > now() - interval '60 seconds') AS last_minute,
+                 count(*) FILTER (WHERE created_at > now() - interval '1 hour' AND consumed_at IS NULL) AS last_hour
+             FROM otp_codes WHERE email = $1`,
+            [email]
+        );
+        const lastMinute = Number(recent[0].last_minute);
+        const lastHour = Number(recent[0].last_hour);
+        if (lastMinute >= 1 || lastHour >= 5) {
+            request.log.info({ email, lastMinute, lastHour }, "otp request throttled");
+            return reply.send({ message: "Code sent" });
+        }
+
         const code = generateOtpCode();
         const codeHash = hashOtpCode(code);
         const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60_000);
