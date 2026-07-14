@@ -77,7 +77,7 @@ export function PropertyCard({
               {detail.owner_name && (
                 <View style={styles.ownerRow}>
                   <Text style={styles.ownerLabel}>Owner</Text>
-                  <Text style={styles.ownerValue} numberOfLines={1}>
+                  <Text style={styles.ownerValue} numberOfLines={2}>
                     {detail.owner_name}
                   </Text>
                 </View>
