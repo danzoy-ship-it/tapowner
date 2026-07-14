@@ -160,10 +160,14 @@ every owner inside → export/mail-merge (design below in roadmap).
 
 ## FREDERICK'S ACTION LIST (only he can do)
 - **✅ Done 2026-07-13:** Resend domain verified via Cloudflare; login codes email for real.
-- **✅ Done 2026-07-14:** Stripe Customer Portal configured (plan switching incl. Prospector,
-  cancellations) — reachable once the Manage-billing web page + tapowner.com DNS land.
-- **Next:** point tapowner.com at the web app; business inbox (Apple support contact); activate
-  Stripe live mode; the legal gate items above; static-code demo account for Apple review.
+- **✅ Done 2026-07-14:** Stripe Customer Portal configured. Business inbox live
+  (info@tapowner.com). Apple demo account BUILT+verified (review@tapowner.com, static code in
+  Railway env — paste into App Store Connect review notes at submission; nothing to do now).
+- **Waiting on Frederick:** add the 4 Cloudflare DNS records for tapowner.com/www (Railway
+  domains already attached, records provided in chat 2026-07-14); LLC → EIN → business bank
+  → THEN Stripe live mode (every-2-day scheduled reminder active, incl. the legal gate:
+  attorney ToS review, TX Data Broker registration, insurance, BatchData addendum); RentCast
+  account signup if the property-attributes pilot is approved.
 - **Done:** Apple Developer, Expo/EAS, Railway, Anthropic, BatchData, Google Geocoding, domain
   purchase, social handles, App Store Connect record.
 
