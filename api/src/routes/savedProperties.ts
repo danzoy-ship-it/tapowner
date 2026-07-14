@@ -7,6 +7,22 @@ import { formatSitusAddress } from "../lib/address.js";
 const STATUSES = ["new", "contacted", "follow_up", "appointment", "listed", "dead"] as const;
 type Status = (typeof STATUSES)[number];
 
+const STATUS_LABELS: Record<string, string> = {
+    new: "New",
+    contacted: "Contacted",
+    follow_up: "Follow-up",
+    appointment: "Appointment",
+    listed: "Listed",
+    dead: "Dead",
+};
+
+// RFC-4180 CSV cell: quote when the value contains a comma, quote, or newline,
+// and double any embedded quotes.
+function csvCell(value: unknown): string {
+    const s = value == null ? "" : String(value);
+    return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
 const PARCEL_FIELDS = `
     p.owner_name, p.situs_address, p.situs_number, p.situs_street,
     p.situs_city, p.situs_state, p.situs_zip,
@@ -60,10 +76,12 @@ export async function savedPropertiesRoutes(app: FastifyInstance) {
         return reply.send(savedProperty);
     });
 
+    // Reading your own saved data is free even without an active plan (a lapsed
+    // Closer keeps read-only access to their pipeline as a reactivation hook);
+    // only writes below require the crm feature.
     app.get<{ Querystring: { status?: string } }>("/saved-properties", async (request, reply) => {
         const session = await requireAuth(request, reply);
         if (!session) return;
-        if (!(await requireFeature(session.userId, "crm", reply))) return;
 
         const status = request.query.status;
         if (status && !STATUSES.includes(status as Status)) {
@@ -88,7 +106,6 @@ export async function savedPropertiesRoutes(app: FastifyInstance) {
     app.get<{ Params: { id: string } }>("/saved-properties/:id", async (request, reply) => {
         const session = await requireAuth(request, reply);
         if (!session) return;
-        if (!(await requireFeature(session.userId, "crm", reply))) return;
 
         const savedPropertyId = Number(request.params.id);
         const savedProperty = await loadOwnedSavedProperty(session.userId, savedPropertyId);
@@ -108,6 +125,66 @@ export async function savedPropertiesRoutes(app: FastifyInstance) {
         const merged = { ...savedProperty, ...parcelRows[0], notes };
         merged.situs_address = formatSitusAddress(merged);
         return reply.send(merged);
+    });
+
+    // CSV export of the whole pipeline. Auth only (no crm-feature gate) so a
+    // read-only / lapsed user can always take their data -- including the
+    // contacts they already paid to trace -- with them.
+    app.get("/saved-properties/export", async (request, reply) => {
+        const session = await requireAuth(request, reply);
+        if (!session) return;
+
+        const { rows } = await pool.query(
+            `SELECT sp.status, sp.created_at AS saved_at,
+                    p.owner_name, p.situs_address, p.situs_number, p.situs_street,
+                    p.situs_city, p.situs_state, p.situs_zip, p.mailing_address,
+                    tr.payload AS trace_payload,
+                    (SELECT string_agg(n.body, ' | ' ORDER BY n.created_at)
+                       FROM notes n WHERE n.saved_property_id = sp.id) AS notes
+             FROM saved_properties sp
+             JOIN parcels p ON p.id = sp.parcel_id
+             LEFT JOIN user_traces ut ON ut.user_id = sp.user_id AND ut.parcel_id = sp.parcel_id
+             LEFT JOIN trace_results tr ON tr.id = ut.trace_result_id
+             WHERE sp.user_id = $1
+             ORDER BY sp.created_at DESC`,
+            [session.userId]
+        );
+
+        const header = [
+            "Owner", "Address", "City", "State", "ZIP", "Mailing Address",
+            "Status", "Phones", "Emails", "Notes", "Saved",
+        ];
+        const lines = [header.map(csvCell).join(",")];
+        for (const r of rows) {
+            const payload = (r.trace_payload ?? {}) as {
+                phones?: Array<{ number?: string }>;
+                emails?: Array<{ email?: string }>;
+            };
+            const phones = (payload.phones ?? []).map((p) => p.number).filter(Boolean).join("; ");
+            const emails = (payload.emails ?? []).map((e) => e.email).filter(Boolean).join("; ");
+            lines.push(
+                [
+                    r.owner_name ?? "",
+                    formatSitusAddress(r) ?? "",
+                    r.situs_city ?? "",
+                    r.situs_state ?? "",
+                    r.situs_zip ?? "",
+                    r.mailing_address ?? "",
+                    STATUS_LABELS[r.status] ?? r.status ?? "",
+                    phones,
+                    emails,
+                    r.notes ?? "",
+                    r.saved_at ? new Date(r.saved_at).toISOString().slice(0, 10) : "",
+                ]
+                    .map(csvCell)
+                    .join(",")
+            );
+        }
+
+        return reply
+            .header("Content-Type", "text/csv; charset=utf-8")
+            .header("Content-Disposition", 'attachment; filename="tapowner-crm.csv"')
+            .send(lines.join("\r\n"));
     });
 
     app.patch<{ Params: { id: string }; Body: { status?: string } }>(
