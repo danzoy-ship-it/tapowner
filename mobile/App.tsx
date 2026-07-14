@@ -43,7 +43,11 @@ function Tabs() {
       })}
     >
       <Tab.Screen name="Map" component={MapScreen} />
-      <Tab.Screen name="Pipeline" component={PipelineScreen} />
+      <Tab.Screen
+        name="Pipeline"
+        component={PipelineScreen}
+        options={{ tabBarLabel: 'CRM', title: 'CRM' }}
+      />
       <Tab.Screen name="Account" component={AccountScreen} />
     </Tab.Navigator>
   );
@@ -203,7 +207,7 @@ function AppInner() {
           <Stack.Screen
             name="PipelineDetail"
             component={PipelineDetailScreen}
-            options={{ title: 'Saved property', headerBackTitle: 'Pipeline' }}
+            options={{ title: 'Saved property', headerBackTitle: 'CRM' }}
           />
         </Stack.Navigator>
       </NavigationContainer>

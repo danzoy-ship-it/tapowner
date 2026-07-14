@@ -171,6 +171,8 @@ export function MapScreen() {
             onChangeText={setSearchText}
             onSubmitEditing={handleSearch}
             returnKeyType="search"
+            clearButtonMode="while-editing"
+            autoCorrect={false}
           />
           <TouchableOpacity style={styles.searchButton} onPress={handleSearch} disabled={searching}>
             {searching ? (

@@ -53,6 +53,7 @@ export function AccountScreen() {
       style={styles.container}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
+      automaticallyAdjustKeyboardInsets
     >
       <Text style={styles.sectionLabel}>Plan</Text>
       <View style={styles.planCard}>

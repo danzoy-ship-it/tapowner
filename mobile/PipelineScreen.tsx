@@ -49,7 +49,7 @@ export function PipelineScreen() {
   if (!features.crm) {
     return (
       <View style={styles.lockedContainer}>
-        <Text style={styles.lockedTitle}>Pipeline is a Closer feature</Text>
+        <Text style={styles.lockedTitle}>CRM is a Closer feature</Text>
         <Text style={styles.lockedBody}>
           Save traced properties, track statuses, and keep notes on every owner conversation.
         </Text>
@@ -93,7 +93,7 @@ export function PipelineScreen() {
         <View style={styles.emptyState}>
           <Text style={styles.emptyTitle}>No saved properties{filter ? ' with this status' : ' yet'}</Text>
           <Text style={styles.emptyBody}>
-            Trace a property on the map, then Save to Pipeline to track it here.
+            Trace a property on the map, then Save to CRM to track it here.
           </Text>
         </View>
       )}

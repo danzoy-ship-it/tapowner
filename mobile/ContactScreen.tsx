@@ -114,6 +114,7 @@ export function ContactScreen() {
       style={styles.container}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
+      automaticallyAdjustKeyboardInsets
     >
       <Text style={styles.address}>{address ?? 'Address unavailable'}</Text>
       {ownerName && <Text style={styles.owner}>{ownerName}</Text>}
@@ -210,11 +211,11 @@ export function ContactScreen() {
               {saveState === 'saving' ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.saveButtonText}>Save to Pipeline</Text>
+                <Text style={styles.saveButtonText}>Save to CRM</Text>
               )}
             </TouchableOpacity>
           ) : (
-            <Text style={styles.savedText}>Saved to Pipeline ✓</Text>
+            <Text style={styles.savedText}>Saved to CRM ✓</Text>
           )}
           {saveState === 'error' && <Text style={styles.errorText}>{saveError}</Text>}
 
