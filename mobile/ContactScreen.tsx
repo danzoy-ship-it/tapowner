@@ -110,7 +110,11 @@ export function ContactScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+    >
       <Text style={styles.address}>{address ?? 'Address unavailable'}</Text>
       {ownerName && <Text style={styles.owner}>{ownerName}</Text>}
 
@@ -218,7 +222,6 @@ export function ContactScreen() {
             <TouchableOpacity
               style={styles.secondaryButton}
               onPress={handleSaveToContacts}
-              disabled={contactsSaved}
             >
               <Text style={styles.secondaryButtonText}>
                 {contactsSaved ? 'In Contacts ✓' : 'Save to Contacts'}

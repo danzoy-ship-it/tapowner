@@ -44,21 +44,30 @@ export function MapScreen() {
   const [trackUser, setTrackUser] = useState<TrackUserLocation | undefined>('default');
   const [flyTarget, setFlyTarget] = useState<[number, number] | null>(null);
   const cameraRef = useRef<CameraRef>(null);
+  const tapSeq = useRef(0);
 
   async function handleParcelPress(event: NativeSyntheticEvent<PressEventWithFeatures>) {
     const { lngLat, features } = event.nativeEvent;
     const feature = features[0];
-    const id = feature?.properties?.id;
-    setSelectedId(typeof id === 'number' ? id : Number(id) || null);
+    const rawId = feature?.properties?.id;
+    // A feature id of 0 is legitimate -- only null/undefined/NaN means "none".
+    const parsedId = typeof rawId === 'number' ? rawId : Number(rawId);
+    const id = Number.isFinite(parsedId) ? parsedId : null;
+    setSelectedId(id);
     setParcelDetail(null);
     setLoadingParcel(true);
+    // Guard against out-of-order responses: a slow tap-A landing after tap-B
+    // must not overwrite tap-B's card with the wrong owner.
+    const seq = ++tapSeq.current;
     try {
       const detail = await fetchParcelAt(lngLat[1], lngLat[0]);
+      if (seq !== tapSeq.current) return;
       setParcelDetail(detail);
     } catch {
+      if (seq !== tapSeq.current) return;
       setParcelDetail(null);
     } finally {
-      setLoadingParcel(false);
+      if (seq === tapSeq.current) setLoadingParcel(false);
     }
   }
 

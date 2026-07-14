@@ -49,7 +49,11 @@ export function AccountScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+    >
       <Text style={styles.sectionLabel}>Plan</Text>
       <View style={styles.planCard}>
         <Text style={styles.planTitle}>{planLine}</Text>

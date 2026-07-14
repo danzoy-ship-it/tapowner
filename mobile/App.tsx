@@ -19,6 +19,7 @@ import { DraftEmailScreen } from './DraftEmailScreen';
 import { LoginScreen } from './LoginScreen';
 import { UpgradeSheet } from './UpgradeSheet';
 import { ExpiryScreen } from './ExpiryScreen';
+import { ErrorBoundary } from './ErrorBoundary';
 import { clearToken, fetchMe, getStoredToken, storeToken, type Me } from './auth';
 
 type PermissionState = 'checking' | 'granted' | 'denied';
@@ -52,7 +53,9 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <AppInner />
+        <ErrorBoundary>
+          <AppInner />
+        </ErrorBoundary>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
@@ -81,19 +84,26 @@ function AppInner() {
 
   useEffect(() => {
     (async () => {
-      const storedToken = await getStoredToken();
-      if (!storedToken) {
-        setAuthState('loggedOut');
-        return;
-      }
-      const result = await fetchMe(storedToken);
-      if (result) {
-        setToken(storedToken);
-        setMe(result);
-        setAuthState('loggedIn');
-        trackEvent(storedToken, 'app_open');
-      } else {
-        await clearToken();
+      try {
+        const storedToken = await getStoredToken();
+        if (!storedToken) {
+          setAuthState('loggedOut');
+          return;
+        }
+        const result = await fetchMe(storedToken);
+        if (result) {
+          setToken(storedToken);
+          setMe(result);
+          setAuthState('loggedIn');
+          trackEvent(storedToken, 'app_open');
+        } else {
+          await clearToken();
+          setAuthState('loggedOut');
+        }
+      } catch {
+        // Network error during bootstrap (offline / API blip): never strand on
+        // the "Loading…" screen -- fall to login so the user can retry rather
+        // than see what looks like a frozen app. Stored token is left intact.
         setAuthState('loggedOut');
       }
     })();

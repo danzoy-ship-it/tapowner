@@ -73,14 +73,24 @@ export function PropertyCard({
           {detail.is_protected ? (
             <Text style={styles.protectedText}>Protected record (Texas Tax Code §25.025)</Text>
           ) : (
-            detail.owner_name && (
-              <View style={styles.ownerRow}>
-                <Text style={styles.ownerLabel}>Owner</Text>
-                <Text style={styles.ownerValue} numberOfLines={1}>
-                  {detail.owner_name}
-                </Text>
-              </View>
-            )
+            <>
+              {detail.owner_name && (
+                <View style={styles.ownerRow}>
+                  <Text style={styles.ownerLabel}>Owner</Text>
+                  <Text style={styles.ownerValue} numberOfLines={1}>
+                    {detail.owner_name}
+                  </Text>
+                </View>
+              )}
+              {detail.mailing_address && (
+                <View style={styles.ownerRow}>
+                  <Text style={styles.ownerLabel}>Mailing</Text>
+                  <Text style={styles.ownerValue} numberOfLines={2}>
+                    {detail.mailing_address}
+                  </Text>
+                </View>
+              )}
+            </>
           )}
 
           {factsLine(detail) !== '' && <Text style={styles.facts}>{factsLine(detail)}</Text>}
