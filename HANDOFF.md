@@ -53,13 +53,19 @@ transcription artifacts; give layman step-by-step for anything he must do):**
   `farm_export_beta_cap_rows`); geocode 200/day/user; draft 30/day/user.
 - **Web:** tapowner.com + www live (Railway `web` service, custom domains verified).
   /billing → OTP → Stripe Customer Portal works end-to-end (portal configured by Frederick).
-  `WEB_BASE_URL=https://tapowner.com` on the api service. **Redesigned 2026-07-14:** real
-  marketing homepage (logo mark in `web/app/logo.tsx`, sticky header, hero, how-it-works,
-  features, Closer-highlighted pricing, trust) replacing the placeholder. **Admin console at
-  `/admin`** — Frederick's referral/commission manager: enter `ADMIN_SECRET` (same one gating
-  `POST /partners`), see every partner with owed/earned/clicks/conversions, create partners,
-  record payouts (`POST /admin/partners/:id/payout` settles unpaid ledger rows), revoke codes.
-  Partners still see their own numbers at `/partner`.
+  `WEB_BASE_URL=https://tapowner.com` on the api service. **Rebranded 2026-07-14 per
+  `BRAND_AND_PRODUCT_BRIEF.md`:** brand is **navy #052158 + orange #F27F09** (NOT the app's
+  blue); the REAL logo art lives at `mobile/assets/logo-{wordmark,mark}.png` → trimmed into
+  `web/public/` + `web/app/icon.png` (never re-draw an SVG). `web/app/logo.tsx` renders those
+  PNGs. Marketing homepage leads with a **Reverse Prospecting flagship hero** + data-moat band.
+  **Admin console at `/admin`** — Frederick's referral/commission manager: enter `ADMIN_SECRET`
+  (same one gating `POST /partners`), see every partner with owed/earned/clicks/conversions +
+  referral **link/QR** + comp terms, create partners (pick **25%/12mo recurring vs $20 flat**),
+  record payouts (`POST /admin/partners/:id/payout`), revoke (`/status`). Commission engine in
+  `billing.ts` verified against §5b (subscription-only revenue, atomic first-paid, flat vs
+  recurring by `comp_model`, prorated clawbacks). Partners see their own numbers at `/partner`.
+  Preview locally: `.claude/launch.json` server `web-dev` (port 3000). tapowner.com uses the
+  prod API, so `/admin` there hits the real `ADMIN_SECRET`.
 - **Apple demo account (for App Review):** review@tapowner.com, fixed code in Railway env
   (`DEMO_EMAIL`, `DEMO_OTP_CODE` — code is 824140), user id 18,永-active no-Stripe Closer with
   999 traces. At submission: paste email+code into App Store Connect review notes.
