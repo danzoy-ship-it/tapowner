@@ -27,8 +27,13 @@ POOL_RE = re.compile(r"pool", re.I)
 # Dwelling floor areas vary by CAD vocabulary: "Main Area" (Travis-style MA),
 # "MAIN FLOOR RESIDENTIAL"/"2ND FLOOR RESIDENTIAL" (Guadalupe RES1/UPST),
 # "MANUFACTURED HOUSE" (MH), "LIVING AREA"/"2ND STORY LIVING AREA"/"LIVING
-# AREA MH" (Kaufman LA/STR2, Grayson LA/LVM). Floors are SUMMED per property.
-DWELLING_RE = re.compile(r"MAIN AREA|MAIN FLOOR|FLOOR RESID|MANUFACTURED HOUSE|LIVING AREA", re.I)
+# AREA MH" (Kaufman LA/STR2, Grayson LA/LVM), "RESIDENCE"/"2ND FLOOR"/
+# "MOBILE HOME" (Bell RES/2ND/MH.). Floors are SUMMED per property.
+DWELLING_RE = re.compile(
+    r"MAIN AREA|MAIN FLOOR|FLOOR RESID|MANUFACTURED HOUSE|LIVING AREA"
+    r"|\bRESIDENCE\b|2ND FLOOR|MOBILE HOME",
+    re.I,
+)
 # Grayson's cd MH is "MOBILE HOME APPENDAGES" (porches/decks bolted onto a
 # mobile home) — NOT the dwelling. Never count appendage rows as living area.
 EXCLUDE_RE = re.compile(r"APPENDAGE", re.I)
