@@ -282,6 +282,9 @@ export function FarmResultsScreen() {
     const withEmails = filtered.filter((p) => contactsFor(p, traced).emails.length > 0);
     const withContacts = filtered.filter((p) => isUnlocked(p));
     const phones = filtered.filter((p) => contactsFor(p, traced).phones.length > 0).length;
+    // All counts below cover unlocked homes only — say so, or "phones for 9"
+    // reads as "only 9 of 13 are reachable" when 4 simply aren't unlocked yet.
+    const locked = filtered.length - withContacts.length;
 
     const options: string[] = [];
     const handlers: Array<() => void> = [];
@@ -310,7 +313,11 @@ export function FarmResultsScreen() {
     });
 
     if (withContacts.length > 0) {
-      options.push(`👤 Add ${withContacts.length} owner${withContacts.length === 1 ? '' : 's'} to Contacts`);
+      options.push(
+        locked > 0
+          ? `👤 Add ${withContacts.length} unlocked to Contacts`
+          : `👤 Add ${withContacts.length} owner${withContacts.length === 1 ? '' : 's'} to Contacts`
+      );
       handlers.push(() => {
         Alert.alert(
           `Add ${withContacts.length} to Contacts?`,
@@ -322,7 +329,11 @@ export function FarmResultsScreen() {
         );
       });
 
-      options.push(`💼 Save ${withContacts.length} to CRM`);
+      options.push(
+        locked > 0
+          ? `💼 Save ${withContacts.length} unlocked to CRM`
+          : `💼 Save ${withContacts.length} to CRM`
+      );
       handlers.push(() => void runBulkCrm(withContacts));
     }
 
@@ -333,7 +344,14 @@ export function FarmResultsScreen() {
 
     ActionSheetIOS.showActionSheetWithOptions(
       {
-        title: `${filtered.length} home${filtered.length === 1 ? '' : 's'} · phones for ${phones} · emails for ${withEmails.length}`,
+        title:
+          locked > 0
+            ? `${filtered.length} home${filtered.length === 1 ? '' : 's'} · ${withContacts.length} unlocked · ${locked} locked`
+            : `${filtered.length} home${filtered.length === 1 ? '' : 's'} · all unlocked`,
+        message:
+          locked > 0
+            ? `Phone/email counts cover the ${withContacts.length} unlocked home${withContacts.length === 1 ? '' : 's'} only (${phones} with phones · ${withEmails.length} with emails). Unlock the other ${locked} to add them.`
+            : `${phones} with phones · ${withEmails.length} with emails.`,
         options,
         cancelButtonIndex: options.length - 1,
       },
