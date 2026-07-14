@@ -23,15 +23,19 @@ import zipfile
 
 import psycopg2
 
-POOL_RE = re.compile(r"pool", re.I)
+# "SWIMPL" is Potter/Randall (PRAD) for swimming pool.
+POOL_RE = re.compile(r"pool|swimpl", re.I)
 # Dwelling floor areas vary by CAD vocabulary: "Main Area" (Travis-style MA),
 # "MAIN FLOOR RESIDENTIAL"/"2ND FLOOR RESIDENTIAL" (Guadalupe RES1/UPST),
 # "MANUFACTURED HOUSE" (MH), "LIVING AREA"/"2ND STORY LIVING AREA"/"LIVING
 # AREA MH" (Kaufman LA/STR2, Grayson LA/LVM), "RESIDENCE"/"2ND FLOOR"/
-# "MOBILE HOME" (Bell RES/2ND/MH.). Floors are SUMMED per property.
+# "MOBILE HOME" (Bell RES/2ND/MH.), "BASE"/"SECOND FLOOR"/"MHA..MHC"/"MHOME"
+# (Potter+Randall PRAD; "FINISHED BASEMENT" deliberately NOT counted).
+# Floors are SUMMED per property.
 DWELLING_RE = re.compile(
     r"MAIN AREA|MAIN FLOOR|FLOOR RESID|MANUFACTURED HOUSE|LIVING AREA"
-    r"|\bRESIDENCE\b|2ND FLOOR|MOBILE HOME",
+    r"|\bRESIDENCE\b|2ND FLOOR|MOBILE HOME"
+    r"|\bBASE\b|SECOND FLOOR|\bMH[ABC]\b|\bMHOME\b",
     re.I,
 )
 # Grayson's cd MH is "MOBILE HOME APPENDAGES" (porches/decks bolted onto a
