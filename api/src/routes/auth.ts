@@ -6,6 +6,17 @@ import { signSession } from "../auth/jwt.js";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// Apple-review demo account: App Review needs working credentials, but our
+// auth is OTP-only -- so one reserved email logs in with a fixed code instead.
+// Active only when BOTH env vars are set (code must be 6+ chars); no email is
+// ever sent for it, and every other address goes through the normal flow.
+const DEMO_EMAIL = process.env.DEMO_EMAIL?.trim().toLowerCase() || null;
+const DEMO_OTP_CODE =
+    process.env.DEMO_OTP_CODE && process.env.DEMO_OTP_CODE.trim().length >= 6
+        ? process.env.DEMO_OTP_CODE.trim()
+        : null;
+const demoActive = Boolean(DEMO_EMAIL && DEMO_OTP_CODE);
+
 export async function authRoutes(app: FastifyInstance) {
     const emailProvider = createEmailProvider(app.log);
 
@@ -13,6 +24,12 @@ export async function authRoutes(app: FastifyInstance) {
         const email = request.body.email?.trim().toLowerCase();
         if (!email || !EMAIL_RE.test(email)) {
             return reply.code(400).send({ error: "A valid email is required" });
+        }
+
+        // Demo account: nothing to create or send -- the reviewer already has
+        // the fixed code.
+        if (demoActive && email === DEMO_EMAIL) {
+            return reply.send({ message: "Code sent" });
         }
 
         // Anti-abuse (real email delivery is live): 1 send per email per 60s,
@@ -53,6 +70,22 @@ export async function authRoutes(app: FastifyInstance) {
             const code = request.body.code?.trim();
             if (!email || !code) {
                 return reply.code(400).send({ error: "email and code are required" });
+            }
+
+            // Demo account: fixed code, no otp_codes row involved.
+            if (demoActive && email === DEMO_EMAIL) {
+                if (code !== DEMO_OTP_CODE) {
+                    return reply.code(401).send({ error: "Invalid or expired code" });
+                }
+                const { rows: demoRows } = await pool.query(
+                    `INSERT INTO users (product_id, email) VALUES ('tapowner', $1)
+                     ON CONFLICT (product_id, email) DO UPDATE SET email = EXCLUDED.email
+                     RETURNING id, email`,
+                    [email]
+                );
+                const demoUser = demoRows[0];
+                const demoToken = signSession({ userId: demoUser.id, email: demoUser.email });
+                return reply.send({ token: demoToken, user: { id: demoUser.id, email: demoUser.email } });
             }
 
             const { rows } = await pool.query(
