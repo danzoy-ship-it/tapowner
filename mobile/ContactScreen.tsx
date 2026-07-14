@@ -17,14 +17,24 @@ import { saveProperty, traceParcel, trackEvent, type TraceResponse } from './api
 import { useApp } from './AppContext';
 import type { RootNav, RootStackParamList } from './navigation';
 
+// vCard 3.0 requires backslash, semicolon, comma, and newlines to be escaped in
+// text values -- otherwise an owner name or address containing a comma/semicolon
+// silently corrupts the card (wrong fields, truncated address).
+function vcardEscape(value: string): string {
+  return value
+    .replace(/\\/g, '\\\\')
+    .replace(/\r?\n/g, '\\n')
+    .replace(/[;,]/g, (m) => `\\${m}`);
+}
+
 function buildVCard(ownerName: string | null, address: string | null, trace: TraceResponse): string {
-  const lines = ['BEGIN:VCARD', 'VERSION:3.0', `FN:${ownerName ?? 'Property Owner'}`];
-  if (address) lines.push(`ADR;TYPE=home:;;${address};;;;`);
+  const lines = ['BEGIN:VCARD', 'VERSION:3.0', `FN:${vcardEscape(ownerName ?? 'Property Owner')}`];
+  if (address) lines.push(`ADR;TYPE=home:;;${vcardEscape(address)};;;;`);
   for (const phone of trace.phones) {
-    lines.push(`TEL;TYPE=${phone.type === 'Mobile' ? 'CELL' : 'HOME'}:${phone.number}`);
+    lines.push(`TEL;TYPE=${phone.type === 'Mobile' ? 'CELL' : 'HOME'}:${vcardEscape(phone.number)}`);
   }
   for (const email of trace.emails) {
-    lines.push(`EMAIL:${email.email}`);
+    lines.push(`EMAIL:${vcardEscape(email.email)}`);
   }
   lines.push('END:VCARD');
   return lines.join('\r\n');

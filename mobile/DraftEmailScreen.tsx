@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import {
   ActivityIndicator,
+  Platform,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -37,21 +39,31 @@ export function DraftEmailScreen() {
     setError(null);
     try {
       const { subject, body } = await draftEmail(token, parcelId, templateId, toneId);
-      const available = await MailComposer.isAvailableAsync();
-      if (!available) {
-        setError('Mail is not set up on this device.');
-        setGenerating(false);
-        return;
-      }
-      // One composer per recipient: each email is reviewed and sent
-      // individually, never one message addressed to everyone.
       const sendTo = recipients.length > 0 ? recipients : [undefined];
-      for (const recipient of sendTo) {
-        await MailComposer.composeAsync({
-          recipients: recipient ? [recipient] : undefined,
-          subject,
-          body,
-        });
+      const mailAvailable = await MailComposer.isAvailableAsync();
+
+      if (mailAvailable) {
+        // One composer per recipient: each email is reviewed and sent
+        // individually, never one message addressed to everyone. On iOS a brief
+        // gap between composers avoids an "already presenting" crash when they
+        // open back-to-back.
+        for (let i = 0; i < sendTo.length; i++) {
+          const recipient = sendTo[i];
+          await MailComposer.composeAsync({
+            recipients: recipient ? [recipient] : undefined,
+            subject,
+            body,
+          });
+          if (Platform.OS === 'ios' && i < sendTo.length - 1) {
+            await new Promise((resolve) => setTimeout(resolve, 800));
+          }
+        }
+      } else {
+        // No Mail account set up (e.g. a Gmail-only user): fall back to the share
+        // sheet so the draft they just paid for is never stranded -- they can
+        // route it to Gmail, Messages, or anything else.
+        const toLine = recipients.length > 0 ? `To: ${recipients.join(', ')}\n` : '';
+        await Share.share({ message: `${toLine}Subject: ${subject}\n\n${body}` });
       }
       navigation.goBack();
     } catch (err) {
@@ -60,6 +72,11 @@ export function DraftEmailScreen() {
       setGenerating(false);
     }
   }
+
+  // If we traced emails, require at least one selected so a deselected sole
+  // recipient can't open an unaddressed composer. With no traced emails, an
+  // unaddressed draft is fine (they'll add the recipient themselves).
+  const noRecipientChosen = emails.length > 0 && recipients.length === 0;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -120,11 +137,15 @@ export function DraftEmailScreen() {
       )}
 
       {error && <Text style={styles.errorText}>{error}</Text>}
+      {noRecipientChosen && <Text style={styles.hintText}>Pick at least one recipient.</Text>}
 
       <TouchableOpacity
-        style={[styles.generateButton, (!templateId || generating) && styles.generateButtonDisabled]}
+        style={[
+          styles.generateButton,
+          (!templateId || generating || noRecipientChosen) && styles.generateButtonDisabled,
+        ]}
         onPress={handleGenerate}
-        disabled={!templateId || generating}
+        disabled={!templateId || generating || noRecipientChosen}
       >
         {generating ? (
           <ActivityIndicator color="#fff" />
@@ -132,7 +153,7 @@ export function DraftEmailScreen() {
           <Text style={styles.generateButtonText}>
             {recipients.length > 1
               ? `Generate ${recipients.length} separate emails`
-              : 'Generate & open Mail'}
+              : 'Generate & send'}
           </Text>
         )}
       </TouchableOpacity>
@@ -209,6 +230,11 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: '#b91c1c',
+    marginTop: 12,
+    fontSize: 13,
+  },
+  hintText: {
+    color: '#6b7280',
     marginTop: 12,
     fontSize: 13,
   },
