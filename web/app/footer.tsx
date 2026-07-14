@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { API_BASE } from '@/lib/api';
 
 // Server component: pulls the config-driven Texas data-broker notice
@@ -19,17 +20,24 @@ export default async function Footer() {
   const notice = await getDataBrokerNotice();
 
   return (
-    <footer className="border-t border-zinc-200 px-6 py-8 text-sm text-zinc-500 dark:border-zinc-800">
+    <footer className="border-t border-zinc-200 px-6 py-8 text-sm text-zinc-500">
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-3">
-        {notice && <p className="font-medium text-zinc-700 dark:text-zinc-300">{notice}</p>}
+        <Image
+          src="/logo-wordmark.png"
+          alt="TapOwner"
+          width={211}
+          height={40}
+          style={{ height: 32, width: 'auto' }}
+        />
+        {notice && <p className="font-medium text-zinc-700">{notice}</p>}
         <div className="flex gap-6">
-          <Link href="/billing" className="hover:text-zinc-800 dark:hover:text-zinc-200">
+          <Link href="/billing" className="hover:text-brand-navy">
             Manage billing
           </Link>
-          <Link href="/terms" className="hover:text-zinc-800 dark:hover:text-zinc-200">
+          <Link href="/terms" className="hover:text-brand-navy">
             Terms of Service
           </Link>
-          <Link href="/privacy" className="hover:text-zinc-800 dark:hover:text-zinc-200">
+          <Link href="/privacy" className="hover:text-brand-navy">
             Privacy Policy
           </Link>
         </div>

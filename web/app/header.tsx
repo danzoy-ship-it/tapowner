@@ -1,29 +1,28 @@
 import Link from 'next/link';
 import { Logo } from './logo';
 
-// Site-wide top bar. Kept lightweight so it sits comfortably above the minimal
-// form pages (signup, billing, partner) as well as the marketing home.
+// Site-wide top bar. White identity, navy links, orange CTA.
 export default function Header() {
   return (
-    <header className="sticky top-0 z-20 border-b border-zinc-200/70 bg-white/80 backdrop-blur dark:border-zinc-800/70 dark:bg-black/70">
+    <header className="sticky top-0 z-20 border-b border-zinc-200/70 bg-white/90 backdrop-blur">
       <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-3">
-        <Logo />
+        <Logo height={28} />
         <nav className="flex items-center gap-5 text-sm">
           <Link
-            href="/#pricing"
-            className="hidden text-zinc-600 hover:text-zinc-900 sm:block dark:text-zinc-400 dark:hover:text-zinc-100"
+            href="/#reverse-prospecting"
+            className="hidden text-brand-navy/80 hover:text-brand-navy sm:block"
           >
+            Reverse Prospecting
+          </Link>
+          <Link href="/#pricing" className="hidden text-brand-navy/80 hover:text-brand-navy sm:block">
             Pricing
           </Link>
-          <Link
-            href="/partner"
-            className="hidden text-zinc-600 hover:text-zinc-900 sm:block dark:text-zinc-400 dark:hover:text-zinc-100"
-          >
+          <Link href="/partner" className="hidden text-brand-navy/80 hover:text-brand-navy sm:block">
             Partners
           </Link>
           <Link
             href="/signup"
-            className="rounded-full bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
+            className="rounded-full bg-brand-orange px-4 py-2 font-medium text-white transition-colors hover:bg-brand-orange-dark"
           >
             Start free trial
           </Link>

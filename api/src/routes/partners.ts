@@ -78,22 +78,21 @@ export async function partnersRoutes(app: FastifyInstance) {
             code = await generateUniqueCode();
         }
 
-        const defaultRate = type === "affiliate" ? 0.25 : null;
-        const defaultMonthsCap = type === "affiliate" ? 12 : null;
+        const model = comp_model ?? "recurring";
+        // A flat-bounty affiliate has no rate/months window (the bounty is
+        // config.affiliate_flat_cents); leave both NULL so the record isn't
+        // misleading. Recurring affiliates default to 25% / 12 months.
+        const isRecurringAffiliate = type === "affiliate" && model !== "flat";
+        const defaultRate = isRecurringAffiliate ? 0.25 : null;
+        const defaultMonthsCap = isRecurringAffiliate ? 12 : null;
+        const finalRate = model === "flat" ? null : (rate ?? defaultRate);
+        const finalMonthsCap = model === "flat" ? null : (months_cap ?? defaultMonthsCap);
 
         const { rows } = await pool.query(
             `INSERT INTO partners (type, user_id, name, code, comp_model, rate, months_cap)
              VALUES ($1, $2, $3, $4, $5, $6, $7)
              RETURNING id, type, name, code, comp_model, rate, months_cap, status, created_at`,
-            [
-                type,
-                userId,
-                name,
-                code,
-                comp_model ?? "recurring",
-                rate ?? defaultRate,
-                months_cap ?? defaultMonthsCap,
-            ]
+            [type, userId, name, code, model, finalRate, finalMonthsCap]
         );
 
         if (type === "founding_agent") {

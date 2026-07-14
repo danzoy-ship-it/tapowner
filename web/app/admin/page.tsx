@@ -141,7 +141,7 @@ export default function AdminPage() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-4 w-full rounded-lg bg-blue-600 px-4 py-3 font-medium text-white disabled:opacity-50 hover:bg-blue-700"
+            className="mt-4 w-full rounded-lg bg-brand-orange px-4 py-3 font-medium text-white disabled:opacity-50 hover:bg-brand-orange-dark"
           >
             {loading ? 'Checking…' : 'Enter'}
           </button>
@@ -213,7 +213,37 @@ export default function AdminPage() {
                         {p.status === 'revoked' ? ' · revoked' : ''}
                       </div>
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs">{p.code}</td>
+                    <td className="px-4 py-3">
+                      <div className="font-mono text-xs text-zinc-900 dark:text-zinc-50">{p.code}</div>
+                      <div className="mt-1 flex items-center gap-2 text-xs">
+                        <button
+                          onClick={() => {
+                            void navigator.clipboard.writeText(
+                              `${window.location.origin}/r/${p.code}`
+                            );
+                          }}
+                          className="text-brand-orange hover:text-brand-orange-dark"
+                          title={`${typeof window !== 'undefined' ? window.location.origin : ''}/r/${p.code}`}
+                        >
+                          Copy link
+                        </button>
+                        <a
+                          href={`${API_BASE}/partners/${p.code}/qr`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-zinc-500 hover:text-brand-navy"
+                        >
+                          QR
+                        </a>
+                      </div>
+                      <div className="mt-0.5 text-[10px] uppercase tracking-wide text-zinc-400">
+                        {p.comp_model === 'flat'
+                          ? '$20 flat'
+                          : p.type === 'affiliate'
+                            ? '25% · 12mo'
+                            : 'give-a-month'}
+                      </div>
+                    </td>
                     <td className="px-4 py-3 text-right tabular-nums">{p.clicks}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{p.signups}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{p.paid_conversions}</td>
@@ -233,7 +263,7 @@ export default function AdminPage() {
                             disabled={busyId === p.id}
                             className={`rounded-full px-3 py-1.5 text-xs font-medium disabled:opacity-50 ${
                               overThreshold
-                                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                ? 'bg-brand-orange text-white hover:bg-brand-orange-dark'
                                 : 'border border-zinc-300 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900'
                             }`}
                           >
@@ -291,12 +321,17 @@ function CreatePartner({
 }) {
   const [open, setOpen] = useState(false);
   const [type, setType] = useState('affiliate');
+  const [compModel, setCompModel] = useState('recurring');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Comp model only applies to affiliates: 25%/12mo recurring vs a $20 flat
+  // bounty. founding_agent/user_referral are give-a-month, no comp model.
+  const showComp = type === 'affiliate';
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -311,6 +346,8 @@ function CreatePartner({
           type,
           name: name.trim(),
           email: email.trim(),
+          ...(showComp ? { comp_model: compModel } : {}),
+          ...(showComp && compModel === 'flat' ? { rate: null, months_cap: null } : {}),
           ...(code.trim() ? { code: code.trim() } : {}),
         }),
       });
@@ -335,7 +372,7 @@ function CreatePartner({
     return (
       <button
         onClick={() => setOpen(true)}
-        className="rounded-full bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+        className="rounded-full bg-brand-orange px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-orange-dark"
       >
         + Create partner
       </button>
@@ -355,11 +392,24 @@ function CreatePartner({
             onChange={(e) => setType(e.target.value)}
             className="rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
           >
-            <option value="affiliate">affiliate (25% / 12mo)</option>
-            <option value="founding_agent">founding_agent</option>
-            <option value="user_referral">user_referral</option>
+            <option value="affiliate">affiliate</option>
+            <option value="founding_agent">founding_agent (lifetime Closer)</option>
+            <option value="user_referral">user_referral (give-a-month)</option>
           </select>
         </label>
+        {showComp && (
+          <label className="flex flex-col gap-1 text-xs text-zinc-500">
+            Comp model
+            <select
+              value={compModel}
+              onChange={(e) => setCompModel(e.target.value)}
+              className="rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+            >
+              <option value="recurring">25% of subs · first 12 months</option>
+              <option value="flat">$20 flat per activation</option>
+            </select>
+          </label>
+        )}
         <label className="flex flex-col gap-1 text-xs text-zinc-500">
           Name
           <input
@@ -393,7 +443,7 @@ function CreatePartner({
         <button
           type="submit"
           disabled={loading}
-          className="rounded-full bg-blue-600 px-5 py-2 text-sm font-medium text-white disabled:opacity-50 hover:bg-blue-700"
+          className="rounded-full bg-brand-orange px-5 py-2 text-sm font-medium text-white disabled:opacity-50 hover:bg-brand-orange-dark"
         >
           {loading ? 'Creating…' : 'Create'}
         </button>

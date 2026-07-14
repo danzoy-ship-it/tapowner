@@ -1,35 +1,41 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
-// TapOwner mark: a map pin whose center is a "tap" ripple — the product in one
-// glyph (tap a location → the owner). Brand blue #2563eb matches the app's
-// primary action color so web and app read as one product.
-export function LogoMark({ className = 'h-7 w-7' }: { className?: string }) {
+// The REAL TapOwner art (mobile/assets/logo-*.png, trimmed into web/public).
+// Never re-draw the mark as an SVG — these are the brand assets.
+
+export function LogoMark({
+  className = '',
+  size = 40,
+}: {
+  className?: string;
+  size?: number;
+}) {
   return (
-    <svg
+    <Image
+      src="/logo-mark.png"
+      alt="TapOwner"
+      width={size}
+      height={size}
       className={className}
-      viewBox="0 0 32 32"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      <path
-        d="M16 2.5c-5.8 0-10.5 4.5-10.5 10.2 0 7.1 9.1 15.5 10 16.3.3.3.7.3 1 0 .9-.8 10-9.2 10-16.3C26.5 7 21.8 2.5 16 2.5Z"
-        fill="#2563eb"
-      />
-      {/* tap ripple in the pin head */}
-      <circle cx="16" cy="12.5" r="5.5" fill="#fff" />
-      <circle cx="16" cy="12.5" r="2.4" fill="#2563eb" />
-    </svg>
+      priority
+    />
   );
 }
 
-export function Logo({ className = '' }: { className?: string }) {
+export function Logo({ height = 30 }: { height?: number }) {
+  // Wordmark aspect ratio ~5.27:1 (trimmed asset is 1133×215).
+  const width = Math.round(height * (1133 / 215));
   return (
-    <Link href="/" className={`inline-flex items-center gap-2 ${className}`}>
-      <LogoMark />
-      <span className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-        Tap<span className="text-blue-600">Owner</span>
-      </span>
+    <Link href="/" className="inline-flex items-center" aria-label="TapOwner home">
+      <Image
+        src="/logo-wordmark.png"
+        alt="TapOwner"
+        width={width}
+        height={height}
+        priority
+        style={{ height, width: 'auto' }}
+      />
     </Link>
   );
 }

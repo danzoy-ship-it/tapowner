@@ -12,6 +12,16 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Brand palette — sampled from the real logo art. Navy is structure/headlines,
+   orange is the single accent + every primary CTA. */
+@theme {
+  --color-brand-navy: #052158;
+  --color-brand-navy-700: #0a2f74;
+  --color-brand-orange: #f27f09;
+  --color-brand-orange-dark: #d96f06;
+  --color-brand-orange-50: #fef3e6;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;

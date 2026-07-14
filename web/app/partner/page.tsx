@@ -141,7 +141,7 @@ export default function PartnerPage() {
             <button
               type="submit"
               disabled={loading}
-              className="rounded-lg bg-black px-4 py-3 font-medium text-white disabled:opacity-50 dark:bg-white dark:text-black"
+              className="rounded-lg bg-brand-orange px-4 py-3 font-medium text-white transition-colors hover:bg-brand-orange-dark disabled:opacity-50"
             >
               {loading ? 'Sending…' : 'Send code'}
             </button>
@@ -165,7 +165,7 @@ export default function PartnerPage() {
             <button
               type="submit"
               disabled={loading}
-              className="rounded-lg bg-black px-4 py-3 font-medium text-white disabled:opacity-50 dark:bg-white dark:text-black"
+              className="rounded-lg bg-brand-orange px-4 py-3 font-medium text-white transition-colors hover:bg-brand-orange-dark disabled:opacity-50"
             >
               {loading ? 'Verifying…' : 'Log in'}
             </button>
