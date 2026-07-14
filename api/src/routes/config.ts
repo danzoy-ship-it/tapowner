@@ -26,6 +26,13 @@ function buildPayload(config: Record<string, any>): Record<string, unknown> {
         // off without an app build if App Review ever objects: set
         // products.config.manage_plan_url to "" to disable.
         manage_plan_url: config.manage_plan_url ?? "https://tapowner.com/billing",
+        // Farm export pricing (Frederick 2026-07-14): beta = free w/ monthly
+        // row cap; launch = flip farm_export_beta and meter at price_cents/row.
+        farm_export: {
+            price_cents: config.farm_export_price_cents ?? 10,
+            beta: config.farm_export_beta ?? true,
+            beta_cap_rows: config.farm_export_beta_cap_rows ?? 100,
+        },
         // Texas Data Broker Act conspicuous-notice slot (compliance appendix
         // item 3): empty until registration; the SOS-prescribed text goes into
         // products.config.data_broker_notice and appears on web + app with no

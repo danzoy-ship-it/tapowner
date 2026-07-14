@@ -4,7 +4,13 @@ import { requireAuth } from "../auth/middleware.js";
 import { getProductConfig } from "../lib/config.js";
 import { requireFeature } from "../lib/entitlements.js";
 import { formatSitusAddress } from "../lib/address.js";
-import { DRAFT_TEMPLATES, DRAFT_TONES, buildDraftPrompt, type DraftTone } from "../draft/templates.js";
+import {
+    DRAFT_TEMPLATES,
+    DRAFT_TONES,
+    buildDraftPrompt,
+    buildFarmDraftPrompt,
+    type DraftTone,
+} from "../draft/templates.js";
 
 const ANTHROPIC_MODEL = "claude-haiku-4-5-20251001";
 
@@ -197,4 +203,122 @@ export async function draftRoutes(app: FastifyInstance) {
             return reply.send({ subject, body });
         }
     );
+
+    // Reverse-prospecting letter: ONE letter for every home matching the farm
+    // criteria in a drawn area. No parcel/trace requirement -- the letter is
+    // generic-by-design (goes to a list via mail merge). Shares the daily
+    // draft rate limit and the draft_email feature gate.
+    app.post<{
+        Body: {
+            tone?: string;
+            criteria?: {
+                min_sqft?: number;
+                min_beds?: number;
+                min_baths?: number;
+                pool?: boolean;
+                single_story?: boolean;
+            };
+        };
+    }>("/draft/farm", async (request, reply) => {
+        const session = await requireAuth(request, reply);
+        if (!session) return;
+
+        const tone = (request.body.tone ?? "professional") as DraftTone;
+        if (!DRAFT_TONES.includes(tone)) {
+            return reply.code(400).send({ error: "Invalid tone" });
+        }
+        const c = request.body.criteria ?? {};
+        const criteria = {
+            min_sqft: Number.isFinite(Number(c.min_sqft)) && Number(c.min_sqft) > 0 ? Math.floor(Number(c.min_sqft)) : undefined,
+            min_beds: Number.isInteger(c.min_beds) && (c.min_beds as number) > 0 ? (c.min_beds as number) : undefined,
+            min_baths: Number.isInteger(c.min_baths) && (c.min_baths as number) > 0 ? (c.min_baths as number) : undefined,
+            pool: c.pool === true ? true : undefined,
+            single_story: c.single_story === true ? true : undefined,
+        };
+
+        if (!(await requireFeature(session.userId, "draft_email", reply))) return;
+
+        const { rows: userRows } = await pool.query(`SELECT agent_profile FROM users WHERE id = $1`, [
+            session.userId,
+        ]);
+        const agentProfile = userRows[0]?.agent_profile ?? {};
+        const agentName = typeof agentProfile.name === "string" ? agentProfile.name.trim() : "";
+        if (!agentName) {
+            return reply.code(400).send({ error: "Complete your agent profile in Settings first" });
+        }
+        const agentBrokerage = typeof agentProfile.brokerage === "string" ? agentProfile.brokerage : null;
+        const agentPhone = typeof agentProfile.phone === "string" ? agentProfile.phone : null;
+
+        const config = await getProductConfig();
+        const dailyLimit = config.draft_rate_limit_per_day ?? 30;
+        const { rows: countRows } = await pool.query(
+            `SELECT count(*) FROM events
+             WHERE user_id = $1 AND name = 'draft_created' AND created_at > now() - interval '1 day'`,
+            [session.userId]
+        );
+        if (Number(countRows[0].count) >= dailyLimit) {
+            return reply.code(429).send({ error: "Daily draft limit reached, try again tomorrow" });
+        }
+
+        const apiKey = process.env.ANTHROPIC_API_KEY;
+        if (!apiKey) {
+            return reply.code(503).send({ error: "AI drafting not configured yet" });
+        }
+
+        const prompt = buildFarmDraftPrompt({ tone, agentName, agentBrokerage, agentPhone, criteria });
+
+        const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: {
+                "x-api-key": apiKey,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({
+                model: ANTHROPIC_MODEL,
+                max_tokens: 600,
+                temperature: 0.7,
+                messages: [{ role: "user", content: prompt }],
+            }),
+        });
+        if (!anthropicRes.ok) {
+            const errBody = await anthropicRes.text();
+            app.log.error({ status: anthropicRes.status, errBody }, "Anthropic farm draft failed");
+            return reply.code(502).send({ error: "Draft generation failed, try again" });
+        }
+
+        const data = (await anthropicRes.json()) as AnthropicResponse;
+        const rawText = data.content?.find((cc) => cc.type === "text")?.text ?? "";
+        const text = rawText.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "").trim();
+
+        let subject = "";
+        let body = "";
+        try {
+            const parsed = JSON.parse(text);
+            subject = String(parsed.subject ?? "").trim();
+            body = String(parsed.body ?? "").trim();
+        } catch {
+            subject = "A buyer may be looking for your home";
+            body = text.trim();
+        }
+        if (!subject || !body) {
+            return reply.code(502).send({ error: "Draft generation failed, try again" });
+        }
+
+        const signatureLines = [agentName, agentBrokerage, agentPhone].filter((l): l is string => Boolean(l));
+        body = `${body}\n\n${signatureLines.join("\n")}`;
+
+        await pool.query(`INSERT INTO events (user_id, name, props) VALUES ($1, 'draft_created', $2)`, [
+            session.userId,
+            JSON.stringify({
+                farm: true,
+                tone,
+                criteria,
+                input_tokens: data.usage?.input_tokens ?? 0,
+                output_tokens: data.usage?.output_tokens ?? 0,
+            }),
+        ]);
+
+        return reply.send({ subject, body });
+    });
 }

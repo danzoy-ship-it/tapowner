@@ -5,6 +5,7 @@ import { formatSitusAddress } from "../lib/address.js";
 import { csvCell } from "../lib/csv.js";
 import { isPlaceholderOwner } from "../lib/owners.js";
 import { getLatestSubscription, isSubscriptionUsable } from "../lib/entitlements.js";
+import { getProductConfig } from "../lib/config.js";
 import { logEvent } from "../lib/events.js";
 
 // Farm mode caps: a neighborhood farm is a few hundred homes. The result cap
@@ -147,40 +148,54 @@ export async function parcelsRoutes(app: FastifyInstance) {
                         p.mailing_address, p.mailing_city, p.mailing_state, p.mailing_zip,
                         p.is_absentee,
                         p.living_area_sqft, p.bedrooms, p.baths_full, p.baths_half,
-                        p.stories, p.year_built, p.has_pool
-                 FROM parcels p, poly
+                        p.stories, p.year_built, p.has_pool,
+                        tr.payload AS trace_payload
+                 FROM parcels p
+                 CROSS JOIN poly
+                 LEFT JOIN user_traces ut ON ut.user_id = $2 AND ut.parcel_id = p.id
+                 LEFT JOIN trace_results tr ON tr.id = ut.trace_result_id
                  WHERE p.geom && poly.g
                    AND ST_Within(ST_PointOnSurface(p.geom), poly.g)
                    AND p.is_protected = false
                    AND p.owner_name IS NOT NULL
                  ORDER BY p.situs_street NULLS LAST, p.situs_number NULLS LAST, p.id
                  LIMIT ${FARM_MAX_PARCELS + 1}`,
-                [geojson]
+                [geojson, session.userId]
             );
 
             const capped = rows.length > FARM_MAX_PARCELS;
             const parcels = rows
                 .slice(0, FARM_MAX_PARCELS)
                 .filter((r) => !isPlaceholderOwner(r.owner_name))
-                .map((r) => ({
-                    id: r.id,
-                    owner_name: r.owner_name,
-                    situs_address: formatSitusAddress(r),
-                    situs_city: r.situs_city,
-                    situs_zip: r.situs_zip,
-                    mailing_address: r.mailing_address,
-                    mailing_city: r.mailing_city,
-                    mailing_state: r.mailing_state,
-                    mailing_zip: r.mailing_zip,
-                    is_absentee: r.is_absentee,
-                    living_area_sqft: r.living_area_sqft,
-                    bedrooms: r.bedrooms,
-                    baths_full: r.baths_full,
-                    baths_half: r.baths_half,
-                    stories: r.stories,
-                    year_built: r.year_built,
-                    has_pool: r.has_pool,
-                }));
+                .map((r) => {
+                    // Contacts the user already paid to trace ride along (owned
+                    // data only -- the LEFT JOIN is scoped to this user).
+                    const payload = (r.trace_payload ?? null) as {
+                        phones?: Array<{ number?: string }>;
+                        emails?: Array<{ email?: string }>;
+                    } | null;
+                    return {
+                        id: r.id,
+                        owner_name: r.owner_name,
+                        situs_address: formatSitusAddress(r),
+                        situs_city: r.situs_city,
+                        situs_zip: r.situs_zip,
+                        mailing_address: r.mailing_address,
+                        mailing_city: r.mailing_city,
+                        mailing_state: r.mailing_state,
+                        mailing_zip: r.mailing_zip,
+                        is_absentee: r.is_absentee,
+                        living_area_sqft: r.living_area_sqft,
+                        bedrooms: r.bedrooms,
+                        baths_full: r.baths_full,
+                        baths_half: r.baths_half,
+                        stories: r.stories,
+                        year_built: r.year_built,
+                        has_pool: r.has_pool,
+                        phones: payload ? (payload.phones ?? []).map((x) => x.number).filter(Boolean) : [],
+                        emails: payload ? (payload.emails ?? []).map((x) => x.email).filter(Boolean) : [],
+                    };
+                });
 
             await logEvent(session.userId, "farm_search", {
                 count: parcels.length,
@@ -193,6 +208,7 @@ export async function parcelsRoutes(app: FastifyInstance) {
                     "Owner", "Property Address", "City", "ZIP",
                     "Mailing Address", "Mailing City", "Mailing State", "Mailing ZIP", "Absentee",
                     "Sqft", "Beds", "Baths Full", "Baths Half", "Stories", "Year Built", "Pool",
+                    "Phones", "Emails",
                 ];
                 const lines = [header.map(csvCell).join(",")];
                 for (const p of parcels) {
@@ -214,6 +230,8 @@ export async function parcelsRoutes(app: FastifyInstance) {
                             p.stories ?? "",
                             p.year_built ?? "",
                             p.has_pool === true ? "Yes" : p.has_pool === false ? "No" : "",
+                            p.phones.join("; "),
+                            p.emails.join("; "),
                         ]
                             .map(csvCell)
                             .join(",")
@@ -228,4 +246,53 @@ export async function parcelsRoutes(app: FastifyInstance) {
             return reply.send({ count: parcels.length, capped, parcels });
         }
     );
+
+    // Farm export accounting. Beta (config farm_export_beta=true): free, capped
+    // at farm_export_beta_cap_rows per calendar month; the client calls this
+    // BEFORE sharing the file and blocks on allowed=false. At launch the flag
+    // flips and this becomes the hook that reports Stripe meter events at
+    // farm_export_price_cents/row.
+    app.post<{ Body: { rows?: number } }>("/farm/export-log", async (request, reply) => {
+        const session = await requireAuth(request, reply);
+        if (!session) return;
+
+        const rows = Number(request.body?.rows);
+        if (!Number.isInteger(rows) || rows <= 0 || rows > FARM_MAX_PARCELS) {
+            return reply.code(400).send({ error: "rows must be 1-" + FARM_MAX_PARCELS });
+        }
+
+        const config = await getProductConfig();
+        const beta = config.farm_export_beta ?? true;
+        const cap = config.farm_export_beta_cap_rows ?? 100;
+
+        if (!beta) {
+            // Launch mode: no cap here (metering to be wired when the flag
+            // flips). Log and allow.
+            await pool.query(`INSERT INTO farm_export_log (user_id, rows) VALUES ($1, $2)`, [
+                session.userId,
+                rows,
+            ]);
+            return reply.send({ allowed: true, beta: false, remaining: null });
+        }
+
+        const { rows: usedRows } = await pool.query(
+            `SELECT COALESCE(SUM(rows), 0)::int AS used FROM farm_export_log
+             WHERE user_id = $1 AND created_at >= date_trunc('month', now())`,
+            [session.userId]
+        );
+        const used = usedRows[0].used as number;
+        if (used + rows > cap) {
+            return reply.send({
+                allowed: false,
+                beta: true,
+                remaining: Math.max(0, cap - used),
+                error: `Beta export limit: ${cap} rows/month. ${Math.max(0, cap - used)} left — resets on the 1st.`,
+            });
+        }
+        await pool.query(`INSERT INTO farm_export_log (user_id, rows) VALUES ($1, $2)`, [
+            session.userId,
+            rows,
+        ]);
+        return reply.send({ allowed: true, beta: true, remaining: cap - used - rows });
+    });
 }

@@ -328,6 +328,9 @@ export interface FarmParcel {
   stories: string | null;
   year_built: number | null;
   has_pool: boolean | null;
+  // Contacts the user already owns (traced) for this parcel.
+  phones: string[];
+  emails: string[];
 }
 
 export interface FarmResult {
@@ -353,6 +356,43 @@ export async function farmCsv(token: string, polygon: [number, number][]): Promi
   });
   if (!res.ok) throw new Error('Export failed');
   return res.text();
+}
+
+// Beta export accounting: ask before sharing a CSV; blocks when the monthly
+// beta cap is used up. Post-beta this becomes the metered-billing hook.
+export async function logFarmExport(
+  token: string,
+  rows: number
+): Promise<{ allowed: boolean; beta: boolean; remaining: number | null; error?: string }> {
+  const res = await timedFetch(`${API_BASE}/farm/export-log`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ rows }),
+  });
+  return handleJson(res);
+}
+
+export interface FarmCriteria {
+  min_sqft?: number;
+  min_beds?: number;
+  min_baths?: number;
+  pool?: boolean;
+  single_story?: boolean;
+}
+
+// Reverse-prospecting letter: one AI-drafted letter for every home matching
+// the criteria (mail-merge ready; signature appended server-side).
+export async function farmDraft(
+  token: string,
+  tone: string,
+  criteria: FarmCriteria
+): Promise<{ subject: string; body: string }> {
+  const res = await timedFetch(`${API_BASE}/draft/farm`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tone, criteria }),
+  });
+  return handleJson(res);
 }
 
 export async function updateSavedPropertyStatus(

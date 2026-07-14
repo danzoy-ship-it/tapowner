@@ -87,3 +87,57 @@ Rules:
 
 Respond with ONLY a JSON object of the exact shape {"subject": "...", "body": "..."} and nothing else -- no code fences, no commentary.`;
 }
+
+export interface FarmCriteria {
+    min_sqft?: number | undefined;
+    min_beds?: number | undefined;
+    min_baths?: number | undefined;
+    pool?: boolean | undefined;
+    single_story?: boolean | undefined;
+}
+
+export function describeFarmCriteria(c: FarmCriteria): string {
+    const parts: string[] = [];
+    if (c.min_sqft) parts.push(`at least ${c.min_sqft.toLocaleString("en-US")} square feet`);
+    if (c.min_beds) parts.push(`${c.min_beds}+ bedrooms`);
+    if (c.min_baths) parts.push(`${c.min_baths}+ bathrooms`);
+    if (c.pool) parts.push("a swimming pool");
+    if (c.single_story) parts.push("single-story");
+    return parts.join(", ");
+}
+
+// Reverse-prospecting letter: ONE letter for every matching home in a drawn
+// area ("I may have a buyer looking for exactly your kind of house"). The
+// criteria are structured numbers/booleans (never free text), so no
+// injection surface; the letter deliberately says "may have" -- it goes to
+// many homes and must stay honest.
+export function buildFarmDraftPrompt(input: {
+    tone: DraftTone;
+    agentName: string;
+    agentBrokerage: string | null;
+    agentPhone: string | null;
+    criteria: FarmCriteria;
+}): string {
+    const { tone, agentName, agentBrokerage, agentPhone, criteria } = input;
+    const agentLine = [agentName, agentBrokerage].filter(Boolean).join(", ");
+    const criteriaLine = describeFarmCriteria(criteria) || "homes like theirs in this neighborhood";
+
+    return `You are drafting a short reverse-prospecting letter for a Texas real estate agent to send to homeowners in one neighborhood. Write in a ${tone} tone.
+
+Agent: ${agentLine}${agentPhone ? ` (${agentPhone})` : ""}
+Buyer criteria the homes match: ${criteriaLine}
+
+The situation: the agent recently showed buyers in this neighborhood; the home they toured wasn't quite right, but they loved the area, and inventory is limited. The recipient's home matches what such a buyer is looking for.
+
+Rules:
+- This letter goes to MANY homeowners, so it must be honest at scale: say the agent "may have" a motivated, qualified buyer -- NEVER claim a specific buyer is committed to this exact house.
+- Open with a generic respectful greeting ("Hello," or "Dear neighbor,") -- no names; the agent sends this to a list.
+- Mention the buyer criteria naturally (e.g. "looking for ${criteriaLine}") and that the recipient's home fits.
+- Acknowledge they may not be thinking of selling; ask for a brief, no-pressure conversation (10 minutes or so).
+- Keep it under 170 words, no more than 3 short paragraphs.
+- Do NOT include a sign-off, closing, or signature block -- that gets appended separately, verbatim. End after the last sentence of the message.
+- No markdown, no placeholders like [Name] -- this must be ready to send as-is.
+- Do not invent specifics (no made-up buyer names, budgets, timelines, or addresses).
+
+Respond with ONLY a JSON object of the exact shape {"subject": "...", "body": "..."} and nothing else -- no code fences, no commentary.`;
+}
