@@ -127,7 +127,12 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 // Credits `partnerUserId`'s own Stripe customer balance by the value of one
 // month at their current tier (falls back to the Closer price if they have
 // no subscription of their own).
-async function creditReferrerFreeMonth(stripe: Stripe, partnerUserId: number, config: Record<string, any>) {
+async function creditReferrerFreeMonth(
+    stripe: Stripe,
+    partnerUserId: number,
+    config: Record<string, any>,
+    referralId: number
+) {
     const { rows } = await pool.query(
         `SELECT stripe_customer_id, tier FROM subscriptions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1`,
         [partnerUserId]
@@ -138,11 +143,13 @@ async function creditReferrerFreeMonth(stripe: Stripe, partnerUserId: number, co
     const tier = referrerSub.tier ?? "closer";
     const amountCents = config.tiers?.[tier]?.price_cents ?? config.tiers?.closer?.price_cents ?? 1999;
 
-    await stripe.customers.createBalanceTransaction(referrerSub.stripe_customer_id, {
-        amount: -amountCents,
-        currency: "usd",
-        description: "Referral reward: 1 free month",
-    });
+    // Idempotency key ties the credit to this referral, so a retry (or a race
+    // that slipped past the DB claim) applies the balance credit only once.
+    await stripe.customers.createBalanceTransaction(
+        referrerSub.stripe_customer_id,
+        { amount: -amountCents, currency: "usd", description: "Referral reward: 1 free month" },
+        { idempotencyKey: `referral-freemonth-${referralId}` }
+    );
 }
 
 function nonMeteredRevenueCents(invoice: Stripe.Invoice): number {
@@ -191,13 +198,15 @@ async function handleInvoicePaid(stripe: Stripe, invoice: Stripe.Invoice, eventI
     const referral = referralRows[0];
     if (!referral) return; // not a referred user, nothing to do
 
-    const isFirstPaidInvoice = referral.first_paid_at === null;
-    if (isFirstPaidInvoice) {
-        await pool.query(
-            `UPDATE referrals SET status = 'activated', first_paid_at = now() WHERE id = $1`,
-            [referral.id]
-        );
-    }
+    // Atomically claim the first-paid milestone: the `AND first_paid_at IS NULL`
+    // guard means only ONE of two concurrent/duplicate invoice.paid deliveries
+    // wins, so the referrer can't be credited a free month twice.
+    const { rows: claimRows } = await pool.query(
+        `UPDATE referrals SET status = 'activated', first_paid_at = now()
+         WHERE id = $1 AND first_paid_at IS NULL RETURNING id`,
+        [referral.id]
+    );
+    const isFirstPaidInvoice = claimRows.length > 0;
 
     const { rows: partnerRows } = await pool.query(`SELECT * FROM partners WHERE id = $1`, [
         referral.partner_id,
@@ -209,7 +218,7 @@ async function handleInvoicePaid(stripe: Stripe, invoice: Stripe.Invoice, eventI
 
     if (partner.type === "user_referral" || partner.type === "founding_agent") {
         if (isFirstPaidInvoice && partner.user_id) {
-            await creditReferrerFreeMonth(stripe, partner.user_id, config);
+            await creditReferrerFreeMonth(stripe, partner.user_id, config, referral.id);
         }
         return;
     }
@@ -262,12 +271,19 @@ async function handleChargeRefunded(stripe: Stripe, charge: Stripe.Charge, event
         [invoiceId]
     );
 
+    // Prorate the clawback by how much of the charge was actually refunded --
+    // a partial refund reverses only that fraction, not the whole commission.
+    const refundFraction =
+        charge.amount > 0 ? Math.min(1, charge.amount_refunded / charge.amount) : 1;
+
     for (const row of rows) {
+        const clawbackCents = Math.round(row.amount_cents * refundFraction);
+        if (clawbackCents <= 0) continue;
         await pool.query(
             `INSERT INTO commission_ledger (partner_id, referral_id, invoice_id, amount_cents, stripe_event_id)
              VALUES ($1, $2, $3, $4, $5)
              ON CONFLICT (stripe_event_id) DO NOTHING`,
-            [row.partner_id, row.referral_id, invoiceId, -row.amount_cents, `clawback:${row.id}`]
+            [row.partner_id, row.referral_id, invoiceId, -clawbackCents, `clawback:${row.id}`]
         );
     }
 }
