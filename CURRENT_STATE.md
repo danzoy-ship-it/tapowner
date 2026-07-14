@@ -21,12 +21,12 @@ proof; costs stated before incurring them.
 ## WHERE IT IS RIGHT NOW
 
 **The app is feature-complete for founding-agent beta and hardened.** Eleven TestFlight
-builds; **build #11 (farm actions redesign) confirmed on-device 2026-07-14** — Frederick's
-same-morning evaluation drove farm-flow v2, now **shipped as build #12** (submission
-scheduled on EAS; verify it lands in TestFlight — the CLI dropped its polling connection
-after "Scheduled iOS submission" but EAS Submit runs server-side): unlock-all-first action
-sheet ("Unlock contacts for all N · up to $X"), "all 13" wording once fully worked, session
-no-match tracking, and Draft-letter folded into the outreach screen as an Email/Letter toggle. The entire 6-agent audit backlog (A boot / B billing / C security /
+builds; **build #12 (farm flow v2) confirmed on-device 2026-07-14** (Frederick's screenshots
+show the unlock-all-first + "Actions for these 13 homes" layout — "way more intuitive").
+**Build #13 shipped** with his follow-up polish: post-unlock popup simplified to "All contacts
+now unlocked." and the Unlock button flips to green "✓ All contacts unlocked · $0" once the
+pass finishes. Flow builds on: unlock-all-first action sheet, "all 13" wording once worked,
+session no-match tracking, Email/Letter toggle in the outreach screen. The entire 6-agent audit backlog (A boot / B billing / C security /
 D data / E mobile) is CLOSED — including C2 (data endpoints now REQUIRE auth; anonymous
 scraping 401s) and D1 (51 mis-projected counties repaired in place). Farm mode grew into
 **Reverse Prospecting**: draw area → filter by beds/sqft/pool/stories → one-button Contact

@@ -33,16 +33,15 @@ transcription artifacts; give layman step-by-step for anything he must do):**
 
 ## 2. PRODUCT STATE (as of handoff)
 
-- **On Frederick's phone:** build **1.0.0 (11)** confirmed on-device; **build #12 (farm
-  flow v2) SHIPPED 2026-07-14** — built + submission scheduled on EAS. ⚠️ The build CLI lost
-  its network connection while polling submission status (GraphQL error) AFTER printing
-  "✔ Scheduled iOS submission" (id 9f4a6484-c3f0-4330-9495-612a12f33875); EAS Submit runs
-  server-side so it should still reach TestFlight — **verify it appears; if not in ~15 min,
-  re-run `npx eas-cli submit --platform ios --latest` from mobile/.** #12 contents: while any
-  home is locked the action sheet leads with `🔓 Unlock contacts for all N · up to $X` (+ free
-  CSV); once fully worked, actions say "all 13"; session no-match tracking ("no verified
-  contact — you were not charged"); "Draft letter only" removed → `FarmDraftScreen` has an
-  Email/Letter toggle beside template+tone.
+- **On Frederick's phone:** build **1.0.0 (12)** CONFIRMED on-device 2026-07-14 (his
+  screenshots show the unlock-all-first + "Actions for these 13 homes" layout — he called it
+  "way more intuitive"). **Build #13 SHIPPED** (built + auto-submitted) with his next polish:
+  post-unlock popup simplified to **"All contacts now unlocked."** (was a phone/email/no-match
+  breakdown he found busy), and the blue Unlock button now flips to green **"✓ All contacts
+  unlocked · $0"** once the pass finishes (no-match homes no longer counted as still-locked).
+  #12 layout it builds on: action sheet leads with `🔓 Unlock contacts for all N · up to $X`
+  while any are locked, "all 13" wording once worked, session no-match tracking, Email/Letter
+  toggle in `FarmDraftScreen`.
   Ship ritual: `cd mobile && npx expo-doctor` (expect 18/18) then
   `npx eas-cli build --platform ios --profile production --auto-submit --non-interactive`
   (run in background; auto-submits; Apple processes ~5-10 min).
@@ -207,8 +206,8 @@ Template = the BCAD letter in chat/PROGRESS (swap county name; from info@tapowne
 
 ## 7. NEXT-SESSION PRIORITY ORDER (unless Frederick redirects)
 
-1. **Confirm build #12 landed in TestFlight** (submission scheduled but CLI dropped the
-   poll — see §2). If missing, `npx eas-cli submit --platform ios --latest` from mobile/.
+1. **Confirm build #13 landed in TestFlight** and gather Frederick's next farm-flow notes
+   (he's iterating fast on this screen; his UX instincts are driving it — keep shipping small).
 2. **Watch for BCAD** (transforms his home county) + Guadalupe July-22 refresh + Tarrant
    PIA + Travis pool-code legend.
 3. **~Jul 28+:** pull `parcel_viewed` gap stats; revisit buy-vs-build with data.
