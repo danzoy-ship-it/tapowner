@@ -117,14 +117,16 @@ build → confirm it launches + login works on a real device → only then resum
 
 - **Working app on Frederick's phone:** A1–A3 fixed → one production build → device launch +
   login (Claude relays OTP from logs until Resend is live).
-- **Founding-agent TestFlight:** + Resend domain-verified (in progress, Cloudflare) so login
-  codes email to anyone; a static-code demo account for Apple review; B1/B3 at minimum.
+- **Founding-agent TestFlight:** ✅ Resend DONE — tapowner.com verified, `OTP_FROM_ADDRESS`
+  + `RESEND_API_KEY` live on Railway, real login codes confirmed delivering to a Gmail inbox
+  through the app path (2026-07-13, ~9:42pm). Still needed: a static-code demo account for
+  Apple review; B1/B3 at minimum.
 - **Public launch:** + the full legal gate (LLC, attorney review, TX Data Broker registration,
   insurance, signed BatchData reseller addendum), Stripe live mode, cancel path (B7),
   security C1–C2, data D1.
 
 ## FREDERICK'S ACTION LIST (only he can do)
-- **In progress:** Resend domain verification via Cloudflare one-click (see RESEND_SETUP.md).
+- **✅ Done 2026-07-13:** Resend domain verified via Cloudflare; login codes email for real.
 - **Next:** point tapowner.com at the web app; business inbox (Apple support contact); activate
   Stripe live mode; the legal gate items above.
 - **Done:** Apple Developer, Expo/EAS, Railway, Anthropic, BatchData, Google Geocoding, domain
