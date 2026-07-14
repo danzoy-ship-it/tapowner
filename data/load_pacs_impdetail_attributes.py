@@ -26,8 +26,12 @@ import psycopg2
 POOL_RE = re.compile(r"pool", re.I)
 # Dwelling floor areas vary by CAD vocabulary: "Main Area" (Travis-style MA),
 # "MAIN FLOOR RESIDENTIAL"/"2ND FLOOR RESIDENTIAL" (Guadalupe RES1/UPST),
-# "MANUFACTURED HOUSE" (MH). Floors are SUMMED per property.
-DWELLING_RE = re.compile(r"MAIN AREA|MAIN FLOOR|FLOOR RESID|MANUFACTURED HOUSE", re.I)
+# "MANUFACTURED HOUSE" (MH), "LIVING AREA"/"2ND STORY LIVING AREA"/"LIVING
+# AREA MH" (Kaufman LA/STR2, Grayson LA/LVM). Floors are SUMMED per property.
+DWELLING_RE = re.compile(r"MAIN AREA|MAIN FLOOR|FLOOR RESID|MANUFACTURED HOUSE|LIVING AREA", re.I)
+# Grayson's cd MH is "MOBILE HOME APPENDAGES" (porches/decks bolted onto a
+# mobile home) — NOT the dwelling. Never count appendage rows as living area.
+EXCLUDE_RE = re.compile(r"APPENDAGE", re.I)
 
 
 def to_int(value, lo, hi):
@@ -67,7 +71,7 @@ def main() -> None:
             entry = accounts.setdefault(pid, [None, None, False])
             if POOL_RE.search(desc) or POOL_RE.search(cd):
                 entry[2] = True
-            if DWELLING_RE.search(desc) or cd in ("MA", "MH"):
+            if (DWELLING_RE.search(desc) or cd in ("MA", "MH")) and not EXCLUDE_RE.search(desc):
                 living = to_int(line[93:108], 1, 2_000_000)
                 yr = to_int(line[85:89], 1800, 2027)
                 if living:
