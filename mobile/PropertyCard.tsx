@@ -13,6 +13,10 @@ function factsLine(detail: ParcelDetail): string {
   if (detail.year_built) parts.push(`Built ${detail.year_built}`);
   const sqft = formatNumber(detail.living_area_sqft);
   if (sqft) parts.push(`${sqft} sqft`);
+  const stories = detail.stories ? parseFloat(detail.stories) : NaN;
+  if (Number.isFinite(stories) && stories > 0) {
+    parts.push(`${stories} ${stories === 1 ? 'story' : 'stories'}`);
+  }
   const lot = formatNumber(detail.lot_size_sqft);
   if (lot) parts.push(`${lot} sqft lot`);
   const value = formatNumber(detail.assessed_total_value);
@@ -75,17 +79,17 @@ export function PropertyCard({
           ) : (
             <>
               {detail.owner_name && (
-                <View style={styles.ownerRow}>
-                  <Text style={styles.ownerLabel}>Owner</Text>
-                  <Text style={styles.ownerValue} numberOfLines={2}>
+                <View style={styles.fieldBlock}>
+                  <Text style={styles.fieldLabel}>OWNER</Text>
+                  <Text style={styles.fieldValue} numberOfLines={2}>
                     {detail.owner_name}
                   </Text>
                 </View>
               )}
               {detail.mailing_address && (
-                <View style={styles.ownerRow}>
-                  <Text style={styles.ownerLabel}>Mailing</Text>
-                  <Text style={styles.ownerValue} numberOfLines={2}>
+                <View style={styles.fieldBlock}>
+                  <Text style={styles.fieldLabel}>MAILING ADDRESS</Text>
+                  <Text style={styles.fieldValue} numberOfLines={2}>
                     {detail.mailing_address}
                   </Text>
                 </View>
@@ -191,24 +195,28 @@ const styles = StyleSheet.create({
     color: '#b91c1c',
     marginVertical: 6,
   },
-  ownerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-    paddingVertical: 4,
+  // Stacked label-above-value: long owner names and mailing addresses wrap
+  // cleanly instead of two right-aligned columns mashing into each other.
+  fieldBlock: {
+    marginTop: 8,
   },
-  ownerLabel: {
-    color: '#6b7280',
+  fieldLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#9ca3af',
+    letterSpacing: 0.5,
+    marginBottom: 2,
   },
-  ownerValue: {
+  fieldValue: {
+    fontSize: 15,
     fontWeight: '500',
-    flexShrink: 1,
-    textAlign: 'right',
+    color: '#111827',
+    lineHeight: 20,
   },
   facts: {
     color: '#6b7280',
     fontSize: 13,
-    marginTop: 4,
+    marginTop: 10,
   },
   ctaButton: {
     marginTop: 14,
