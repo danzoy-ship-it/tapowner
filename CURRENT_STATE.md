@@ -63,6 +63,9 @@ and declined 2026-07-14 — unit economics + scraped-source legal risk).
 | Fort Bend | 93,774 (partial, ⅓ id overlap — revisit) | — | — | FBCAD hub (`load_fortbend_attributes.py`) |
 | Hays | 51,187 | 3,792 | beds | HaysCAD zip (`load_hays_attributes.py`) |
 | Guadalupe | 69,123 | 4,285 | — | free certified roll (`load_pacs_impdetail_attributes.py`) |
+| Galveston | 138,113 | 16,605 | — | full certified roll — found by hunt agent (PACS loader) |
+| Bastrop | 32,461 | 1,999 | — | free data export (PACS loader) |
+| Wilson | 16,684 | 2,597 | — | free appraisal roll (PACS loader) |
 | El Paso | 26,978 (partial, ~5% id overlap — revisit w/ REAL_ESTATE export geo ids) | 948 | garage | EPCAD dump (`load_elpaso_attributes.py`) |
 
 **Skipped/blocked:** Galveston (published export is the attribute-less PACS format — needs
