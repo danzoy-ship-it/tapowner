@@ -1,4 +1,8 @@
 import type { FastifyInstance } from "fastify";
+import { pool } from "../db.js";
+import { dataAuth } from "../lib/dataAuth.js";
+import { getProductConfig } from "../lib/config.js";
+import { logEvent } from "../lib/events.js";
 
 interface GoogleGeocodeResponse {
     status: string;
@@ -11,6 +15,9 @@ interface GoogleGeocodeResponse {
 
 export async function geocodeRoutes(app: FastifyInstance) {
     app.get<{ Querystring: { address?: string } }>("/geocode", async (request, reply) => {
+        const userId = await dataAuth(request, reply);
+        if (userId === undefined) return;
+
         const address = request.query.address?.trim();
         if (!address) {
             return reply.code(400).send({ error: "address query param is required" });
@@ -19,6 +26,22 @@ export async function geocodeRoutes(app: FastifyInstance) {
         const apiKey = process.env.GOOGLE_PLACES_API_KEY;
         if (!apiKey) {
             return reply.code(503).send({ error: "Address search not configured yet" });
+        }
+
+        // Every geocode costs Google-budget money: cap per user per day (the
+        // per-IP limiter still covers anonymous grace-mode traffic).
+        if (userId !== null) {
+            const config = await getProductConfig();
+            const dailyLimit = config.geocode_daily_limit ?? 200;
+            const { rows: countRows } = await pool.query(
+                `SELECT count(*) FROM events
+                 WHERE user_id = $1 AND name = 'geocode' AND created_at > now() - interval '1 day'`,
+                [userId]
+            );
+            if (Number(countRows[0].count) >= dailyLimit) {
+                return reply.code(429).send({ error: "Daily address-search limit reached, try again tomorrow" });
+            }
+            await logEvent(userId, "geocode", {});
         }
 
         const url = new URL("https://maps.googleapis.com/maps/api/geocode/json");

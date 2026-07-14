@@ -159,7 +159,7 @@ export function MapScreen() {
     // must not overwrite tap-B's card with the wrong owner.
     const seq = ++tapSeq.current;
     try {
-      const detail = await fetchParcelAt(lngLat[1], lngLat[0]);
+      const detail = await fetchParcelAt(token, lngLat[1], lngLat[0]);
       if (seq !== tapSeq.current) return;
       setParcelDetail(detail);
     } catch {
@@ -182,7 +182,7 @@ export function MapScreen() {
     setSearching(true);
     setSearchError(null);
     try {
-      const result = await geocodeAddress(query);
+      const result = await geocodeAddress(token, query);
       setTrackUser(undefined);
       setFlyTarget([result.lng, result.lat]);
       closeCard();

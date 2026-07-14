@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { pool } from "../db.js";
 import { requireAuth } from "../auth/middleware.js";
+import { dataAuth } from "../lib/dataAuth.js";
 import { formatSitusAddress } from "../lib/address.js";
 import { csvCell } from "../lib/csv.js";
 import { isPlaceholderOwner } from "../lib/owners.js";
@@ -31,6 +32,9 @@ export async function parcelsRoutes(app: FastifyInstance) {
     app.get<{ Querystring: { lat?: string; lng?: string } }>(
         "/parcels/at",
         async (request, reply) => {
+            // C2 grace-mode auth: see lib/dataAuth.ts.
+            if ((await dataAuth(request, reply)) === undefined) return;
+
             const { lat, lng } = request.query;
 
             if (!lat || !lng) {

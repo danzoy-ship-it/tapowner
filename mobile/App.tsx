@@ -2,12 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { TransformRequestManager } from '@maplibre/maplibre-react-native';
 import * as Location from 'expo-location';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { FALLBACK_CONFIG, fetchConfig, trackEvent, type AppConfig } from './api';
+import { API_BASE, FALLBACK_CONFIG, fetchConfig, trackEvent, type AppConfig } from './api';
 import { AppContext, type AppContextValue } from './AppContext';
 import type { RootStackParamList } from './navigation';
 import { MapScreen } from './MapScreen';
@@ -79,6 +80,25 @@ function AppInner() {
     if (authState !== 'loggedIn') return;
     Location.requestForegroundPermissionsAsync().catch(() => {});
   }, [authState]);
+
+  // C2: MapLibre fetches parcel tiles natively (outside our fetch code), so
+  // attach the session token to those requests here. Matched STRICTLY to our
+  // API host -- the basemap loads from OpenFreeMap and must never see our JWT.
+  // Re-adding the same id updates in place (token refresh); removed on logout.
+  useEffect(() => {
+    // Plain string parse (RN's URL polyfill is unreliable and this runs at boot).
+    const apiHost = API_BASE.replace(/^https?:\/\//, '').split('/')[0].replace(/\./g, '\\.');
+    if (token) {
+      TransformRequestManager.addHeader({
+        id: 'tapowner-api-auth',
+        match: apiHost,
+        name: 'Authorization',
+        value: `Bearer ${token}`,
+      });
+    } else {
+      TransformRequestManager.removeHeader('tapowner-api-auth');
+    }
+  }, [token]);
 
   useEffect(() => {
     fetchConfig()

@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { LRUCache } from "lru-cache";
 import { pool } from "../db.js";
+import { dataAuth } from "../lib/dataAuth.js";
 
 // Parcel boundaries only make sense at street-level zoom; reject anything
 // coarser before it ever reaches the database.
@@ -33,6 +34,10 @@ export async function tilesRoutes(app: FastifyInstance) {
     app.get<{ Params: { z: string; x: string; yext: string } }>(
         "/tiles/:z/:x/:yext",
         async (request, reply) => {
+            // C2 grace-mode auth (see lib/dataAuth.ts). Build #9 attaches the
+            // session token to native tile requests via TransformRequestManager.
+            if ((await dataAuth(request, reply)) === undefined) return;
+
             const { z, x, yext } = request.params;
 
             if (!yext.endsWith(".mvt")) {

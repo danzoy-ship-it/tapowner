@@ -125,8 +125,10 @@ export interface GeocodeResult {
   formatted_address: string;
 }
 
-export async function geocodeAddress(address: string): Promise<GeocodeResult> {
-  const res = await timedFetch(`${API_BASE}/geocode?address=${encodeURIComponent(address)}`);
+export async function geocodeAddress(token: string, address: string): Promise<GeocodeResult> {
+  const res = await timedFetch(`${API_BASE}/geocode?address=${encodeURIComponent(address)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
   const body = await res.json();
   if (!res.ok) {
     throw new Error(body.error ?? 'Address search failed');
@@ -134,8 +136,10 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult> {
   return body;
 }
 
-export async function fetchParcelAt(lat: number, lng: number): Promise<ParcelDetail | null> {
-  const res = await timedFetch(`${API_BASE}/parcels/at?lat=${lat}&lng=${lng}`);
+export async function fetchParcelAt(token: string, lat: number, lng: number): Promise<ParcelDetail | null> {
+  const res = await timedFetch(`${API_BASE}/parcels/at?lat=${lat}&lng=${lng}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
   if (res.status === 404) {
     return null;
   }
