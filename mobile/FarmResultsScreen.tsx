@@ -205,12 +205,22 @@ export function FarmResultsScreen() {
       setNoMatchIds((prev) => new Set(Array.from(prev).concat(misses)));
     }
     setBusy(null);
-    const phones = filtered.filter((p) => contactsFor(p, merged).phones.length > 0).length;
-    const emails = filtered.filter((p) => contactsFor(p, merged).emails.length > 0).length;
-    Alert.alert(
-      'Contacts unlocked',
-      `Phones for ${phones}, emails for ${emails}${noMatch ? ` · ${noMatch} no verified contact (not charged)` : ''}${stopped ? `\n${stopped}` : ''}\n\nNumbers are on the list — tap Actions to use them.`
-    );
+    // Frederick's UX call: keep this dead simple. Once the unlock pass finishes
+    // there's nothing left to act on, so just confirm it's done — no phone/email
+    // breakdown (that read as "only N reachable").
+    const anyUnlocked = filtered.some((p) => {
+      const c = contactsFor(p, merged);
+      return c.phones.length > 0 || c.emails.length > 0;
+    });
+    let msg: string;
+    if (stopped) {
+      msg = stopped;
+    } else if (!anyUnlocked) {
+      msg = 'No verified contacts were found for these — you weren’t charged.';
+    } else {
+      msg = 'All contacts now unlocked.';
+    }
+    Alert.alert('Contacts unlocked', msg);
   }
 
   // ---------- Stage 2: actions ----------
@@ -388,7 +398,10 @@ export function FarmResultsScreen() {
     );
   }
 
-  const toUnlockCount = filtered.filter((p) => !isUnlocked(p)).length;
+  // No-match homes have no data to buy, so they don't count as "still locked" —
+  // otherwise the button keeps offering to unlock homes that can't be unlocked.
+  const toUnlockCount = filtered.filter((p) => !isUnlocked(p) && !noMatchIds.has(p.id)).length;
+  const anyUnlocked = filtered.some((p) => isUnlocked(p));
 
   return (
     <View style={styles.container}>
@@ -496,7 +509,7 @@ export function FarmResultsScreen() {
         </View>
       )}
 
-      {toUnlockCount > 0 && (
+      {toUnlockCount > 0 ? (
         <TouchableOpacity
           style={styles.unlockButton}
           onPress={handleUnlock}
@@ -507,7 +520,11 @@ export function FarmResultsScreen() {
             {((toUnlockCount * config.trace_price_cents) / 100).toFixed(2)}
           </Text>
         </TouchableOpacity>
-      )}
+      ) : anyUnlocked ? (
+        <View style={styles.unlockedDoneButton}>
+          <Text style={styles.unlockedDoneText}>✓ All contacts unlocked · $0</Text>
+        </View>
+      ) : null}
 
       <TouchableOpacity
         style={[styles.actionsButton, (busy !== null || filtered.length === 0) && styles.buttonDisabled]}
@@ -675,6 +692,18 @@ const styles = StyleSheet.create({
   },
   unlockButtonText: {
     color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  unlockedDoneButton: {
+    marginTop: 8,
+    backgroundColor: '#dcfce7',
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  unlockedDoneText: {
+    color: '#15803d',
     fontWeight: '600',
     fontSize: 14,
   },
