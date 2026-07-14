@@ -53,7 +53,8 @@
         {
           "contactsPermission": "TapOwner saves property owners to your contacts when you choose."
         }
-      ]
+      ],
+      "expo-font"
     ],
     "extra": {
       "eas": {
