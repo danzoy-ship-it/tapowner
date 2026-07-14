@@ -183,64 +183,6 @@ export function FarmResultsScreen() {
     }
   }
 
-  function handleBulkTrace() {
-    const targets = filtered.filter((p) => contactsFor(p, traced).phones.length === 0);
-    if (targets.length === 0) {
-      Alert.alert('All set', 'You already have contact info for every home in this list.');
-      return;
-    }
-    const already = filtered.length - targets.length;
-    const maxCost = ((targets.length * config.trace_price_cents) / 100).toFixed(2);
-    Alert.alert(
-      `Get contacts for ${targets.length} of ${filtered.length} home${filtered.length === 1 ? '' : 's'}?`,
-      `${already > 0 ? `${already} already unlocked (free). ` : ''}Up to $${maxCost} for the rest — included traces are used first, and a no-match is never charged.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Get contacts', onPress: () => void runBulkTrace(targets) },
-      ]
-    );
-  }
-
-  async function runBulkTrace(targets: FarmParcel[]) {
-    setBulkProgress({ done: 0, total: targets.length });
-    let matched = 0;
-    let noMatch = 0;
-    let failed = 0;
-    const found: Record<number, Contacts> = {};
-    for (let i = 0; i < targets.length; i++) {
-      const parcel = targets[i];
-      try {
-        const r = await traceParcel(token, parcel.id);
-        if (r.matched) {
-          matched += 1;
-          found[parcel.id] = {
-            phones: r.phones.map((x) => x.number),
-            emails: r.emails.map((x) => x.email),
-          };
-        } else {
-          noMatch += 1;
-        }
-      } catch (err) {
-        failed += 1;
-        const msg = err instanceof Error ? err.message : '';
-        // A cap / subscription stop applies to every remaining call too.
-        if (/cap|inactive|subscription/i.test(msg)) {
-          setTraced((prev) => ({ ...prev, ...found }));
-          setBulkProgress(null);
-          Alert.alert('Stopped', `${msg}\n\nGot contacts for ${matched} home${matched === 1 ? '' : 's'} first.`);
-          return;
-        }
-      }
-      setBulkProgress({ done: i + 1, total: targets.length });
-    }
-    setTraced((prev) => ({ ...prev, ...found }));
-    setBulkProgress(null);
-    Alert.alert(
-      'Done',
-      `${matched} matched · ${noMatch} no verified contact (not charged)${failed ? ` · ${failed} failed` : ''}.\n\nExport the CSV to take phones & emails with you.`
-    );
-  }
-
   function clearFilters() {
     setMinSqftText('');
     setMinBeds(0);
@@ -249,25 +191,17 @@ export function FarmResultsScreen() {
     setSingleStory(false);
   }
 
-  // Homes in the current (filtered) list that have at least one traced email.
-  const emailTargets = useMemo(
-    () => filtered.filter((p) => contactsFor(p, traced).emails.length > 0),
-    [filtered, traced]
-  );
+  // "Unlocked" = we already hold any contact data for this home.
+  function isUnlocked(p: FarmParcel): boolean {
+    const c = contactsFor(p, traced);
+    return c.phones.length > 0 || c.emails.length > 0;
+  }
 
   // Per-owner emailing through the agent's OWN Mail account: one pre-addressed
   // composer per home (never one blast), reviewed and sent individually --
   // compliant and deliverable. Big lists go via CSV + mail merge instead.
-  async function handleEmailOwners() {
-    if (!features.draft_email) return showUpgrade();
-    if (emailTargets.length > EMAIL_MAX) {
-      Alert.alert(
-        `${emailTargets.length} homes is a lot of taps`,
-        `One-by-one emailing is capped at ${EMAIL_MAX}. For a list this size, export the CSV and use your email tool's mail merge — same letter, one click per hundred.`
-      );
-      return;
-    }
-    setEmailProgress({ done: 0, total: emailTargets.length });
+  async function runEmailLoop(targets: FarmParcel[], contacts: Record<number, Contacts>) {
+    setEmailProgress({ done: 0, total: targets.length });
     try {
       const { subject, body } = await farmDraft(token, 'professional', criteria);
       const mailAvailable = await MailComposer.isAvailableAsync();
@@ -280,15 +214,15 @@ export function FarmResultsScreen() {
         await Share.share({ message: `Subject: ${subject}\n\n${body}` });
         return;
       }
-      for (let i = 0; i < emailTargets.length; i++) {
-        const home = emailTargets[i];
+      for (let i = 0; i < targets.length; i++) {
+        const home = targets[i];
         await MailComposer.composeAsync({
-          recipients: contactsFor(home, traced).emails,
+          recipients: contactsFor(home, contacts).emails,
           subject,
           body,
         });
-        setEmailProgress({ done: i + 1, total: emailTargets.length });
-        if (Platform.OS === 'ios' && i < emailTargets.length - 1) {
+        setEmailProgress({ done: i + 1, total: targets.length });
+        if (Platform.OS === 'ios' && i < targets.length - 1) {
           await new Promise((resolve) => setTimeout(resolve, 800));
         }
       }
@@ -297,6 +231,102 @@ export function FarmResultsScreen() {
     } finally {
       setEmailProgress(null);
     }
+  }
+
+  // Step 3 of Contact owners: phones are the agent's primary move (Frederick),
+  // so "Show phone numbers" leads; emailing is the secondary option.
+  function offerNextStep(contacts: Record<number, Contacts>, note?: string) {
+    const withPhones = filtered.filter((p) => contactsFor(p, contacts).phones.length > 0);
+    const withEmails = filtered.filter((p) => contactsFor(p, contacts).emails.length > 0);
+    if (withPhones.length === 0 && withEmails.length === 0) {
+      Alert.alert('No contacts found', note ?? 'No verified contact info came back — you were not charged for misses.');
+      return;
+    }
+    const buttons = [
+      { text: `Show phone numbers (${withPhones.length})`, style: 'default' as const },
+    ];
+    if (withEmails.length > 0) {
+      if (withEmails.length > EMAIL_MAX) {
+        buttons.push({
+          text: `Email via CSV mail merge (${withEmails.length})`,
+          style: 'default' as const,
+          // @ts-expect-error onPress is valid on Alert buttons
+          onPress: () => void handleExport(),
+        });
+      } else {
+        buttons.push({
+          text: `Open ${withEmails.length} pre-addressed email${withEmails.length === 1 ? '' : 's'}`,
+          style: 'default' as const,
+          // @ts-expect-error onPress is valid on Alert buttons
+          onPress: () => {
+            if (!features.draft_email) return showUpgrade();
+            void runEmailLoop(withEmails, contacts);
+          },
+        });
+      }
+    }
+    Alert.alert(
+      `${withPhones.length || withEmails.length} owner${(withPhones.length || withEmails.length) === 1 ? '' : 's'} ready`,
+      `${note ? note + '\n' : ''}Phones for ${withPhones.length}, emails for ${withEmails.length}. Numbers are on the list below and in the CSV.`,
+      buttons
+    );
+  }
+
+  // ONE intention, one button: "Contact owners" unlocks whatever is missing
+  // (with an upfront cost line), then offers calls first, emails second.
+  function handleContactOwners() {
+    if (filtered.length === 0) return;
+    const toUnlock = filtered.filter((p) => !isUnlocked(p));
+    const already = filtered.length - toUnlock.length;
+    if (toUnlock.length === 0) {
+      offerNextStep(traced);
+      return;
+    }
+    const maxCost = ((toUnlock.length * config.trace_price_cents) / 100).toFixed(2);
+    Alert.alert(
+      `Contact ${filtered.length} owner${filtered.length === 1 ? '' : 's'}`,
+      `${already > 0 ? `✓ ${already} already unlocked — free\n` : ''}🔓 ${toUnlock.length} new to unlock — up to $${maxCost} (included traces first, no-match never charged)\n\nYou'll get phone numbers and emails, then choose calls or emails.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Unlock & continue', onPress: () => void unlockThenOffer(toUnlock) },
+      ]
+    );
+  }
+
+  async function unlockThenOffer(targets: FarmParcel[]) {
+    setBulkProgress({ done: 0, total: targets.length });
+    let noMatch = 0;
+    let stopped: string | null = null;
+    const found: Record<number, Contacts> = {};
+    for (let i = 0; i < targets.length; i++) {
+      const parcel = targets[i];
+      try {
+        const r = await traceParcel(token, parcel.id);
+        if (r.matched) {
+          found[parcel.id] = {
+            phones: r.phones.map((x) => x.number),
+            emails: r.emails.map((x) => x.email),
+          };
+        } else {
+          noMatch += 1;
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Trace failed';
+        if (/cap|inactive|subscription/i.test(msg)) {
+          stopped = msg;
+          break;
+        }
+        noMatch += 1;
+      }
+      setBulkProgress({ done: i + 1, total: targets.length });
+    }
+    const merged = { ...traced, ...found };
+    setTraced(merged);
+    setBulkProgress(null);
+    const notes: string[] = [];
+    if (noMatch > 0) notes.push(`${noMatch} had no verified contact (not charged).`);
+    if (stopped) notes.push(stopped);
+    offerNextStep(merged, notes.length ? notes.join(' ') : undefined);
   }
 
   return (
@@ -410,6 +440,31 @@ export function FarmResultsScreen() {
         </View>
       )}
 
+      {(() => {
+        const toUnlockCount = filtered.filter((p) => !isUnlocked(p)).length;
+        const suffix =
+          filtered.length === 0
+            ? ''
+            : toUnlockCount > 0
+              ? ` · ~$${((toUnlockCount * config.trace_price_cents) / 100).toFixed(2)}`
+              : ' · all unlocked';
+        return (
+          <TouchableOpacity
+            style={styles.contactButton}
+            onPress={handleContactOwners}
+            disabled={bulkProgress !== null || emailProgress !== null || filtered.length === 0}
+          >
+            <Text style={styles.contactButtonText}>
+              {bulkProgress
+                ? `Unlocking ${bulkProgress.done}/${bulkProgress.total}…`
+                : emailProgress
+                  ? `Emailing ${emailProgress.done}/${emailProgress.total}…`
+                  : `✆ Contact owners (${filtered.length})${suffix}`}
+            </Text>
+          </TouchableOpacity>
+        );
+      })()}
+
       <View style={styles.actionRow}>
         <TouchableOpacity
           style={styles.actionButton}
@@ -419,33 +474,10 @@ export function FarmResultsScreen() {
           {drafting ? (
             <ActivityIndicator size="small" color="#111827" />
           ) : (
-            <Text style={styles.actionButtonText}>✍ Letter</Text>
+            <Text style={styles.actionButtonText}>✍ Reverse-prospect letter</Text>
           )}
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={handleBulkTrace}
-          disabled={bulkProgress !== null || filtered.length === 0}
-        >
-          <Text style={styles.actionButtonText}>
-            {bulkProgress ? `Tracing ${bulkProgress.done}/${bulkProgress.total}…` : '☎ Get contacts'}
-          </Text>
-        </TouchableOpacity>
       </View>
-
-      {emailTargets.length > 0 && (
-        <TouchableOpacity
-          style={styles.emailButton}
-          onPress={handleEmailOwners}
-          disabled={emailProgress !== null}
-        >
-          <Text style={styles.emailButtonText}>
-            {emailProgress
-              ? `Emailing ${emailProgress.done}/${emailProgress.total}…`
-              : `✉ Email owners (${emailTargets.length} of ${filtered.length})`}
-          </Text>
-        </TouchableOpacity>
-      )}
 
       <FlatList
         data={filtered}
@@ -462,11 +494,11 @@ export function FarmResultsScreen() {
                 <Text style={styles.rowOwner} numberOfLines={1}>
                   {item.owner_name}
                 </Text>
-                {(rowFacts(item) !== '' || c.phones.length > 0) && (
-                  <Text style={styles.rowFacts}>
-                    {[rowFacts(item), c.phones.length > 0 ? '✓ contact' : '']
-                      .filter(Boolean)
-                      .join(' · ')}
+                {rowFacts(item) !== '' && <Text style={styles.rowFacts}>{rowFacts(item)}</Text>}
+                {c.phones.length > 0 && (
+                  <Text style={styles.rowPhone} numberOfLines={1}>
+                    ✆ {c.phones[0]}
+                    {c.phones.length > 1 ? `  +${c.phones.length - 1} more` : ''}
                   </Text>
                 )}
               </View>
@@ -538,17 +570,23 @@ const styles = StyleSheet.create({
   refineButtonTextActive: {
     color: '#fff',
   },
-  emailButton: {
+  contactButton: {
+    marginTop: 8,
     backgroundColor: '#2563eb',
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: 'center',
-    marginBottom: 8,
   },
-  emailButtonText: {
+  contactButtonText: {
     color: '#fff',
     fontWeight: '600',
     fontSize: 14,
+  },
+  rowPhone: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#2563eb',
+    marginTop: 2,
   },
   filterPanel: {
     borderWidth: 1,
