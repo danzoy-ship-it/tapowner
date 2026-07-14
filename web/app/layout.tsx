@@ -15,13 +15,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TapOwner — Know who owns it, before you knock",
+  title: "TapOwner — Owner data, farming & outreach for Texas agents",
   description:
-    "Tap any property in Texas and see the owner of record, free. Unlock verified phone and email for 29¢, draft AI outreach, and reverse-prospect a whole neighborhood. The $9.99 alternative to $99+/mo prospecting tools.",
+    "See any Texas owner of record free. Unlock verified phone & email for 29¢, draft AI outreach, farm whole neighborhoods, and export 500-home direct-mail lists — all from your phone, from $9.99/mo.",
   openGraph: {
-    title: "TapOwner — Know who owns it, before you knock",
+    title: "TapOwner — Owner data, farming & outreach for Texas agents",
     description:
-      "Tap any Texas property → owner free → phone/email for 29¢ → AI outreach → reverse-prospect a whole neighborhood.",
+      "Tap any Texas property → owner free → phone/email 29¢ → AI outreach → farm a neighborhood → export a 500-home mailing list. From $9.99/mo.",
     images: ["/logo-mark.png"],
     type: "website",
   },
