@@ -33,7 +33,8 @@ export async function parcelsRoutes(app: FastifyInstance) {
         "/parcels/at",
         async (request, reply) => {
             // C2 grace-mode auth: see lib/dataAuth.ts.
-            if ((await dataAuth(request, reply)) === undefined) return;
+            const viewerId = await dataAuth(request, reply);
+            if (viewerId === undefined) return;
 
             const { lat, lng } = request.query;
 
@@ -72,6 +73,20 @@ export async function parcelsRoutes(app: FastifyInstance) {
 
             const parcel = result.rows[0];
             parcel.situs_address = formatSitusAddress(parcel);
+
+            // Felt-gap instrumentation (property-data API decision, 2026-07-14):
+            // record what each opened card was missing so the real
+            // user-experienced blank rate is measurable, not estimated. The
+            // vendor-vs-own-pipeline call gets made from this data.
+            void logEvent(viewerId, "parcel_viewed", {
+                parcel_id: parcel.id,
+                county_fips: parcel.county_fips,
+                has_sqft: parcel.living_area_sqft !== null,
+                has_beds: parcel.bedrooms !== null,
+                has_pool_known: parcel.has_pool !== null,
+                has_year: parcel.year_built !== null,
+            });
+
             return reply.send(parcel);
         }
     );
