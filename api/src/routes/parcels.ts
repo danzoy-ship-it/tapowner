@@ -145,7 +145,9 @@ export async function parcelsRoutes(app: FastifyInstance) {
                         p.situs_address, p.situs_number, p.situs_street,
                         p.situs_city, p.situs_state, p.situs_zip,
                         p.mailing_address, p.mailing_city, p.mailing_state, p.mailing_zip,
-                        p.is_absentee
+                        p.is_absentee,
+                        p.living_area_sqft, p.bedrooms, p.baths_full, p.baths_half,
+                        p.stories, p.year_built, p.has_pool
                  FROM parcels p, poly
                  WHERE p.geom && poly.g
                    AND ST_Within(ST_PointOnSurface(p.geom), poly.g)
@@ -171,6 +173,13 @@ export async function parcelsRoutes(app: FastifyInstance) {
                     mailing_state: r.mailing_state,
                     mailing_zip: r.mailing_zip,
                     is_absentee: r.is_absentee,
+                    living_area_sqft: r.living_area_sqft,
+                    bedrooms: r.bedrooms,
+                    baths_full: r.baths_full,
+                    baths_half: r.baths_half,
+                    stories: r.stories,
+                    year_built: r.year_built,
+                    has_pool: r.has_pool,
                 }));
 
             await logEvent(session.userId, "farm_search", {
@@ -183,6 +192,7 @@ export async function parcelsRoutes(app: FastifyInstance) {
                 const header = [
                     "Owner", "Property Address", "City", "ZIP",
                     "Mailing Address", "Mailing City", "Mailing State", "Mailing ZIP", "Absentee",
+                    "Sqft", "Beds", "Baths Full", "Baths Half", "Stories", "Year Built", "Pool",
                 ];
                 const lines = [header.map(csvCell).join(",")];
                 for (const p of parcels) {
@@ -197,6 +207,13 @@ export async function parcelsRoutes(app: FastifyInstance) {
                             p.mailing_state ?? "",
                             p.mailing_zip ?? "",
                             p.is_absentee ? "Yes" : "",
+                            p.living_area_sqft ?? "",
+                            p.bedrooms ?? "",
+                            p.baths_full ?? "",
+                            p.baths_half ?? "",
+                            p.stories ?? "",
+                            p.year_built ?? "",
+                            p.has_pool === true ? "Yes" : p.has_pool === false ? "No" : "",
                         ]
                             .map(csvCell)
                             .join(",")

@@ -321,6 +321,13 @@ export interface FarmParcel {
   mailing_state: string | null;
   mailing_zip: string | null;
   is_absentee: boolean;
+  living_area_sqft: string | null;
+  bedrooms: number | null;
+  baths_full: number | null;
+  baths_half: number | null;
+  stories: string | null;
+  year_built: number | null;
+  has_pool: boolean | null;
 }
 
 export interface FarmResult {
