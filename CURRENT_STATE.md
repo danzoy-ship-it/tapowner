@@ -47,7 +47,7 @@ and declined 2026-07-14 — unit economics + scraped-source legal risk).
    legal gate (attorney ToS review, TX Data Broker reg, insurance, BatchData addendum).
 4. **Then:** App Store submission (demo account + review notes ready; builds proven).
 
-## COUNTY ATTRIBUTE SCOREBOARD (all free — statewide: 4,698,345 sqft · 357,322 pools · 1,842,774 beds)
+## COUNTY ATTRIBUTE SCOREBOARD (all free — statewide: 5,319,113 sqft · 420,477 pools · 1,842,774 beds · 20 counties)
 
 | County | Parcels | Pools | Extras | Source/loader |
 |---|---|---|---|---|
@@ -66,6 +66,9 @@ and declined 2026-07-14 — unit economics + scraped-source legal risk).
 | Galveston | 138,113 | 16,605 | — | full certified roll — found by hunt agent (PACS loader) |
 | Bastrop | 32,461 | 1,999 | — | free data export (PACS loader) |
 | Wilson | 16,684 | 2,597 | — | free appraisal roll (PACS loader) |
+| Brazoria | 126,423 | 14,110 | — | ProTax export (`load_brazoria_attributes.py`) |
+| Cameron | 126,420 | 8,290 | — | free PACS roll (hunt agent) |
+| Nueces | 111,280 | 8,811 | — | free PACS roll (hunt agent) |
 | El Paso | 26,978 (partial, ~5% id overlap — revisit w/ REAL_ESTATE export geo ids) | 948 | garage | EPCAD dump (`load_elpaso_attributes.py`) |
 
 **Skipped/blocked:** Galveston (published export is the attribute-less PACS format — needs
