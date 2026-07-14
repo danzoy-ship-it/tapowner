@@ -177,6 +177,13 @@ async function handleInvoicePaid(stripe: Stripe, invoice: Stripe.Invoice, eventI
         );
     }
 
+    // §5b rewards attach to a REAL payment, not the $0 trial-creation invoice or
+    // a 100%-off coupon invoice. Without this, a referrer is credited a free
+    // month the instant a referred user merely starts a trial (farmable, and
+    // rewards signups that never convert).
+    const amountPaidCents = invoice.amount_paid ?? 0;
+    if (amountPaidCents <= 0) return;
+
     const { rows: referralRows } = await pool.query(
         `SELECT id, partner_id, first_paid_at FROM referrals WHERE referred_user_id = $1`,
         [userId]
