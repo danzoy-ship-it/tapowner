@@ -23,8 +23,10 @@ import zipfile
 import fiona
 import psycopg2
 import psycopg2.extras
+from pyproj import CRS, Transformer
 from shapely import force_2d
 from shapely.geometry import shape, MultiPolygon
+from shapely.ops import transform as shp_transform
 
 S3_BASE = "https://tnris-data-warehouse.s3.us-east-1.amazonaws.com/LCD/collection"
 DOWNLOAD_DIR = os.path.join(os.path.dirname(__file__), "downloads")
@@ -138,16 +140,26 @@ def compute_is_absentee(situs_city, situs_state, mail_city, mail_state):
     return True
 
 
-def to_multipolygon_wkt(geom_geojson):
+def to_multipolygon_wkt(geom_geojson, transformer=None):
     if geom_geojson is None:
         return None
     # Some counties (first seen: Erath 48143) ship PolygonZ -- the geom column
     # is 2D, so drop any Z dimension before generating WKT.
     geom = force_2d(shape(geom_geojson))
+    # Re-eval F1: 51 counties ship Web Mercator (or other) CRS -- stamping
+    # those coordinates as 4326 made ~580K parcels invisible. Reproject
+    # whenever the source CRS isn't already lon/lat.
+    if transformer is not None:
+        geom = shp_transform(transformer.transform, geom)
     if geom.geom_type == "Polygon":
         geom = MultiPolygon([geom])
     elif geom.geom_type != "MultiPolygon":
         return None
+    # Bbox sanity: reject anything that still isn't plausible lon/lat --
+    # better to abort a county loudly than to load invisible geometry again.
+    minx, miny, maxx, maxy = geom.bounds
+    if not (-180 <= minx <= 180 and -180 <= maxx <= 180 and -90 <= miny <= 90 and -90 <= maxy <= 90):
+        raise ValueError(f"geometry bbox not in lon/lat after CRS handling: {geom.bounds}")
     return geom.wkt
 
 
@@ -182,11 +194,27 @@ def load_rows(shp_paths):
 
 
 def _load_rows_one(shp_path):
+    skipped = 0
     with fiona.open(shp_path) as src:
+        # Honor the shapefile's own CRS (re-eval F1). None/unreadable CRS is
+        # treated as 4326 only after logging -- StratMap's default really is
+        # lon/lat, but the 51 Web Mercator counties prove it isn't universal.
+        transformer = None
+        try:
+            src_crs = CRS.from_user_input(src.crs) if src.crs else None
+        except Exception:
+            src_crs = None
+        if src_crs is None:
+            print(f"  WARNING: {os.path.basename(shp_path)} has no readable CRS; assuming EPSG:4326")
+        elif not src_crs.equals(CRS.from_epsg(4326)):
+            print(f"  reprojecting {os.path.basename(shp_path)} from {src_crs.name} to EPSG:4326")
+            transformer = Transformer.from_crs(src_crs, CRS.from_epsg(4326), always_xy=True)
+
         for feat in src:
             p = feat["properties"]
-            wkt = to_multipolygon_wkt(feat["geometry"])
+            wkt = to_multipolygon_wkt(feat["geometry"], transformer)
             if wkt is None:
+                skipped += 1
                 continue
 
             owner_name = clean_str(p.get("OWNER_NAME"))
@@ -225,6 +253,10 @@ def _load_rows_one(shp_path):
                 to_num(p.get("IMP_VALUE")),
                 to_num(p.get("MKT_VALUE")),
             )
+    # Re-eval F5: skips were silent and uncounted -- surface them so an
+    # inserted-vs-source mismatch is visible in the load log.
+    if skipped:
+        print(f"  {os.path.basename(shp_path)}: skipped {skipped} null/non-polygon geometries")
 
 
 INSERT_SQL = """
