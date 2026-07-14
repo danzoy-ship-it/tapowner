@@ -4,6 +4,7 @@ import {
   Alert,
   FlatList,
   Keyboard,
+  Platform,
   Share,
   StyleSheet,
   Text,
@@ -11,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import * as MailComposer from 'expo-mail-composer';
 import { File, Paths } from 'expo-file-system';
 import { useRoute, type RouteProp } from '@react-navigation/native';
 import {
@@ -107,6 +109,11 @@ export function FarmResultsScreen() {
   const [drafting, setDrafting] = useState(false);
   const [traced, setTraced] = useState<Record<number, Contacts>>({});
   const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number } | null>(null);
+  const [emailProgress, setEmailProgress] = useState<{ done: number; total: number } | null>(null);
+
+  // One-by-one emailing stays pleasant up to here; bigger lists belong in a
+  // proper mail merge via the CSV (Frederick's call: 15).
+  const EMAIL_MAX = 15;
 
   const minSqft = parseInt(minSqftText, 10) || 0;
   const filtersActive = minSqft > 0 || minBeds > 0 || minBaths > 0 || poolOnly || singleStory;
@@ -242,6 +249,56 @@ export function FarmResultsScreen() {
     setSingleStory(false);
   }
 
+  // Homes in the current (filtered) list that have at least one traced email.
+  const emailTargets = useMemo(
+    () => filtered.filter((p) => contactsFor(p, traced).emails.length > 0),
+    [filtered, traced]
+  );
+
+  // Per-owner emailing through the agent's OWN Mail account: one pre-addressed
+  // composer per home (never one blast), reviewed and sent individually --
+  // compliant and deliverable. Big lists go via CSV + mail merge instead.
+  async function handleEmailOwners() {
+    if (!features.draft_email) return showUpgrade();
+    if (emailTargets.length > EMAIL_MAX) {
+      Alert.alert(
+        `${emailTargets.length} homes is a lot of taps`,
+        `One-by-one emailing is capped at ${EMAIL_MAX}. For a list this size, export the CSV and use your email tool's mail merge — same letter, one click per hundred.`
+      );
+      return;
+    }
+    setEmailProgress({ done: 0, total: emailTargets.length });
+    try {
+      const { subject, body } = await farmDraft(token, 'professional', criteria);
+      const mailAvailable = await MailComposer.isAvailableAsync();
+      if (!mailAvailable) {
+        setEmailProgress(null);
+        Alert.alert(
+          'Mail is not set up on this device',
+          'Sharing the letter instead — grab the addresses from the CSV export.'
+        );
+        await Share.share({ message: `Subject: ${subject}\n\n${body}` });
+        return;
+      }
+      for (let i = 0; i < emailTargets.length; i++) {
+        const home = emailTargets[i];
+        await MailComposer.composeAsync({
+          recipients: contactsFor(home, traced).emails,
+          subject,
+          body,
+        });
+        setEmailProgress({ done: i + 1, total: emailTargets.length });
+        if (Platform.OS === 'ios' && i < emailTargets.length - 1) {
+          await new Promise((resolve) => setTimeout(resolve, 800));
+        }
+      }
+    } catch (err) {
+      Alert.alert('Email failed', err instanceof Error ? err.message : 'Please try again.');
+    } finally {
+      setEmailProgress(null);
+    }
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
@@ -251,20 +308,20 @@ export function FarmResultsScreen() {
             : `${result.count} ${result.count === 1 ? 'property' : 'properties'}`}
           {result.capped ? ' (limit reached — draw smaller for full coverage)' : ''}
         </Text>
-        <View style={styles.headerButtons}>
-          <TouchableOpacity
-            style={[styles.headerButton, filtersActive && styles.headerButtonActive]}
-            onPress={() => setFiltersOpen(!filtersOpen)}
-          >
-            <Text style={[styles.headerButtonText, filtersActive && styles.headerButtonTextActive]}>
-              Filters{filtersActive ? ' ✓' : ''}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.headerButton} onPress={handleExport} disabled={exporting}>
-            <Text style={styles.headerButtonText}>{exporting ? '…' : '⬇ CSV'}</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={styles.headerButton} onPress={handleExport} disabled={exporting}>
+          <Text style={styles.headerButtonText}>{exporting ? '…' : '⬇ CSV'}</Text>
+        </TouchableOpacity>
       </View>
+
+      {/* Primary action first: refine the list, THEN act on it below. */}
+      <TouchableOpacity
+        style={[styles.refineButton, filtersActive && styles.refineButtonActive]}
+        onPress={() => setFiltersOpen(!filtersOpen)}
+      >
+        <Text style={[styles.refineButtonText, filtersActive && styles.refineButtonTextActive]}>
+          🔍 Refine — beds, sqft, pool…{filtersActive ? ' ✓' : ''}
+        </Text>
+      </TouchableOpacity>
 
       {filtersOpen && (
         <View style={styles.filterPanel}>
@@ -362,7 +419,7 @@ export function FarmResultsScreen() {
           {drafting ? (
             <ActivityIndicator size="small" color="#111827" />
           ) : (
-            <Text style={styles.actionButtonText}>✍ Reverse-prospect letter</Text>
+            <Text style={styles.actionButtonText}>✍ Letter</Text>
           )}
         </TouchableOpacity>
         <TouchableOpacity
@@ -375,6 +432,20 @@ export function FarmResultsScreen() {
           </Text>
         </TouchableOpacity>
       </View>
+
+      {emailTargets.length > 0 && (
+        <TouchableOpacity
+          style={styles.emailButton}
+          onPress={handleEmailOwners}
+          disabled={emailProgress !== null}
+        >
+          <Text style={styles.emailButtonText}>
+            {emailProgress
+              ? `Emailing ${emailProgress.done}/${emailProgress.total}…`
+              : `✉ Email owners (${emailTargets.length} of ${filtered.length})`}
+          </Text>
+        </TouchableOpacity>
+      )}
 
       <FlatList
         data={filtered}
@@ -437,10 +508,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     flexShrink: 1,
   },
-  headerButtons: {
-    flexDirection: 'row',
-    gap: 6,
-  },
   headerButton: {
     borderWidth: 1,
     borderColor: '#d1d5db',
@@ -448,17 +515,40 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
-  headerButtonActive: {
-    backgroundColor: '#111827',
-    borderColor: '#111827',
-  },
   headerButtonText: {
     fontSize: 13,
     fontWeight: '600',
     color: '#2563eb',
   },
-  headerButtonTextActive: {
+  refineButton: {
+    marginTop: 10,
+    backgroundColor: '#111827',
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  refineButtonActive: {
+    backgroundColor: '#16a34a',
+  },
+  refineButtonText: {
     color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  refineButtonTextActive: {
+    color: '#fff',
+  },
+  emailButton: {
+    backgroundColor: '#2563eb',
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  emailButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
   },
   filterPanel: {
     borderWidth: 1,
