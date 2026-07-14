@@ -134,7 +134,7 @@ export function MapScreen() {
 
   return (
     <View style={styles.container}>
-      <Map style={styles.map} mapStyle={OPENFREEMAP_STYLE}>
+      <Map style={styles.map} mapStyle={OPENFREEMAP_STYLE} onPress={() => Keyboard.dismiss()}>
         <Camera
           ref={cameraRef}
           trackUserLocation={trackUser}
