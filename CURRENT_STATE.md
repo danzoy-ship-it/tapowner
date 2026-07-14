@@ -47,7 +47,7 @@ and declined 2026-07-14 — unit economics + scraped-source legal risk).
    legal gate (attorney ToS review, TX Data Broker reg, insurance, BatchData addendum).
 4. **Then:** App Store submission (demo account + review notes ready; builds proven).
 
-## COUNTY ATTRIBUTE SCOREBOARD (all free, ~4.44M+ parcels enriched)
+## COUNTY ATTRIBUTE SCOREBOARD (all free — statewide: 4,698,345 sqft · 357,322 pools · 1,842,774 beds)
 
 | County | Parcels | Pools | Extras | Source/loader |
 |---|---|---|---|---|
@@ -62,6 +62,11 @@ and declined 2026-07-14 — unit economics + scraped-source legal risk).
 | Montgomery | 247,131 | — | stories | prodigy JSON (`load_prodigy_json_attributes.py`) |
 | Fort Bend | 93,774 (partial, ⅓ id overlap — revisit) | — | — | FBCAD hub (`load_fortbend_attributes.py`) |
 | Hays | 51,187 | 3,792 | beds | HaysCAD zip (`load_hays_attributes.py`) |
+| El Paso | 26,978 (partial, ~5% id overlap — revisit w/ REAL_ESTATE export geo ids) | 948 | garage | EPCAD dump (`load_elpaso_attributes.py`) |
+
+**Skipped/blocked:** Galveston (published export is the attribute-less PACS format — needs
+PIA for improvement detail) · Comal/Guadalupe (no public bulk; PIAs with Frederick) ·
+next fresh targets: Brazoria, Bell, McLennan, Nueces, Lubbock, Smith (Task #11 recipe).
 
 ---
 
