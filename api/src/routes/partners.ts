@@ -181,6 +181,116 @@ export async function partnersRoutes(app: FastifyInstance) {
         });
     });
 
+    // ---------- Admin manager (Frederick's console; x-admin-secret gated) ----------
+
+    // Every partner with rolled-up program stats + what's currently owed
+    // (unpaid ledger net, clawbacks included since they're negative rows).
+    app.get("/admin/partners", async (request, reply) => {
+        if (!requireAdmin(request, reply)) return;
+
+        const { rows } = await pool.query(
+            `SELECT
+                 p.id, p.type, p.name, p.code, p.comp_model, p.rate, p.months_cap,
+                 p.status, p.created_at,
+                 u.email AS email,
+                 COALESCE(c.clicks, 0)                                   AS clicks,
+                 COALESCE(r.signups, 0)                                  AS signups,
+                 COALESCE(r.paid_conversions, 0)                         AS paid_conversions,
+                 COALESCE(l.earned_cents, 0)                             AS earned_cents,
+                 COALESCE(l.paid_out_cents, 0)                           AS paid_out_cents,
+                 COALESCE(l.owed_cents, 0)                               AS owed_cents
+             FROM partners p
+             LEFT JOIN users u ON u.id = p.user_id
+             LEFT JOIN (
+                 SELECT props->>'partner_id' AS pid, count(*) AS clicks
+                 FROM events WHERE name = 'referral_click' GROUP BY 1
+             ) c ON c.pid = p.id::text
+             LEFT JOIN (
+                 SELECT partner_id,
+                        count(*)                                  AS signups,
+                        count(*) FILTER (WHERE status = 'activated') AS paid_conversions
+                 FROM referrals GROUP BY partner_id
+             ) r ON r.partner_id = p.id
+             LEFT JOIN (
+                 SELECT partner_id,
+                        COALESCE(sum(amount_cents), 0)                                   AS earned_cents,
+                        COALESCE(sum(amount_cents) FILTER (WHERE paid_out_at IS NOT NULL), 0) AS paid_out_cents,
+                        COALESCE(sum(amount_cents) FILTER (WHERE paid_out_at IS NULL), 0)     AS owed_cents
+                 FROM commission_ledger GROUP BY partner_id
+             ) l ON l.partner_id = p.id
+             ORDER BY owed_cents DESC, p.created_at DESC`
+        );
+
+        // payout_threshold_cents lives in product config; surface it so the UI
+        // can flag who's over the bar without hardcoding the number.
+        const { rows: cfgRows } = await pool.query(
+            `SELECT (config->>'payout_threshold_cents')::int AS threshold
+             FROM products WHERE id = 'tapowner'`
+        );
+
+        return reply.send({
+            payout_threshold_cents: cfgRows[0]?.threshold ?? 5000,
+            partners: rows,
+        });
+    });
+
+    // Record a manual payout: mark every currently-unpaid ledger row for this
+    // partner as paid out now. Returns the net amount just settled. Idempotent
+    // in effect — a second call finds nothing unpaid and settles $0.
+    app.post<{ Params: { id: string } }>("/admin/partners/:id/payout", async (request, reply) => {
+        if (!requireAdmin(request, reply)) return;
+
+        const partnerId = Number(request.params.id);
+        if (!Number.isInteger(partnerId)) {
+            return reply.code(400).send({ error: "Invalid partner id" });
+        }
+
+        const { rows: partnerRows } = await pool.query(
+            `SELECT id FROM partners WHERE id = $1`,
+            [partnerId]
+        );
+        if (partnerRows.length === 0) {
+            return reply.code(404).send({ error: "Partner not found" });
+        }
+
+        const { rows } = await pool.query(
+            `UPDATE commission_ledger
+                SET paid_out_at = now()
+              WHERE partner_id = $1 AND paid_out_at IS NULL
+              RETURNING amount_cents`,
+            [partnerId]
+        );
+        const paidCents = rows.reduce((sum, r) => sum + Number(r.amount_cents), 0);
+
+        return reply.send({ ok: true, entries_settled: rows.length, paid_cents: paidCents });
+    });
+
+    // Revoke or reactivate a partner code (kills/restores attribution + links).
+    app.post<{ Params: { id: string }; Body: { status?: string } }>(
+        "/admin/partners/:id/status",
+        async (request, reply) => {
+            if (!requireAdmin(request, reply)) return;
+
+            const partnerId = Number(request.params.id);
+            const status = request.body.status;
+            if (!Number.isInteger(partnerId)) {
+                return reply.code(400).send({ error: "Invalid partner id" });
+            }
+            if (status !== "active" && status !== "revoked") {
+                return reply.code(400).send({ error: "status must be active or revoked" });
+            }
+
+            const { rows } = await pool.query(
+                `UPDATE partners SET status = $1 WHERE id = $2 RETURNING id, status`,
+                [status, partnerId]
+            );
+            if (rows.length === 0) {
+                return reply.code(404).send({ error: "Partner not found" });
+            }
+            return reply.send(rows[0]);
+        }
+    );
+
     app.post<{ Body: { code: string } }>("/referrals/click", async (request, reply) => {
         const code = request.body.code?.trim().toUpperCase();
         if (!code) return reply.code(400).send({ error: "code is required" });
