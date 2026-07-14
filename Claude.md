@@ -4,4 +4,6 @@
 
 **Then read `HANDOFF.md`** — the operational runbook (deploy/build/DB rituals, the county data-mining campaign queue, the decision log, and the ranked next actions). It exists so a new session loses zero context; keep it current when its facts change.
 
+**Before touching the marketing site, brand, or referral/promo portal, read `BRAND_AND_PRODUCT_BRIEF.md`** — the real logo assets + exact brand colors (navy `#052158` + orange `#F27F09`, NOT the app's bright blue), the full product story (Reverse Prospecting is the flagship), and the canonical commission/referral model.
+
 Ground truth of what actually works: `CURRENT_STATE.md`. Running log: `PROGRESS.md`.
