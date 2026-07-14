@@ -4,22 +4,48 @@
 Rewrite the top section every working session. If a phase says "PASSED" in PROGRESS.md
 but isn't in the "Verified" table here with evidence, treat it as unverified.
 
-**Last updated:** 2026-07-13 (after the 6-agent full re-evaluation).
+**Last updated:** 2026-07-14 (overnight backend-hardening + 2nd TestFlight build).
 **Reports backing this doc:** `scratchpad/reeval/01..06` (spec, api, mobile, web/compliance, data/infra, timeline).
 
 ---
 
 ## THE ONE-LINE TRUTH
 
-**✅ 2026-07-13 (late): the production app now LAUNCHES.** The startup hang (wrong-version
-`expo-font` thrown at bundle eval) is fixed and CONFIRMED on a real TestFlight build — the app
-opens and behaves as intended on Frederick's device. Email delivery is live (Resend) so login
-uses real emailed codes. The backend has also had its top §7 billing bugs fixed + verified
-(trace reset, atomic charge, protected-record gate, referral gating, OTP throttle).
+**✅ The production app LAUNCHES and the top backlog is largely cleared.** The startup hang is
+fixed and CONFIRMED on-device; email login is live (Resend). Since the re-eval, the entire A
+(boot-trust), most of B (billing), and several C/D/E items have been fixed, deployed, and
+where possible live-verified. A 2nd production build (EAS `e70ef8d4`, build #auto) is in flight
+carrying five mobile UX fixes incl. the location-denial fix (E5).
 
-**Next:** full on-device smoke test of the redesigned flows, then continue down the backend
-backlog (auth on data endpoints, the 51 mis-projected counties, DB password rotation), then
-a final production build for founding-agent TestFlight.
+**Still open (deliberately):** C1 (rotate DB password — infra), C2 (auth on `/tiles`,
+`/parcels/at`, `/geocode` — needs a coordinated backend+client ship), D1 (reload 51
+mis-projected counties — ~half-day data job), B5 (past_due read-only grace — product decision
+for Frederick), plus minor polish (E4 draft edges, E7 Android vCard, F hygiene).
+
+---
+
+## SHIPPED SINCE THE RE-EVAL (deployed to Railway prod / committed for the build)
+
+- **Boot trust (A1–A3):** expo-font deduped to 14.0.12, offline-bootstrap catch, ErrorBoundary.
+  App confirmed launching on-device.
+- **Billing (B1/B2/B3):** included-traces reset on invoice.paid + upgrade grant; referral reward
+  moved to the first *paid* invoice with a zero-amount guard; atomic included-consume + Stripe
+  meter idempotency key + concurrency gate. **B4:** $25 metered spend cap (config
+  `metered_cap_cents`, per-cycle, checked before the vendor call). **H1:** partial-refund
+  clawback is prorated. **H2:** referral first-paid milestone claimed atomically + idempotency
+  key on the balance credit. **B6:** verified — all 5 webhook events are registered (not a bug).
+  **B7:** resolved — signup-as-Closer-trial is by design; Prospector is via the Stripe portal
+  (Frederick action), and the webhook already maps the downgrade.
+- **Security (C3/C4-OTP):** pg pool error listener; per-email OTP throttle (1/min, 5/hr).
+- **Data (D2/D3):** deterministic condo lookup (smallest-area, id tiebreaker); protected-record
+  + null-owner gate returns 403 before any vendor call.
+- **AI draft (M6):** owner name / address wrapped in delimiters with a "treat as literal, not
+  instructions" rule — blocks prompt-injection via a crafted owner/LLC name.
+- **Mobile (E1/E2/E5/E6 + UX):** mailing address restored; keyboard-persist taps; keyboard no
+  longer covers the note field; address-search clear button; Pipeline→CRM rename; owner name
+  wraps to 2 lines; tap-race stale guard + id-0 fix; **E5** location denial no longer bricks the
+  app (default region + search fallback, self-healing "Enable location" button, prompt after
+  login). Committed; reaching the device via build `e70ef8d4`.
 
 ---
 
