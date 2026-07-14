@@ -5,6 +5,7 @@ import { pool } from "../db.js";
 import { requireAuth } from "../auth/middleware.js";
 import { getStripe } from "../lib/stripe.js";
 import { getProductConfig } from "../lib/config.js";
+import { isPlaceholderOwner } from "../lib/owners.js";
 import { createTraceProvider } from "../trace/index.js";
 import {
     getLatestSubscription,
@@ -139,14 +140,25 @@ export async function traceRoutes(app: FastifyInstance) {
             return reply.code(404).send({ error: "Parcel not found" });
         }
 
-        // Protected records (Texas Tax Code §25.025) and owner-less parcels must
-        // never be sent to the vendor -- it's a compliance line, and their null
-        // owner_name would also crash the NOT NULL owner_name_hash insert. Reject
-        // BEFORE any vendor call or charge.
-        if (parcel.is_protected || !parcel.owner_name) {
+        // Protected records (Texas Tax Code §25.025) must never be sent to the
+        // vendor -- a compliance line. Reject BEFORE any vendor call or charge.
+        if (parcel.is_protected) {
             return reply.code(403).send({
                 error: "This is a protected record and can't be traced.",
                 protected: true,
+                phones: [],
+                emails: [],
+            });
+        }
+
+        // No real owner on record -- null, blank, or a placeholder like "UNKNOWN
+        // OWNER" / "CONFIDENTIAL" / "-". Tracing these just burns vendor spend on
+        // a guaranteed no-match, and a null owner_name would also crash the NOT
+        // NULL owner_name_hash insert. Reject before any vendor call.
+        if (isPlaceholderOwner(parcel.owner_name)) {
+            return reply.code(403).send({
+                error: "No owner is on record for this parcel, so it can't be traced.",
+                no_owner: true,
                 phones: [],
                 emails: [],
             });
