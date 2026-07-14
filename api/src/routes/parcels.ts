@@ -59,12 +59,20 @@ export async function parcelsRoutes(app: FastifyInstance) {
                 // smallest area first (the specific unit over a building-envelope
                 // parcel), with id as a unique tiebreaker so the same tap always
                 // resolves to the same parcel.
-                `SELECT ${PARCEL_FIELDS}
+                // already_unlocked drives the contact button's label/color: if this
+                // viewer has ever traced this parcel, re-viewing is free. Purely
+                // cosmetic -- the trace route re-checks and is the source of truth
+                // for charging -- so a null (grace-mode) viewer safely reads false.
+                `SELECT ${PARCEL_FIELDS},
+                        EXISTS (
+                            SELECT 1 FROM user_traces ut
+                            WHERE ut.user_id = $3 AND ut.parcel_id = parcels.id
+                        ) AS already_unlocked
                  FROM parcels
                  WHERE ST_Contains(geom, ST_SetSRID(ST_MakePoint($1, $2), 4326))
                  ORDER BY ST_Area(geom) ASC, id ASC
                  LIMIT 1`,
-                [lngNum, latNum]
+                [lngNum, latNum, viewerId]
             );
 
             if (result.rows.length === 0) {

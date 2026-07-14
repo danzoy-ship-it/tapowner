@@ -314,16 +314,22 @@ export function FarmResultsScreen() {
     // "all 13" instead of counts that read like only some owners are reachable.
     if (locked > 0) {
       const maxCost = ((locked * config.trace_price_cents) / 100).toFixed(2);
-      options.push(`🔓 Unlock contacts for all ${n} · up to $${maxCost}`);
+      const paid = withContacts.length;
+      options.push(`🔓 Unlock remaining ${locked} · up to $${maxCost}`);
       handlers.push(handleUnlock);
-      options.push('📄 Export CSV (owner mailing addresses — free)');
+      options.push('📄 Export CSV (mailing addresses — free)');
       handlers.push(() => void handleExport());
       options.push('Cancel');
       ActionSheetIOS.showActionSheetWithOptions(
         {
-          title: `${n} home${plural} · ${withContacts.length} unlocked · ${locked} locked`,
-          message: `Unlock the locked home${locked === 1 ? '' : 's'} first — then email, save, and export cover all ${n} at once.`,
+          title: `${n} home${plural} · ${paid} unlocked · ${locked} locked`,
+          message:
+            paid > 0
+              ? `${paid} already paid — $0. Unlock the last ${locked} to email, save, and export all ${n} at once.`
+              : `Unlock all ${locked} to email, save, and export them at once.`,
           options,
+          // The only charging action reads as destructive (red) — a clear "this costs money" signal.
+          destructiveButtonIndex: 0,
           cancelButtonIndex: options.length - 1,
         },
         (index) => {
@@ -402,6 +408,7 @@ export function FarmResultsScreen() {
   // otherwise the button keeps offering to unlock homes that can't be unlocked.
   const toUnlockCount = filtered.filter((p) => !isUnlocked(p) && !noMatchIds.has(p.id)).length;
   const anyUnlocked = filtered.some((p) => isUnlocked(p));
+  const unlockedCount = filtered.filter((p) => isUnlocked(p)).length;
 
   return (
     <View style={styles.container}>
@@ -509,22 +516,13 @@ export function FarmResultsScreen() {
         </View>
       )}
 
-      {toUnlockCount > 0 ? (
-        <TouchableOpacity
-          style={styles.unlockButton}
-          onPress={handleUnlock}
-          disabled={busy !== null}
-        >
-          <Text style={styles.unlockButtonText}>
-            🔓 Unlock contacts ({toUnlockCount}) · ~$
-            {((toUnlockCount * config.trace_price_cents) / 100).toFixed(2)}
-          </Text>
-        </TouchableOpacity>
-      ) : anyUnlocked ? (
-        <View style={styles.unlockedDoneButton}>
-          <Text style={styles.unlockedDoneText}>✓ All contacts unlocked · $0</Text>
-        </View>
-      ) : null}
+      {(toUnlockCount > 0 || anyUnlocked) && (
+        <Text style={styles.unlockStatus}>
+          {toUnlockCount > 0
+            ? `${unlockedCount} of ${filtered.length} unlocked · ${toUnlockCount} left to unlock`
+            : `✓ All ${filtered.length} contact${filtered.length === 1 ? '' : 's'} unlocked`}
+        </Text>
+      )}
 
       <TouchableOpacity
         style={[styles.actionsButton, (busy !== null || filtered.length === 0) && styles.buttonDisabled]}
@@ -683,44 +681,25 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 14,
   },
-  unlockButton: {
+  unlockStatus: {
     marginTop: 8,
-    backgroundColor: '#2563eb',
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  unlockButtonText: {
-    color: '#fff',
+    fontSize: 13,
     fontWeight: '600',
-    fontSize: 14,
-  },
-  unlockedDoneButton: {
-    marginTop: 8,
-    backgroundColor: '#dcfce7',
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  unlockedDoneText: {
-    color: '#15803d',
-    fontWeight: '600',
-    fontSize: 14,
+    color: '#6b7280',
   },
   actionsButton: {
     marginTop: 8,
     marginBottom: 8,
-    borderWidth: 1.5,
-    borderColor: '#111827',
+    backgroundColor: '#2563eb',
     borderRadius: 10,
-    paddingVertical: 12,
+    paddingVertical: 13,
     alignItems: 'center',
   },
   buttonDisabled: {
     opacity: 0.4,
   },
   actionsButtonText: {
-    color: '#111827',
+    color: '#fff',
     fontWeight: '600',
     fontSize: 14,
   },

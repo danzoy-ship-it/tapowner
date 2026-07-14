@@ -107,16 +107,42 @@ export async function savedPropertiesRoutes(app: FastifyInstance) {
             return reply.code(404).send({ error: "Not found" });
         }
 
+        // Richer than the list view: the detail screen shows the house facts and
+        // the contact info the user already paid for, so the CRM is a real record
+        // of the owner -- not just a name and address.
         const { rows: parcelRows } = await pool.query(
-            `SELECT ${PARCEL_FIELDS} FROM parcels p WHERE p.id = $1`,
+            `SELECT p.owner_name, p.situs_address, p.situs_number, p.situs_street,
+                    p.situs_city, p.situs_state, p.situs_zip,
+                    p.mailing_address, p.is_absentee, p.is_protected,
+                    p.living_area_sqft, p.year_built, p.bedrooms, p.baths_full, p.baths_half,
+                    p.stories, p.lot_size_sqft, p.has_pool,
+                    p.assessed_total_value, p.last_sale_date, p.last_sale_price
+             FROM parcels p WHERE p.id = $1`,
             [savedProperty.parcel_id]
         );
         const { rows: notes } = await pool.query(
             `SELECT id, body, created_at FROM notes WHERE saved_property_id = $1 ORDER BY created_at DESC`,
             [savedPropertyId]
         );
+        // Contact info comes from the trace this user already paid for (re-reading
+        // it is always free). Same join the CRM CSV export uses.
+        const { rows: traceRows } = await pool.query(
+            `SELECT tr.payload
+               FROM user_traces ut
+               JOIN trace_results tr ON tr.id = ut.trace_result_id
+              WHERE ut.user_id = $1 AND ut.parcel_id = $2`,
+            [session.userId, savedProperty.parcel_id]
+        );
+        const payload = (traceRows[0]?.payload ?? {}) as {
+            phones?: Array<{ number?: string; type?: string; dnc?: boolean }>;
+            emails?: Array<{ email?: string }>;
+        };
+        const phones = (payload.phones ?? [])
+            .filter((p) => p.number)
+            .map((p) => ({ number: p.number as string, type: p.type ?? null, dnc: p.dnc ?? false }));
+        const emails = (payload.emails ?? []).map((e) => e.email).filter(Boolean);
 
-        const merged = { ...savedProperty, ...parcelRows[0], notes };
+        const merged = { ...savedProperty, ...parcelRows[0], notes, phones, emails };
         merged.situs_address = formatSitusAddress(merged);
         return reply.send(merged);
     });

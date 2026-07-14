@@ -129,10 +129,16 @@ export function PropertyCard({
     </>
   );
 
+  const unlocked = detail?.already_unlocked === true;
   const cta = detail && !detail.is_protected && (
-    <TouchableOpacity style={styles.ctaButton} onPress={() => onGetContact(detail)}>
+    <TouchableOpacity
+      style={[styles.ctaButton, unlocked && styles.ctaButtonUnlocked]}
+      onPress={() => onGetContact(detail)}
+    >
       <Text style={styles.ctaButtonText}>
-        Get Contact Info — {formatCents(config.trace_price_cents)}
+        {unlocked
+          ? 'Contact this person — Free'
+          : `Contact this person — ${formatCents(config.trace_price_cents)}`}
       </Text>
     </TouchableOpacity>
   );
@@ -414,6 +420,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingVertical: 14,
     alignItems: 'center',
+  },
+  ctaButtonUnlocked: {
+    backgroundColor: '#16a34a',
   },
   ctaButtonText: {
     fontWeight: '600',

@@ -45,6 +45,9 @@ export interface ParcelDetail {
   assessed_total_value: string | null;
   last_sale_date: string | null;
   last_sale_price: string | null;
+  // True when this viewer already traced this parcel, so re-viewing is free.
+  // Optional: older API builds omit it (treated as not-yet-unlocked).
+  already_unlocked?: boolean;
 }
 
 export interface TierConfig {
@@ -261,8 +264,30 @@ export interface SavedPropertyNote {
   created_at: string;
 }
 
+export interface SavedPropertyPhone {
+  number: string;
+  type: string | null;
+  dnc: boolean;
+}
+
 export interface SavedPropertyDetail extends Omit<SavedPropertySummary, 'note_count' | 'latest_note'> {
   notes: SavedPropertyNote[];
+  // Enriched detail: house facts + the contact info already paid for. Optional so
+  // an older API build that omits them still types cleanly.
+  mailing_address?: string | null;
+  living_area_sqft?: string | null;
+  year_built?: number | null;
+  bedrooms?: number | null;
+  baths_full?: number | null;
+  baths_half?: number | null;
+  stories?: string | null;
+  lot_size_sqft?: string | null;
+  has_pool?: boolean | null;
+  assessed_total_value?: string | null;
+  last_sale_date?: string | null;
+  last_sale_price?: string | null;
+  phones?: SavedPropertyPhone[];
+  emails?: string[];
 }
 
 async function handleJson<T>(res: Response): Promise<T> {

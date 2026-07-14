@@ -23,6 +23,19 @@ import {
 import { useApp } from './AppContext';
 import type { RootStackParamList } from './navigation';
 
+// Compact facts line for the CRM record — mirrors the map card's summary.
+function factsLine(d: SavedPropertyDetail): string {
+  const parts: string[] = [];
+  if (d.living_area_sqft) {
+    const n = Math.round(parseFloat(d.living_area_sqft));
+    if (Number.isFinite(n) && n > 0) parts.push(`${n.toLocaleString('en-US')} sqft`);
+  }
+  if (d.bedrooms || d.baths_full) parts.push(`${d.bedrooms ?? '?'}bd/${d.baths_full ?? '?'}ba`);
+  if (d.has_pool) parts.push('Pool');
+  if (d.year_built) parts.push(`Built ${d.year_built}`);
+  return parts.join(' · ');
+}
+
 export function PipelineDetailScreen() {
   const route = useRoute<RouteProp<RootStackParamList, 'PipelineDetail'>>();
   const { savedPropertyId } = route.params;
@@ -88,6 +101,34 @@ export function PipelineDetailScreen() {
       <View style={styles.content}>
         <Text style={styles.address}>{detail.situs_address ?? 'Address unavailable'}</Text>
         {detail.owner_name && <Text style={styles.owner}>{detail.owner_name}</Text>}
+        {factsLine(detail) !== '' && <Text style={styles.facts}>{factsLine(detail)}</Text>}
+        {detail.mailing_address && (
+          <Text style={styles.mailing}>✉ Mails to: {detail.mailing_address}</Text>
+        )}
+
+        {((detail.phones?.length ?? 0) > 0 || (detail.emails?.length ?? 0) > 0) && (
+          <>
+            <Text style={styles.sectionLabel}>Contact</Text>
+            {detail.phones?.map((p) => (
+              <View key={p.number} style={styles.contactRow}>
+                <Text style={styles.contactValue}>{p.number}</Text>
+                <View style={styles.contactMetaRow}>
+                  {p.type ? <Text style={styles.contactMeta}>{p.type}</Text> : null}
+                  {p.dnc && (
+                    <View style={styles.dncBadge}>
+                      <Text style={styles.dncBadgeText}>DNC</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            ))}
+            {detail.emails?.map((e) => (
+              <Text key={e} style={styles.contactEmail}>
+                {e}
+              </Text>
+            ))}
+          </>
+        )}
 
         <Text style={styles.sectionLabel}>Status</Text>
         {readOnly ? (
@@ -169,6 +210,57 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6b7280',
     marginTop: 2,
+  },
+  facts: {
+    fontSize: 12,
+    color: '#9ca3af',
+    marginTop: 4,
+  },
+  mailing: {
+    fontSize: 13,
+    color: '#6b7280',
+    marginTop: 6,
+  },
+  contactRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6',
+  },
+  contactValue: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  contactMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  contactMeta: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
+  dncBadge: {
+    backgroundColor: '#fee2e2',
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  dncBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#b91c1c',
+  },
+  contactEmail: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#111827',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6',
   },
   sectionLabel: {
     marginTop: 16,
