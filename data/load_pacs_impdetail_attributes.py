@@ -24,7 +24,10 @@ import zipfile
 import psycopg2
 
 POOL_RE = re.compile(r"pool", re.I)
-MAIN_CDS = {"MA", "MH"}
+# Dwelling floor areas vary by CAD vocabulary: "Main Area" (Travis-style MA),
+# "MAIN FLOOR RESIDENTIAL"/"2ND FLOOR RESIDENTIAL" (Guadalupe RES1/UPST),
+# "MANUFACTURED HOUSE" (MH). Floors are SUMMED per property.
+DWELLING_RE = re.compile(r"MAIN AREA|MAIN FLOOR|FLOOR RESID|MANUFACTURED HOUSE", re.I)
 
 
 def to_int(value, lo, hi):
@@ -64,11 +67,11 @@ def main() -> None:
             entry = accounts.setdefault(pid, [None, None, False])
             if POOL_RE.search(desc) or POOL_RE.search(cd):
                 entry[2] = True
-            if cd in MAIN_CDS or "MAIN AREA" in desc:
+            if DWELLING_RE.search(desc) or cd in ("MA", "MH"):
                 living = to_int(line[93:108], 1, 2_000_000)
                 yr = to_int(line[85:89], 1800, 2027)
-                if living and (entry[0] or 0) < living:
-                    entry[0] = living
+                if living:
+                    entry[0] = (entry[0] or 0) + living
                 entry[1] = entry[1] or yr
             if dry_run and i >= 120_000:
                 print("dry-run: stopping parse", flush=True)
