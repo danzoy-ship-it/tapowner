@@ -23,6 +23,9 @@ export default async function Footer() {
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-3">
         {notice && <p className="font-medium text-zinc-700 dark:text-zinc-300">{notice}</p>}
         <div className="flex gap-6">
+          <Link href="/billing" className="hover:text-zinc-800 dark:hover:text-zinc-200">
+            Manage billing
+          </Link>
           <Link href="/terms" className="hover:text-zinc-800 dark:hover:text-zinc-200">
             Terms of Service
           </Link>

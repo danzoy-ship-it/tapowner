@@ -4,6 +4,7 @@ import { pool } from "../db.js";
 import { getStripe } from "../lib/stripe.js";
 import { getProductConfig } from "../lib/config.js";
 import { logEvent } from "../lib/events.js";
+import { requireAuth } from "../auth/middleware.js";
 
 const REFERRAL_COUPON_ID = "user-referral-free-month";
 
@@ -352,6 +353,37 @@ export async function billingRoutes(app: FastifyInstance) {
             return reply.send({ url: session.url });
         }
     );
+
+    // Stripe Customer Portal session for the logged-in user: plan switching
+    // (incl. Prospector) and cancellation happen in Stripe's own UI, configured
+    // in the dashboard -- the app never handles card data.
+    app.post("/billing/portal-session", async (request, reply) => {
+        const stripe = getStripe();
+        if (!stripe) {
+            return reply.code(503).send({ error: "Billing not configured yet" });
+        }
+        const session = await requireAuth(request, reply);
+        if (!session) return;
+
+        const { rows } = await pool.query(
+            `SELECT stripe_customer_id FROM subscriptions
+             WHERE user_id = $1 AND stripe_customer_id IS NOT NULL
+             ORDER BY created_at DESC LIMIT 1`,
+            [session.userId]
+        );
+        const customerId = rows[0]?.stripe_customer_id;
+        if (!customerId) {
+            return reply.code(404).send({
+                error: "No billing account found for this email. If you just signed up, give it a minute and try again.",
+            });
+        }
+
+        const portal = await stripe.billingPortal.sessions.create({
+            customer: customerId,
+            return_url: `${process.env.WEB_BASE_URL}/billing`,
+        });
+        return reply.send({ url: portal.url });
+    });
 
     // Scoped child plugin: overrides the JSON body parser to keep the raw
     // buffer, which Stripe's signature verification requires. Fastify's

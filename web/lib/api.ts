@@ -39,6 +39,18 @@ export function getStoredReferral(): { code: string; attributedAt: number } | nu
   }
 }
 
+export async function createPortalSession(token: string): Promise<string> {
+  const res = await fetch(`${API_BASE}/billing/portal-session`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const body = await res.json();
+  if (!res.ok) {
+    throw new Error(body.error ?? 'Could not open billing portal');
+  }
+  return body.url as string;
+}
+
 export async function createCheckoutSession(email: string): Promise<string> {
   const referral = getStoredReferral();
   const res = await fetch(`${API_BASE}/billing/checkout-session`, {
