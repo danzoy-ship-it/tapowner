@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TapOwner — Pre-Launch Legal &amp; Compliance Review Packet</title>
+<style>
+  @page { margin: 1in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: Georgia, "Times New Roman", serif;
+    color: #1a1a1a;
+    line-height: 1.6;
+    font-size: 14px;
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 44px 28px;
+    background: #fff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  h1 { color: #052158; font-size: 26px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .subtitle { color: #F27F09; font-weight: bold; text-transform: uppercase; letter-spacing: 0.09em; font-size: 12px; margin: 0 0 22px; }
+  .meta { font-size: 13px; color: #333; margin: 0 0 20px; }
+  .meta div { margin: 2px 0; }
+  .fillnote { font-size: 12px; color: #7a5b00; background: #fff8e6; border: 1px solid #e6cd8a; padding: 8px 12px; margin: 0 0 26px; }
+  h2 { color: #052158; font-size: 18px; margin: 34px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #F27F09; }
+  h3 { color: #052158; font-size: 15px; margin: 20px 0 6px; }
+  p { margin: 9px 0; }
+  ul, ol { margin: 9px 0; padding-left: 24px; }
+  li { margin: 7px 0; }
+  .lead { color: #333; }
+  .note { border-left: 3px solid #F27F09; background: #fef6ec; padding: 11px 15px; margin: 15px 0; font-size: 13px; }
+  .fill { background: #fff3cd; border-bottom: 1px solid #d9a400; padding: 0 5px; font-style: italic; color: #6b5200; }
+  .q { margin: 16px 0; padding-left: 4px; }
+  .q .qh { color: #052158; font-weight: bold; }
+  .attachment { break-before: page; page-break-before: always; padding-top: 8px; }
+  .draft-banner { border: 1px solid #d9a400; background: #fff8e6; color: #7a5b00; padding: 8px 12px; font-size: 12px; margin: 0 0 16px; }
+  .doc { border: 1px solid #dcdcdc; padding: 22px 26px; margin-top: 12px; background: #fcfcfc; }
+  .doc h4 { color: #052158; margin: 18px 0 4px; font-size: 14px; }
+  .doc h4:first-of-type { margin-top: 4px; }
+  .email { border: 1px solid #dcdcdc; background: #fcfcfc; padding: 22px 26px; margin-top: 12px; }
+  .email .hdr { font-size: 12px; color: #555; border-bottom: 1px solid #e2e2e2; padding-bottom: 10px; margin-bottom: 14px; }
+  .email .body { white-space: pre-line; }
+  .sig { white-space: pre-line; border-left: 3px solid #ccc; padding-left: 15px; color: #444; margin: 14px 0 0; font-size: 13px; }
+  footer { margin-top: 44px; border-top: 1px solid #ddd; padding-top: 10px; font-size: 11px; color: #888; text-align: center; }
+  @media print {
+    body { font-size: 11pt; max-width: none; padding: 0; }
+    h1 { font-size: 20pt; }
+    h2 { font-size: 14pt; }
+    h3 { font-size: 12pt; }
+    a { color: inherit; text-decoration: none; }
+    .fillnote { display: none; }
+  }
+</style>
+</head>
+<body>
+
+  <h1>TapOwner — Pre-Launch Legal &amp; Compliance Review</h1>
+  <p class="subtitle">Confidential · Prepared for Attorney Review</p>
+
+  <div class="meta">
+    <div><strong>Prepared:</strong> July 14, 2026</div>
+    <div><strong>Client:</strong> Frederick Danzoy &mdash; fred@salasers.com</div>
+    <div><strong>Entity:</strong> Stokely Software LLC (Texas; formation in progress)</div>
+    <div><strong>Product:</strong> TapOwner (iOS app + tapowner.com), Texas real-estate data tool</div>
+    <div><strong>For:</strong> the reviewing attorney</div>
+  </div>
+
+  <h2>1. What we&rsquo;re asking for</h2>
+  <p class="lead">
+    TapOwner is a pre-launch subscription app for licensed Texas real estate agents. Before we
+    enable live billing or open to the public, we want a compliance review so we launch on solid
+    footing. We are currently in payment test mode with <strong>no live customers</strong>; none
+    of the documents in this packet are in effect yet.
+  </p>
+  <p>We&rsquo;re seeking your review and guidance on five areas:</p>
+  <ol>
+    <li>Our <strong>Terms of Service</strong> (Attachment A)</li>
+    <li>Our <strong>Privacy Policy</strong> (Attachment B)</li>
+    <li><strong>Texas Data Broker Act</strong> registration &mdash; whether we qualify, and timing</li>
+    <li>Our <strong>data-vendor (BatchData) reseller position</strong> (Attachment C)</li>
+    <li>Any <strong>TCPA / FCRA exposure</strong> from how the product works</li>
+  </ol>
+
+  <h2>2. What TapOwner does (so the model is clear)</h2>
+  <ul>
+    <li><strong>Free owner lookup.</strong> The agent opens a map of Texas, taps a property, and
+      sees the owner of record (name + mailing address) &mdash; sourced from <strong>public county
+      appraisal records</strong> via the State of Texas TxGIO StratMap program.</li>
+    <li><strong>Paid contact &ldquo;trace&rdquo; (the data-resale piece).</strong> For 29&cent;, the
+      agent unlocks that owner&rsquo;s phone/email, supplied <strong>per-lookup by a licensed
+      third-party provider (BatchData)</strong> that performs Do-Not-Call scrubbing. We resell
+      that contact data to the subscriber for their own real-estate use.</li>
+    <li><strong>AI-drafted outreach.</strong> The agent can generate a one-to-one email, sent from
+      <strong>the agent&rsquo;s own email account</strong> &mdash; never from our servers.</li>
+    <li><strong>Mini-CRM.</strong> The agent saves owners with private notes and pipeline status.</li>
+    <li><strong>&ldquo;Farm&rdquo; / Reverse Prospecting.</strong> The agent draws an area on the map,
+      sees every owner inside it (capped at 500), filters by property attributes (beds, baths,
+      pool, sqft), and can <strong>export a CSV</strong>. That CSV contains owner names + mailing
+      addresses (public record) and &mdash; for parcels the agent already paid to trace &mdash;
+      phone numbers and emails.</li>
+    <li><strong>Pricing / billing.</strong> Prospector $9.99/mo or Closer $19.99/mo, 30-day trial.
+      Account creation and billing happen on tapowner.com, not inside the app.</li>
+  </ul>
+
+  <h3>Deliberate risk-reduction choices (please confirm these are the right lines to hold)</h3>
+  <ul>
+    <li><strong>No autodialer, no mass texting, no robocalls</strong> anywhere in the product.</li>
+    <li>Contact lookups are <strong>one at a time</strong> and billed per lookup; outreach emails
+      are <strong>one-to-one from the agent&rsquo;s own mailbox</strong>.</li>
+    <li><strong>Do-Not-Call and litigation-risk flags are shown on every phone number</strong> and
+      cannot be turned off.</li>
+    <li><strong>Protected records</strong> (Texas Tax Code &sect;25.025) are excluded from display.</li>
+    <li>We are <strong>not a consumer reporting agency</strong>; the ToS prohibits all FCRA-covered
+      uses (tenant screening, employment, credit, insurance eligibility).</li>
+  </ul>
+
+  <h2>3. What we believe we must complete before launch (please confirm / correct)</h2>
+  <p>This is our internal, researched-but-not-lawyer-verified checklist:</p>
+  <ol>
+    <li><strong>Vendor redistribution rights (BatchData)</strong> &mdash; see &sect;4 Q4 and Attachment C.</li>
+    <li><strong>Terms of Service</strong> with required acceptable-use clauses &mdash; Attachment A.</li>
+    <li><strong>Texas Data Broker Act registration</strong> (Bus. &amp; Com. Code ch. 509/510): Texas
+      Secretary of State Form 4001 (~$300/yr), post the SOS-prescribed conspicuous
+      &ldquo;data broker&rdquo; notice on the website and in the app, and maintain a written
+      comprehensive information-security program (12 statutory safeguards). Our reading is that the
+      &ldquo;more than 50,000 individuals&rdquo; prong (no revenue floor) is crossed at modest scale,
+      so we plan to <strong>register proactively at launch</strong>. Please confirm the trigger
+      analysis and the timing.</li>
+    <li><strong>Insurance:</strong> E&amp;O + cyber-liability coverage appropriate to a solo micro-SaaS.</li>
+    <li><strong>This attorney review</strong> (ToS, privacy policy, registration timing, vendor terms).</li>
+  </ol>
+
+  <h2>4. Specific questions for you</h2>
+
+  <div class="q"><span class="qh">Q1 &mdash; Terms of Service (Attachment A).</span> Are the five
+    acceptable-use clauses (lawful use; no FCRA uses; user is solely responsible for their own
+    outreach compliance; honor opt-outs; no harassment/stalking), the &ldquo;as-is&rdquo; warranty
+    disclaimer, and the liability cap adequate and enforceable under Texas law for this business?
+    Anything missing or that should be strengthened? <em>Also please reconcile one wording point:</em>
+    &sect;5 prohibits the user from &ldquo;bulk-export,&rdquo; yet the Farm feature (&sect;2) provides a
+    CSV export for the user&rsquo;s own business use &mdash; how should that clause be worded so the
+    intended restriction (no reselling / no building a competing database) doesn&rsquo;t contradict a
+    feature we offer?</div>
+
+  <div class="q"><span class="qh">Q2 &mdash; Privacy Policy (Attachment B).</span> Is it adequate for
+    a business that handles both (a) subscriber data and (b) property-owner data drawn from public
+    records plus a licensed vendor? Does it meet the Texas Data Broker Act&rsquo;s requirements and
+    any applicable consumer-privacy obligations? Is the owner suppression / opt-out mechanism
+    sufficient?</div>
+
+  <div class="q"><span class="qh">Q3 &mdash; Texas Data Broker Act (ch. 509/510).</span> Do we in
+    fact qualify as a &ldquo;data broker&rdquo;? Is register-at-launch the correct timing, or is
+    registration required earlier or not at all? Please confirm the exact required notice text and
+    the 12 information-security-program safeguards, and whether our current design meets them.</div>
+
+  <div class="q"><span class="qh">Q4 &mdash; BatchData / vendor reseller rights (Attachment C).</span>
+    We resell BatchData&rsquo;s licensed contact data to our subscribers on a per-lookup basis. Their
+    standard self-serve terms appear to cover internal use only. Their account executive has sent the
+    email in Attachment C stating BatchData &ldquo;will not sue&hellip; regarding your reselling&hellip;
+    in volumes less than 40k records per month&rdquo; and to &ldquo;stay in contract,&rdquo; but they
+    <strong>declined to provide formal reseller terms &ldquo;at this stage.&rdquo;</strong>
+    <strong>Is that email, on top of our existing self-serve contract, a sufficient legal basis to
+    resell their data to end users at launch &mdash; or do we need a signed reseller/redistribution
+    addendum, or at least written confirmation from someone with authority to bind BatchData?</strong>
+    What is our exposure if we launch on the email alone, and how would you recommend firming it up?</div>
+
+  <div class="q"><span class="qh">Q5 &mdash; Bulk export &amp; TCPA.</span> The Farm feature can export
+    up to 500 rows to CSV: owner names and mailing addresses (public record), plus phone numbers and
+    emails for any parcels the agent already paid to trace.
+    <strong>(a)</strong> Does exporting phone numbers in bulk create TCPA / Do-Not-Call exposure for
+    us as the platform, even though we operate no dialer and the subscriber contractually owns their
+    own outreach compliance?
+    <strong>(b)</strong> Should we limit the launch export to <em>mailing addresses only</em> (for
+    physical direct mail, which we understand sits outside the TCPA) and drop the phone/email columns
+    until vendor rights are formalized?
+    <strong>(c)</strong> Does the BatchData 40k-records/month ceiling or their terms otherwise
+    restrict this export?</div>
+
+  <div class="q"><span class="qh">Q6 &mdash; Entity &amp; liability.</span> Any recommendations tying
+    the forming LLC, the ToS liability limitation, and the insurance together for a solo-operated
+    micro-SaaS in this category?</div>
+
+  <div class="q"><span class="qh">Q7 &mdash; Anything we haven&rsquo;t asked</span> that you would flag
+    for a Texas-based real-estate-data / data-broker SaaS before public launch.</div>
+
+  <h2>5. Logistics</h2>
+  <ul>
+    <li>We are pre-launch (payment test mode); the goal is to clear this review before enabling live
+      billing.</li>
+    <li>We&rsquo;re aiming to keep this engagement to <strong>no more than $1,000</strong> &mdash;
+      please tell us if that isn&rsquo;t realistic for the scope.</li>
+    <li>Primary contact: Frederick Danzoy, fred@salasers.com, 210-896-9769.</li>
+  </ul>
+
+  <!-- ===================== ATTACHMENT A ===================== -->
+  <div class="attachment">
+    <h2>Attachment A &mdash; Terms of Service (current draft)</h2>
+    <div class="doc">
+      <div class="draft-banner">DRAFT &mdash; pending attorney review. Not yet in effect.</div>
+      <p style="color:#666;font-size:12px;margin-top:0;">Last updated: July 13, 2026</p>
+
+      <h4>1. What TapOwner is</h4>
+      <p>TapOwner is a subscription service for licensed real estate professionals. It displays
+        property ownership information compiled from public county appraisal records, and &mdash; when
+        you choose to purchase a lookup &mdash; contact information supplied by a licensed data
+        provider. TapOwner is operated from Texas and currently covers Texas properties.</p>
+
+      <h4>2. Your account and billing</h4>
+      <p>Plans are billed monthly through Stripe. Trials convert to a paid subscription automatically
+        unless canceled before the trial ends. Per-lookup contact charges (&ldquo;traces&rdquo;) are
+        metered to your subscription &mdash; you are only charged when a lookup returns verified
+        contact data. You can cancel anytime; access continues through the end of the paid period.
+        Manage your plan at tapowner.com.</p>
+
+      <h4>3. Acceptable use &mdash; the important part</h4>
+      <p>By using TapOwner you agree to ALL of the following:</p>
+      <ol>
+        <li><strong>Lawful use only.</strong> You will use TapOwner and any data obtained through it
+          solely for lawful purposes connected to your real estate business.</li>
+        <li><strong>No FCRA uses.</strong> TapOwner is not a consumer reporting agency and its data is
+          not a consumer report. You will not use it to determine eligibility for credit, insurance,
+          employment, housing/tenant screening, or any other purpose covered by the Fair Credit
+          Reporting Act.</li>
+        <li><strong>You own your outreach compliance.</strong> You are solely responsible for ensuring
+          your calls, texts, and emails comply with all applicable laws &mdash; including the TCPA and
+          federal/state Do-Not-Call rules for calls and texts, and CAN-SPAM for email. Do-Not-Call and
+          litigation-risk flags shown in the app are informational aids, not legal advice, and
+          displaying a number does not mean it is lawful for you to call it.</li>
+        <li><strong>Honor opt-outs.</strong> If a property owner asks you not to contact them, you will
+          honor that request promptly and permanently.</li>
+        <li><strong>No harassment or stalking.</strong> You will not use TapOwner to harass, intimidate,
+          stalk, or harm any person, or to locate a person for any purpose unrelated to a legitimate
+          real estate inquiry.</li>
+      </ol>
+      <p>We may suspend or terminate accounts that violate this section, without refund.</p>
+
+      <h4>4. Data accuracy</h4>
+      <p>Ownership records come from county appraisal districts and are updated on their schedule, not
+        in real time. Contact data comes from a licensed third-party provider and is not guaranteed to
+        be current or accurate. Verify independently before acting on it.</p>
+
+      <h4>5. License and restrictions</h4>
+      <p>Your subscription grants a personal, non-transferable license to use the data inside TapOwner
+        for your own business. You may save individual contacts you have purchased. You may not resell,
+        redistribute, scrape, bulk-export, or use the service to build or enrich any database or
+        competing product.</p>
+
+      <h4>6. Disclaimers and liability</h4>
+      <p>The service is provided &ldquo;as is&rdquo; without warranties of any kind. To the maximum
+        extent permitted by law, TapOwner&rsquo;s total liability for any claim is limited to the amount
+        you paid in the twelve months before the claim arose.</p>
+
+      <h4>7. Changes and contact</h4>
+      <p>We may update these terms; material changes will be announced by email or in the app.
+        Questions: fred@salasers.com.</p>
+    </div>
+  </div>
+
+  <!-- ===================== ATTACHMENT B ===================== -->
+  <div class="attachment">
+    <h2>Attachment B &mdash; Privacy Policy (current draft)</h2>
+    <div class="doc">
+      <div class="draft-banner">DRAFT &mdash; pending attorney review. Not yet in effect.</div>
+      <p style="color:#666;font-size:12px;margin-top:0;">Last updated: July 13, 2026</p>
+
+      <h4>1. Two kinds of people, two kinds of data</h4>
+      <p>TapOwner handles data about <strong>subscribers</strong> (real estate professionals with
+        accounts) and about <strong>property owners</strong> (whose ownership records appear in the
+        product). This policy covers both.</p>
+
+      <h4>2. What we collect from subscribers</h4>
+      <ul>
+        <li><strong>Account:</strong> your email address, and the agent profile you choose to enter
+          (name, brokerage, phone) used to sign your outreach emails.</li>
+        <li><strong>Billing:</strong> handled by Stripe. We never see or store your card number.</li>
+        <li><strong>Usage:</strong> product events (app opens, lookups purchased, emails drafted,
+          properties saved) tied to your account, used to operate and improve the service.</li>
+        <li><strong>Location:</strong> used on your device to center the map around you. Your GPS
+          location is not stored on our servers.</li>
+        <li><strong>Contacts:</strong> the app writes a contact to your phone only when you tap
+          &ldquo;Save to Contacts,&rdquo; using the standard iOS contact form. We never read your
+          address book.</li>
+      </ul>
+
+      <h4>3. Where property-owner data comes from</h4>
+      <p>Ownership records (owner name, property and mailing address, assessed values) come from public
+        records published by Texas county appraisal districts through the state&rsquo;s StratMap
+        program. Contact information (phone numbers, email addresses) is supplied per-lookup by a
+        licensed data provider that performs Do-Not-Call scrubbing, and is purchased by a subscriber
+        for their own business use.</p>
+
+      <h4>4. Who we share data with</h4>
+      <p>Only the processors needed to run the service:</p>
+      <ul>
+        <li><strong>Stripe</strong> &mdash; payments and subscriptions.</li>
+        <li><strong>BatchData</strong> &mdash; the licensed contact-data provider (receives the property
+          address you look up).</li>
+        <li><strong>Anthropic</strong> &mdash; AI email drafting (receives the property details and your
+          agent profile for the draft you request; their API does not train on this data).</li>
+        <li><strong>Railway</strong> &mdash; cloud hosting for our servers and database.</li>
+        <li><strong>Google</strong> &mdash; address search geocoding (receives the address text you type).</li>
+      </ul>
+      <p>We do not sell subscriber data. We do not run ads.</p>
+
+      <h4>5. Property owners: your choices</h4>
+      <p>If you are a property owner and want your contact information suppressed from TapOwner lookups,
+        email fred@salasers.com with the property address and we will suppress it and forward the
+        request to our data provider. Ownership records themselves are public county records; corrections
+        to those must be made with your county appraisal district.</p>
+
+      <h4>6. Retention and security</h4>
+      <p>Purchased contact results are cached for up to 90 days. Account data is kept while your account
+        is active and deleted on verified request. Data is encrypted in transit, access is restricted,
+        and we maintain a written information security program.</p>
+
+      <h4>7. Contact</h4>
+      <p>Privacy questions or deletion requests: fred@salasers.com. Material changes to this policy will
+        be announced by email or in the app.</p>
+    </div>
+  </div>
+
+  <!-- ===================== ATTACHMENT C ===================== -->
+  <div class="attachment">
+    <h2>Attachment C &mdash; BatchData correspondence (verbatim)</h2>
+    <p>The following is the full text of an email received from BatchData&rsquo;s account executive in
+      response to our request for formal reseller/redistribution terms.</p>
+    <div class="email">
+      <div class="hdr">
+        <div><strong>From:</strong> Sean Murray &lt;Sean.Mur@BatchService.com&gt;</div>
+        <div><strong>Received:</strong> July 14, 2026, 4:50 PM</div>
+        <div><strong>Subject:</strong> Reselling / redistribution terms</div>
+      </div>
+      <div class="body">We cannot provide this at this stage in the partnership.
+
+BatchData will not sue you or pursue legal action regarding your reselling of our data in volumes less than 40k records per month.  Let&rsquo;s just stay in contract.
+
+This should stand as a formal statement until otherwise notified that you are able to buy at 7c and resell as needed.</div>
+      <div class="sig">Sean Murray
+Senior Account Executive
+Sean.Mur@BatchService.com
+(602) 836-3472
+www.batchdata.io</div>
+    </div>
+    <div class="note">
+      <strong>Our concern (for Q4):</strong> this is an account executive&rsquo;s email, not a signed
+      contract amendment; it is framed as a promise not to sue rather than a grant of resale rights, it
+      is revocable (&ldquo;until otherwise notified&rdquo;), and it carries a 40,000-records/month
+      ceiling. We&rsquo;d like your read on whether it is sufficient to launch on as-is.
+    </div>
+  </div>
+
+  <footer>
+    TapOwner &mdash; Confidential. Prepared for attorney review, July 14, 2026. Drafts herein are not
+    yet in effect.
+  </footer>
+
+</body>
+</html>

@@ -33,15 +33,22 @@ transcription artifacts; give layman step-by-step for anything he must do):**
 
 ## 2. PRODUCT STATE (as of handoff)
 
-- **On Frederick's phone:** build **1.0.0 (12)** CONFIRMED on-device 2026-07-14 (his
-  screenshots show the unlock-all-first + "Actions for these 13 homes" layout — he called it
-  "way more intuitive"). **Build #13 SHIPPED** (built + auto-submitted) with his next polish:
-  post-unlock popup simplified to **"All contacts now unlocked."** (was a phone/email/no-match
-  breakdown he found busy), and the blue Unlock button now flips to green **"✓ All contacts
-  unlocked · $0"** once the pass finishes (no-match homes no longer counted as still-locked).
-  #12 layout it builds on: action sheet leads with `🔓 Unlock contacts for all N · up to $X`
-  while any are locked, "all 13" wording once worked, session no-match tracking, Email/Letter
-  toggle in `FarmDraftScreen`.
+- **On Frederick's phone:** build **1.0.0 (13)** was the last on-device confirm.
+  **Build #14 SHIPPED 2026-07-14** (EAS build `9449080b`, submission `d1f8802e` scheduled;
+  Apple processes ~5–10 min after the ~15-min build) with three UX fixes from his evaluation:
+  (1) **contact button knows if you already paid** — `/parcels/at` returns `already_unlocked`
+  and `PropertyCard` shows green **"Contact this person — Free"** when owned vs blue **"— $0.29"**
+  when new (cosmetic only; the trace route still gates charging, so a stale flag can only
+  under-promise Free);
+  (2) **farm collapsed to two buttons** — the standalone Unlock button is GONE (now a plain
+  status line), **"Actions for these N homes" is filled blue**, and the action sheet leads with
+  a red (destructive) **"🔓 Unlock remaining X · up to $Y"** row with **"N already paid — $0"**
+  in the subtitle (this REPLACES #13's blue→green standalone Unlock button and the "Unlock
+  contacts for all N" sheet label);
+  (3) **CRM detail is a real record** — `/saved-properties/:id` now also returns house facts +
+  the paid phones/emails (same join the CSV export uses), and `PipelineDetailScreen` renders a
+  facts line, mailing address, and a Contact section (DNC-badged phones + emails).
+  Still valid: session no-match tracking, Email/Letter toggle in `FarmDraftScreen`.
   Ship ritual: `cd mobile && npx expo-doctor` (expect 18/18) then
   `npx eas-cli build --platform ios --profile production --auto-submit --non-interactive`
   (run in background; auto-submits; Apple processes ~5-10 min).
@@ -204,6 +211,25 @@ Template = the BCAD letter in chat/PROGRESS (swap county name; from info@tapowne
   mode").
 - **Trace economics** (§7 discipline): included-first atomic consume; $25 metered cap;
   no-match never charged; re-view forever free; protected/placeholder owners never traced.
+- **BatchData reseller status** (2026-07-14): NO signed reseller/redistribution addendum. AE
+  Sean Murray emailed a stopgap — BatchData "will not sue… regarding your reselling… in
+  volumes less than 40k records per month… stay in contract," standing "until otherwise
+  notified that you are able to buy at 7c and resell as needed." This is a revocable "won't
+  sue" forbearance on the existing internal-use self-serve contract, NOT a granted resell
+  right; it is from an AE (may not bind BatchData), and they explicitly declined formal terms
+  "at this stage." Do NOT treat gate item 1 as closed. Route to attorney (gate item 5); watch
+  the 40k/mo ceiling as the trigger to negotiate the 7¢ wholesale-resell tier. Bears on farm
+  CSV bulk export (vendor side covered ≤40k/mo; TCPA side still open). Packet for the attorney:
+  `legal/attorney-review-packet.html`.
+- **Contact-button "Free" + farm two-button + CRM detail** (Frederick eval, 2026-07-14, build
+  #14): (a) already-paid contacts must read green "Free," not "$0.29" (confusion that you'd be
+  charged again); the `already_unlocked` flag on /parcels/at is cosmetic — the trace route still
+  gates charging. (b) Farm's standalone Unlock button vs Actions button showed mismatched counts
+  (contacts vs homes) — collapsed to one blue Actions button; unlocking now lives inside the
+  sheet as the lone red row. (c) CRM only *displayed* name+address though it always *stored* the
+  paid contacts (they were in the CSV export all along) — the detail endpoint/screen now surface
+  phones/emails + house facts. REJECTED "force save-to-contacts first": the CRM builds from
+  server data, never from the phone's address book (a privacy promise on the site).
 
 ---
 
@@ -211,7 +237,10 @@ Template = the BCAD letter in chat/PROGRESS (swap county name; from info@tapowne
 
 1. **LLC → EIN → business bank → Stripe LIVE** (blocks all real revenue).
 2. **Legal gate before public launch:** attorney ToS/privacy review, TX Data Broker
-   registration, E&O insurance, BatchData reseller addendum.
+   registration, E&O insurance, BatchData reseller terms (🟡 2026-07-14: only an AE "won't
+   sue ≤40k records/mo" email — see Decision Log; attorney must judge if it's launch-
+   sufficient or needs binding confirmation). Attorney-review packet ready:
+   `legal/attorney-review-packet.html`.
 3. PIAs optional to send: Medina/Kendall/Atascosa/Parker/Ellis (template ready).
 4. Test build #10/#11 and keep feeding evaluation notes (his notes have driven the best
    improvements — the man finds real UX truth).
