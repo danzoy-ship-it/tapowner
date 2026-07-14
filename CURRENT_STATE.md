@@ -4,8 +4,8 @@
 Rewrite the top section every working session. If a phase says "PASSED" in PROGRESS.md
 but isn't in the "Verified" table here with evidence, treat it as unverified.
 
-**Last updated:** 2026-07-14 (mid-day — build #11 shipped AND confirmed on-device;
-ready-to-load county queue cleared: 29 counties enriched).
+**Last updated:** 2026-07-14 (afternoon — build #12 shipped; Fort Bend + El Paso
+partials repaired via correct join keys; statewide 6.51M sqft · 466,792 pools).
 
 ---
 
@@ -22,10 +22,11 @@ proof; costs stated before incurring them.
 
 **The app is feature-complete for founding-agent beta and hardened.** Eleven TestFlight
 builds; **build #11 (farm actions redesign) confirmed on-device 2026-07-14** — Frederick's
-same-morning evaluation drove a v2 of the farm flow (committed, = build #12 queue):
-unlock-all-first action sheet ("Unlock contacts for all N · up to $X"), "all 13" wording
-once fully worked, session no-match tracking, and Draft-letter folded into the outreach
-screen as an Email/Letter toggle. The entire 6-agent audit backlog (A boot / B billing / C security /
+same-morning evaluation drove farm-flow v2, now **shipped as build #12** (submission
+scheduled on EAS; verify it lands in TestFlight — the CLI dropped its polling connection
+after "Scheduled iOS submission" but EAS Submit runs server-side): unlock-all-first action
+sheet ("Unlock contacts for all N · up to $X"), "all 13" wording once fully worked, session
+no-match tracking, and Draft-letter folded into the outreach screen as an Email/Letter toggle. The entire 6-agent audit backlog (A boot / B billing / C security /
 D data / E mobile) is CLOSED — including C2 (data endpoints now REQUIRE auth; anonymous
 scraping 401s) and D1 (51 mis-projected counties repaired in place). Farm mode grew into
 **Reverse Prospecting**: draw area → filter by beds/sqft/pool/stories → one-button Contact
@@ -50,7 +51,7 @@ and declined 2026-07-14 — unit economics + scraped-source legal risk).
    legal gate (attorney ToS review, TX Data Broker reg, insurance, BatchData addendum).
 4. **Then:** App Store submission (demo account + review notes ready; builds proven).
 
-## COUNTY ATTRIBUTE SCOREBOARD (all free — statewide: 6,048,991 sqft · 448,512 pools · 1,842,774 beds · 29 counties)
+## COUNTY ATTRIBUTE SCOREBOARD (all free — statewide: 6,512,561 sqft · 466,792 pools · 1,842,774 beds · 29 counties)
 
 | County | Parcels | Pools | Extras | Source/loader |
 |---|---|---|---|---|
@@ -63,7 +64,7 @@ and declined 2026-07-14 — unit economics + scraped-source legal risk).
 | Denton | 311,480 | — | — | prodigy CSV (`load_prodigy_csv_attributes.py`) |
 | Williamson | 233,017 | 17,212 | garage | WCAD Socrata (`load_williamson_attributes.py`) |
 | Montgomery | 247,131 | — | stories | prodigy JSON (`load_prodigy_json_attributes.py`) |
-| Fort Bend | 93,774 (partial, ⅓ id overlap — revisit) | — | — | FBCAD hub (`load_fortbend_attributes.py`) |
+| Fort Bend | 310,752 | — | year built | FBCAD CamaSummary REST, apn==PropertyNu (`load_fortbend_attributes.py`) |
 | Hays | 51,187 | 3,792 | beds | HaysCAD zip (`load_hays_attributes.py`) |
 | Guadalupe | 69,123 | 4,285 | — | free certified roll (`load_pacs_impdetail_attributes.py`) |
 | Galveston | 138,113 | 16,605 | — | full certified roll — found by hunt agent (PACS loader) |
@@ -72,7 +73,7 @@ and declined 2026-07-14 — unit economics + scraped-source legal risk).
 | Brazoria | 126,423 | 14,110 | — | ProTax export (`load_brazoria_attributes.py`) |
 | Cameron | 126,420 | 8,290 | — | free PACS roll (hunt agent) |
 | Nueces | 111,280 | 8,811 | — | free PACS roll (hunt agent) |
-| El Paso | 26,978 (partial, ~5% id overlap — revisit w/ REAL_ESTATE export geo ids) | 948 | garage | EPCAD dump (`load_elpaso_attributes.py`) |
+| El Paso | 260,171 | 19,228 | year built | EPCAD ABE dumps, GeoID==apn chain (`load_elpaso_attributes.py`) |
 | Kaufman | 66,950 | 3,891 | — | free full roll (PACS loader, LIVING AREA vocab fix) |
 | Grayson | 52,617 | 2,567 | — | GCAD ORR export (PACS loader; MH=APPENDAGES excluded) |
 | Bell | 121,481 | 7,174 | — | free certified .7z (PACS loader, RESIDENCE vocab) |

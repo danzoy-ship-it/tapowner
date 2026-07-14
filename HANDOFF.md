@@ -33,15 +33,16 @@ transcription artifacts; give layman step-by-step for anything he must do):**
 
 ## 2. PRODUCT STATE (as of handoff)
 
-- **On Frederick's phone:** build **1.0.0 (11)** (farm actions redesign) — shipped AND
-  confirmed on-device 2026-07-14; his same-morning evaluation produced the v2 below.
-- **Committed but NOT YET SHIPPED (= build #12 queue):** farm flow **v2** (Frederick's
-  2026-07-14 note — partial counts like "phones for 9" read as "only 9 of 13 reachable"):
-  while any home is locked the action sheet leads with `🔓 Unlock contacts for all N · up to
-  $X` (+ free CSV export only); once fully worked, actions say "all 13"; session-scoped
-  no-match tracking ("no verified contact — you were not charged") so unlock-all can't loop;
-  "Draft letter only" removed — `FarmDraftScreen` has an Email/Letter outreach toggle beside
-  template+tone. No server changes needed.
+- **On Frederick's phone:** build **1.0.0 (11)** confirmed on-device; **build #12 (farm
+  flow v2) SHIPPED 2026-07-14** — built + submission scheduled on EAS. ⚠️ The build CLI lost
+  its network connection while polling submission status (GraphQL error) AFTER printing
+  "✔ Scheduled iOS submission" (id 9f4a6484-c3f0-4330-9495-612a12f33875); EAS Submit runs
+  server-side so it should still reach TestFlight — **verify it appears; if not in ~15 min,
+  re-run `npx eas-cli submit --platform ios --latest` from mobile/.** #12 contents: while any
+  home is locked the action sheet leads with `🔓 Unlock contacts for all N · up to $X` (+ free
+  CSV); once fully worked, actions say "all 13"; session no-match tracking ("no verified
+  contact — you were not charged"); "Draft letter only" removed → `FarmDraftScreen` has an
+  Email/Letter toggle beside template+tone.
   Ship ritual: `cd mobile && npx expo-doctor` (expect 18/18) then
   `npx eas-cli build --platform ios --profile production --auto-submit --non-interactive`
   (run in background; auto-submits; Apple processes ~5-10 min).
@@ -110,7 +111,7 @@ transcription artifacts; give layman step-by-step for anything he must do):**
 
 ## 4. COUNTY DATA MINING (the active campaign)
 
-**Statewide as of 2026-07-14: 6,048,991 parcels with sqft · 448,512 verified pools ·
+**Statewide as of 2026-07-14: 6,512,561 parcels with sqft · 466,792 verified pools ·
 1,842,774 with beds · 29 counties enriched · $0 spent.** Scoreboard in `CURRENT_STATE.md`.
 
 **The doctrine (Frederick's, after Guadalupe):** the roll is almost always published free
@@ -140,12 +141,13 @@ Prodigy API flow is CRACKED and reusable for any prodigycad county:
 `GET .../public/filedownload/{urlencoded reportS3ID}`. **McLennan**: portal 204s on every
 category. Both → records request.
 
-**PARTIALS TO FIX:**
-- **Fort Bend** (48157): 93,774/291K — FBCAD CamaSummary `UID` overlaps only ⅓ of StratMap
-  Prop_IDs. Try XReference/PropertyNu ↔ parcels.apn, or hunt a PACS export on their site.
-- **El Paso** (48141): 26,978/548K — EPCAD dump pids ≠ StratMap ids mostly. Their
-  REAL_ESTATE.zip (documented tilde export, layout 8.0.34 on epcad.org/OpenGovernment) should
-  carry geo_id for a better key.
+**PARTIALS — Fort Bend + El Paso FIXED 2026-07-14** (both were wrong-join-key, not missing
+data): Fort Bend now 310,752 sqft (live CamaSummary FeatureServer paged, join apn==PropertyNu
+— `services2.arcgis.com/D4saGHECICkCeoJm/.../CamaSummary_/FeatureServer/0`); El Paso now
+260,171 sqft + 19,228 pools (EPCAD ABE Properties+Improvements dumps from
+`propertysearch.blob.core.windows.net/abepublicfiles/`, chain Improvements.Property_dbId →
+Properties.**PropertyId (col1)** → GeoID == apn; the schema calls col0 "dbId" but the FK is
+col1). Both loaders re-run idempotently. Remaining partials/legend items:
 - **Travis pools**: detail-type code legend requested from TCAD (Frederick PIA); the 30GB JSON
   is re-downloadable; pools decode once the legend arrives.
 
@@ -205,15 +207,15 @@ Template = the BCAD letter in chat/PROGRESS (swap county name; from info@tapowne
 
 ## 7. NEXT-SESSION PRIORITY ORDER (unless Frederick redirects)
 
-1. **Ship build #12** when Frederick blesses it (farm flow v2 — unlock-all-first sheet,
-   Email/Letter toggle in FarmDraftScreen; committed 2026-07-14, no server changes).
-2. **Fort Bend/El Paso key remaps** (the two big partials: 291K and 548K parcel counties).
-3. **Watch for BCAD** (transforms his home county) + Guadalupe July-22 refresh + Tarrant
+1. **Confirm build #12 landed in TestFlight** (submission scheduled but CLI dropped the
+   poll — see §2). If missing, `npx eas-cli submit --platform ios --latest` from mobile/.
+2. **Watch for BCAD** (transforms his home county) + Guadalupe July-22 refresh + Tarrant
    PIA + Travis pool-code legend.
-4. **~Jul 28+:** pull `parcel_viewed` gap stats; revisit buy-vs-build with data.
-5. Backlog nice-to-haves: F-hygiene (style dedup, `charged_via='cache'` never recorded,
+3. **~Jul 28+:** pull `parcel_viewed` gap stats; revisit buy-vs-build with data.
+4. Backlog nice-to-haves: F-hygiene (style dedup, `charged_via='cache'` never recorded,
    is_absentee city-only caveat), casita schema design, records-request follow-ups
    (Comal/Medina/Kendall/Atascosa/Parker/Ellis/Hidalgo/Webb/McLennan).
+   ✅ DONE 2026-07-14: build #12 shipped; Fort Bend + El Paso partials repaired.
 
 *Written by Claude Fable 5 at Frederick's request: "guarantee that we can keep going with the
 same type of quality." The quality bar is: verify live, quantify honestly, ship small, let
