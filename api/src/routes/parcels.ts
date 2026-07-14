@@ -263,7 +263,7 @@ export async function parcelsRoutes(app: FastifyInstance) {
 
         const config = await getProductConfig();
         const beta = config.farm_export_beta ?? true;
-        const cap = config.farm_export_beta_cap_rows ?? 100;
+        const cap = config.farm_export_beta_cap_rows ?? 300;
 
         if (!beta) {
             // Launch mode: no cap here (metering to be wired when the flag

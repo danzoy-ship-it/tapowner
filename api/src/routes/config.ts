@@ -31,7 +31,7 @@ function buildPayload(config: Record<string, any>): Record<string, unknown> {
         farm_export: {
             price_cents: config.farm_export_price_cents ?? 10,
             beta: config.farm_export_beta ?? true,
-            beta_cap_rows: config.farm_export_beta_cap_rows ?? 100,
+            beta_cap_rows: config.farm_export_beta_cap_rows ?? 300,
         },
         // Texas Data Broker Act conspicuous-notice slot (compliance appendix
         // item 3): empty until registration; the SOS-prescribed text goes into

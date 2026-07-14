@@ -7,8 +7,8 @@ CREATE TABLE IF NOT EXISTS farm_export_log (
 );
 CREATE INDEX IF NOT EXISTS farm_export_log_user_month_idx ON farm_export_log (user_id, created_at);
 
--- Pricing knobs (Frederick 2026-07-14): 10 cents/row at launch; beta = free
--- with a 100-row/month cap.
+-- Pricing knobs (Frederick 2026-07-14): 10 cents/row at launch; evaluator
+-- ("beta") mode = free with a 300-row/month cap (raised from 100 same day).
 UPDATE products SET config = config
-    || '{"farm_export_price_cents": 10, "farm_export_beta": true, "farm_export_beta_cap_rows": 100}'::jsonb
+    || '{"farm_export_price_cents": 10, "farm_export_beta": true, "farm_export_beta_cap_rows": 300}'::jsonb
 WHERE id = 'tapowner';
