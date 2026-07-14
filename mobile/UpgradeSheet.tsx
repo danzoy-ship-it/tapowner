@@ -1,8 +1,9 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { formatCents, type AppConfig } from './api';
 
-// Per TAPOWNER_BUILD.md §3: v1 ships NO purchase link/UI -- plain-text
-// instruction to manage the plan on the web (Netflix pattern for App Review).
+// Billing link opens the web portal (Frederick override 2026-07-14, allowed
+// for US storefront post-2025 ruling). Config-driven: empty manage_plan_url
+// falls back to plain text, so App Review pushback needs no app build.
 export function UpgradeSheet({ config, onClose }: { config: AppConfig; onClose: () => void }) {
   const closer = config.tiers.closer;
   const price = closer ? formatCents(closer.price_cents) : '$19.99';
@@ -19,7 +20,13 @@ export function UpgradeSheet({ config, onClose }: { config: AppConfig; onClose: 
           <Text style={styles.bullet}>• Save properties, notes & pipeline statuses</Text>
           <Text style={styles.bullet}>• Save owners straight to Contacts</Text>
         </View>
-        <Text style={styles.manageText}>{config.manage_plan_url_text}</Text>
+        {config.manage_plan_url ? (
+          <TouchableOpacity onPress={() => Linking.openURL(config.manage_plan_url)}>
+            <Text style={styles.manageText}>{config.manage_plan_url_text} →</Text>
+          </TouchableOpacity>
+        ) : (
+          <Text style={styles.manageText}>{config.manage_plan_url_text}</Text>
+        )}
         <TouchableOpacity style={styles.closeButton} onPress={onClose}>
           <Text style={styles.closeButtonText}>Not now</Text>
         </TouchableOpacity>

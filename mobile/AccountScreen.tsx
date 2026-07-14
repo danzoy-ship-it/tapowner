@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   ActivityIndicator,
   Keyboard,
+  Linking,
   ScrollView,
   StyleSheet,
   Text,
@@ -79,7 +80,13 @@ export function AccountScreen() {
             Trial ends {new Date(me.trial_ends_at).toLocaleDateString()}
           </Text>
         )}
-        <Text style={styles.planManage}>{config.manage_plan_url_text}</Text>
+        {config.manage_plan_url ? (
+          <TouchableOpacity onPress={() => Linking.openURL(config.manage_plan_url)}>
+            <Text style={styles.planManage}>{config.manage_plan_url_text} →</Text>
+          </TouchableOpacity>
+        ) : (
+          <Text style={styles.planManage}>{config.manage_plan_url_text}</Text>
+        )}
         {readOnly && (
           <>
             <Text style={styles.planInactive}>

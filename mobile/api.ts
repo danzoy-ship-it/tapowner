@@ -65,6 +65,7 @@ export interface AppConfig {
     rate_limit_per_day: number;
   };
   manage_plan_url_text: string;
+  manage_plan_url: string;
   data_broker_notice?: string;
 }
 
@@ -93,6 +94,7 @@ export const FALLBACK_CONFIG: AppConfig = {
     rate_limit_per_day: 30,
   },
   manage_plan_url_text: 'Manage your plan at tapowner.com',
+  manage_plan_url: 'https://tapowner.com/billing',
   data_broker_notice: '',
 };
 
