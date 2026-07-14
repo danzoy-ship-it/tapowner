@@ -2,12 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Keyboard,
+  Linking,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
+import * as Location from 'expo-location';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeSyntheticEvent } from 'react-native';
@@ -43,8 +45,35 @@ export function MapScreen() {
   const [searchError, setSearchError] = useState<string | null>(null);
   const [trackUser, setTrackUser] = useState<TrackUserLocation | undefined>('default');
   const [flyTarget, setFlyTarget] = useState<[number, number] | null>(null);
+  const [locationDenied, setLocationDenied] = useState(false);
   const cameraRef = useRef<CameraRef>(null);
   const tapSeq = useRef(0);
+
+  // Reflect the current location permission (without prompting) so the locate
+  // button can offer "Enable location" instead of silently doing nothing.
+  useEffect(() => {
+    Location.getForegroundPermissionsAsync()
+      .then(({ status }) => setLocationDenied(status !== 'granted'))
+      .catch(() => {});
+  }, []);
+
+  // Locate button: follow the user if we have permission; otherwise re-request
+  // (prompts only the first time) and, if still blocked, open the OS Settings
+  // so a previously-denied user has a real way to turn location back on.
+  async function handleLocatePress() {
+    const current = await Location.getForegroundPermissionsAsync();
+    let status = current.status;
+    if (status !== 'granted' && current.canAskAgain) {
+      status = (await Location.requestForegroundPermissionsAsync()).status;
+    }
+    if (status === 'granted') {
+      setLocationDenied(false);
+      setTrackUser('default');
+    } else {
+      setLocationDenied(true);
+      Linking.openSettings();
+    }
+  }
 
   async function handleParcelPress(event: NativeSyntheticEvent<PressEventWithFeatures>) {
     const { lngLat, features } = event.nativeEvent;
@@ -185,12 +214,11 @@ export function MapScreen() {
         {searchError && <Text style={styles.searchErrorText}>{searchError}</Text>}
       </View>
 
-      {!trackUser && selectedId === null && (
-        <TouchableOpacity
-          style={styles.recenterButton}
-          onPress={() => setTrackUser('default')}
-        >
-          <Text style={styles.recenterButtonText}>📍 My location</Text>
+      {selectedId === null && (!trackUser || locationDenied) && (
+        <TouchableOpacity style={styles.recenterButton} onPress={handleLocatePress}>
+          <Text style={styles.recenterButtonText}>
+            {locationDenied ? '📍 Enable location' : '📍 My location'}
+          </Text>
         </TouchableOpacity>
       )}
 

@@ -22,7 +22,6 @@ import { ExpiryScreen } from './ExpiryScreen';
 import { ErrorBoundary } from './ErrorBoundary';
 import { clearToken, fetchMe, getStoredToken, storeToken, type Me } from './auth';
 
-type PermissionState = 'checking' | 'granted' | 'denied';
 type AuthState = 'checking' | 'loggedOut' | 'loggedIn';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -69,16 +68,17 @@ function AppInner() {
   const [authState, setAuthState] = useState<AuthState>('checking');
   const [me, setMe] = useState<Me | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [permission, setPermission] = useState<PermissionState>('checking');
   const [config, setConfig] = useState<AppConfig>(FALLBACK_CONFIG);
   const [upgradeVisible, setUpgradeVisible] = useState(false);
 
+  // Ask for location only once the user is logged in, so a brand-new user sees
+  // the login screen first (not a location prompt over it). Denial never blocks
+  // the app -- the map falls back to a default region + address search, and the
+  // "Enable location" button on the map re-requests / opens Settings on demand.
   useEffect(() => {
-    (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      setPermission(status === 'granted' ? 'granted' : 'denied');
-    })();
-  }, []);
+    if (authState !== 'loggedIn') return;
+    Location.requestForegroundPermissionsAsync().catch(() => {});
+  }, [authState]);
 
   useEffect(() => {
     fetchConfig()
@@ -170,25 +170,6 @@ function AppInner() {
     );
   }
 
-  if (permission === 'checking') {
-    return (
-      <View style={styles.center}>
-        <Text>Requesting location permission…</Text>
-      </View>
-    );
-  }
-
-  if (permission === 'denied') {
-    return (
-      <View style={styles.center}>
-        <Text style={styles.deniedText}>
-          TapOwner uses your location to show properties around you. Enable location access in
-          Settings to continue.
-        </Text>
-      </View>
-    );
-  }
-
   return (
     <AppContext.Provider value={contextValue}>
       <NavigationContainer>
@@ -222,8 +203,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
-  },
-  deniedText: {
-    textAlign: 'center',
   },
 });
