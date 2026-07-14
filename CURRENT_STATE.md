@@ -4,8 +4,8 @@
 Rewrite the top section every working session. If a phase says "PASSED" in PROGRESS.md
 but isn't in the "Verified" table here with evidence, treat it as unverified.
 
-**Last updated:** 2026-07-15 (early AM — Frederick asleep, standing order: keep mining
-county attribute data; docs refreshed first per his anti-drift instruction).
+**Last updated:** 2026-07-14 (mid-day — build #11 shipped AND confirmed on-device;
+ready-to-load county queue cleared: 29 counties enriched).
 
 ---
 
@@ -20,9 +20,12 @@ proof; costs stated before incurring them.
 
 ## WHERE IT IS RIGHT NOW
 
-**The app is feature-complete for founding-agent beta and hardened.** Ten TestFlight builds;
-build #9 confirmed on-device; #10 (tap-map-to-dismiss card, merged phone-first "Contact
-owners" flow) submitted. The entire 6-agent audit backlog (A boot / B billing / C security /
+**The app is feature-complete for founding-agent beta and hardened.** Eleven TestFlight
+builds; **build #11 (farm actions redesign) confirmed on-device 2026-07-14** — Frederick's
+same-morning evaluation drove a v2 of the farm flow (committed, = build #12 queue):
+unlock-all-first action sheet ("Unlock contacts for all N · up to $X"), "all 13" wording
+once fully worked, session no-match tracking, and Draft-letter folded into the outreach
+screen as an Email/Letter toggle. The entire 6-agent audit backlog (A boot / B billing / C security /
 D data / E mobile) is CLOSED — including C2 (data endpoints now REQUIRE auth; anonymous
 scraping 401s) and D1 (51 mis-projected counties repaired in place). Farm mode grew into
 **Reverse Prospecting**: draw area → filter by beds/sqft/pool/stories → one-button Contact
@@ -47,7 +50,7 @@ and declined 2026-07-14 — unit economics + scraped-source legal risk).
    legal gate (attorney ToS review, TX Data Broker reg, insurance, BatchData addendum).
 4. **Then:** App Store submission (demo account + review notes ready; builds proven).
 
-## COUNTY ATTRIBUTE SCOREBOARD (all free — statewide: 5,319,113 sqft · 420,477 pools · 1,842,774 beds · 20 counties)
+## COUNTY ATTRIBUTE SCOREBOARD (all free — statewide: 6,048,991 sqft · 448,512 pools · 1,842,774 beds · 29 counties)
 
 | County | Parcels | Pools | Extras | Source/loader |
 |---|---|---|---|---|
@@ -70,10 +73,22 @@ and declined 2026-07-14 — unit economics + scraped-source legal risk).
 | Cameron | 126,420 | 8,290 | — | free PACS roll (hunt agent) |
 | Nueces | 111,280 | 8,811 | — | free PACS roll (hunt agent) |
 | El Paso | 26,978 (partial, ~5% id overlap — revisit w/ REAL_ESTATE export geo ids) | 948 | garage | EPCAD dump (`load_elpaso_attributes.py`) |
+| Kaufman | 66,950 | 3,891 | — | free full roll (PACS loader, LIVING AREA vocab fix) |
+| Grayson | 52,617 | 2,567 | — | GCAD ORR export (PACS loader; MH=APPENDAGES excluded) |
+| Bell | 121,481 | 7,174 | — | free certified .7z (PACS loader, RESIDENCE vocab) |
+| Lubbock | 105,971 | — | year built | CAD ArcGIS layer (`load_lubbock_attributes.py`) |
+| Johnson | 69,315 | 6,602 | — | JCAD certified roll WEBIMPR (`load_johnson_attributes.py`) |
+| Smith | 76,740 | — | year built | county GIS layer (`load_smith_attributes.py`) |
+| Midland | 53,655 | 4,157 | — | MCAD web file (`load_midland_attributes.py`) |
+| Ector | 50,161 | — | year built | ECAD roll XLSX (`load_ector_attributes.py`) |
+| Rockwall | 44,141 | 7,916 | — | 1.3GB PACS roll via Drive (PACS loader) |
+| Potter | 39,666 | 602 | — | PRAD Drive zip (PACS loader, BASE/SWIMPL vocab) |
+| Randall | 52,526 | 1,584 | — | PRAD Drive zip (PACS loader) |
 
-**Skipped/blocked:** Galveston (published export is the attribute-less PACS format — needs
-PIA for improvement detail) · Comal (hunting agents dispatched; Guadalupe SOLVED — its roll was free on their certified-appraisal-roll page all along) ·
-next fresh targets: Brazoria, Bell, McLennan, Nueces, Lubbock, Smith (Task #11 recipe).
+**Records-request-only (all free sources exhausted):** Comal, Medina, Kendall, Atascosa,
+Parker, Ellis, Hidalgo, **Webb** (True Prodigy portal publishes only a PDF roll — API flow
+cracked and documented in HANDOFF §4 for reuse), **McLennan** (portal empty — 204 on every
+report category). The ready-to-load queue from the 2026-07-15 hunt is fully cleared.
 
 ---
 

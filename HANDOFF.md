@@ -33,15 +33,15 @@ transcription artifacts; give layman step-by-step for anything he must do):**
 
 ## 2. PRODUCT STATE (as of handoff)
 
-- **On Frederick's phone:** build **1.0.0 (10)** (tap-map-dismisses-card, merged phone-first
-  "Contact owners" flow). Builds ≤9 confirmed working; #10 submitted + processing at handoff.
-- **Committed but NOT YET SHIPPED (= build #11 queue):** the Farm **actions redesign**
-  (Frederick-approved "exactly as mocked"): two-stage results screen — `🔓 Unlock contacts
-  (N) · ~$X` then `⚡ Actions for these N homes…` → native action sheet: Email owners (full
-  template+tone picker via new `FarmDraftScreen`; >15 → CSV mail-merge) / Draft letter only /
-  Add N to Contacts (bulk `addContactAsync`) / Save N to CRM / Export CSV. The reverse-prospect
-  letter is now just the `buyer_neighborhood_match` template. **Server side for this IS
-  deployed** (`/draft/farm` accepts any `template_id`) — only the mobile side awaits build #11.
+- **On Frederick's phone:** build **1.0.0 (11)** (farm actions redesign) — shipped AND
+  confirmed on-device 2026-07-14; his same-morning evaluation produced the v2 below.
+- **Committed but NOT YET SHIPPED (= build #12 queue):** farm flow **v2** (Frederick's
+  2026-07-14 note — partial counts like "phones for 9" read as "only 9 of 13 reachable"):
+  while any home is locked the action sheet leads with `🔓 Unlock contacts for all N · up to
+  $X` (+ free CSV export only); once fully worked, actions say "all 13"; session-scoped
+  no-match tracking ("no verified contact — you were not charged") so unlock-all can't loop;
+  "Draft letter only" removed — `FarmDraftScreen` has an Email/Letter outreach toggle beside
+  template+tone. No server changes needed.
   Ship ritual: `cd mobile && npx expo-doctor` (expect 18/18) then
   `npx eas-cli build --platform ios --profile production --auto-submit --non-interactive`
   (run in background; auto-submits; Apple processes ~5-10 min).
@@ -110,8 +110,8 @@ transcription artifacts; give layman step-by-step for anything he must do):**
 
 ## 4. COUNTY DATA MINING (the active campaign)
 
-**Statewide at handoff: 5,319,113 parcels with sqft · 420,477 verified pools · 1,842,774
-with beds · 20 counties enriched · $0 spent.** Scoreboard table in `CURRENT_STATE.md`.
+**Statewide as of 2026-07-14: 6,048,991 parcels with sqft · 448,512 verified pools ·
+1,842,774 with beds · 29 counties enriched · $0 spent.** Scoreboard in `CURRENT_STATE.md`.
 
 **The doctrine (Frederick's, after Guadalupe):** the roll is almost always published free
 somewhere; hunt HARD before declaring a records request: CAD site pages
@@ -129,37 +129,18 @@ Prodigy protaxExport JSON line-scan; --normalize-float for float-artifact ids) �
 williamson) · GIS REST pager (bexar) · one-offs (dallas, harris, tarrant, hays, brazoria,
 elpaso, fortbend). All are idempotent COALESCE-fills; rerunnable for refreshes.
 
-**READY-TO-LOAD QUEUE (hunter-verified URLs, ~Jul 15):**
-- **Johnson** (48251): https://johnsoncad.com/wp-content/uploads/2025/08/2025-Certified-Data-Roll.zip
-  (194.7MB; custom WEBIMPR.CSV/WEBLAND/WEBVALUE — inspect + small loader)
-- **Bell** (48027): https://bellcad.org/wp-content/uploads/2025/07/2025-Bell-County-Certified-Export.7z
-  (58.6MB PACS but **.7z** — needs `pip install py7zr` or 7z.exe, then the PACS loader)
-- **Webb/Laredo** (48479): True Prodigy token flow —
-  `POST https://prod-container.trueprodigyapi.com/trueprodigy/cadpublic/auth/token {"office":"Webb"}`
-  → token → `GET /public/filedownload/webb%2F21533ecc-76ea-11f0-8b55-0242ac110009.zip`
-  (62.3MB; refresh reportS3ID via `/public/reportcategory/Certified%20Roll/search...`)
-- **Rockwall** (48397): Google Drive file 1Ekz8ijj32TIMF_g7JsAOq-Yy8A5jXey6 (1.3GB PACS roll;
-  use drive.usercontent.google.com/download?id=...&confirm=t)
-- **Potter+Randall/Amarillo** (48375/48381): Drive folder 1TQNvlSj8yD5MAnsPL1MFUokCfpMgJ1Ws
-  (per-county PACS zips + layout)
-- **Midland** (48329): https://midcad.org/wp-content/uploads/2025/11/2025-MCAD-Web-File.zip
-  (70.9MB; `export_webbld.txt` pipe format — small custom loader)
-- **Ector/Odessa** (48135): https://www.ectorcad.org/downloads/car/CERTIFIED_APPRAISAL_ROLL_RE-08062025-862025.ZIP
-  (22MB → one 156MB XLSX; openpyxl read-only + inspect improvement columns)
-- **Lubbock** (48303): ArcGIS layer
-  https://gis.lubbockcad.org/arcgis/rest/services/LubbockCADWebService/MapServer/129/query
-  (fields **YearBuilt, TotSqftLvg**; 137,440 parcels; Bexar-style REST pager)
-- **Smith/Tyler** (48423): https://www.smithcountymapsite.org/publicgis/rest/services/Gallery/TaxParcelQuery/MapServer/1/query
-  (fields **YRBLT, SFLA**; 141,916 records; note our ids are R-prefixed 'R017621' — verify key)
-- **McLennan/Waco** (48309): only a 13MB "Notice Data Query" zip via the Webb-style token flow
-  (office=`McLennan`) — VERIFY depth before relying; else records request.
+**READY-TO-LOAD QUEUE: ✅ CLEARED 2026-07-14** — Johnson, Bell, Rockwall, Potter, Randall,
+Midland, Ector, Lubbock, Smith all loaded (rolls kept in `data/downloads/rolls/`); Grayson +
+Kaufman vocab fixed and loaded. **Webb**: portal publishes only a PDF roll — but the True
+Prodigy API flow is CRACKED and reusable for any prodigycad county:
+`POST https://prod-container.trueprodigyapi.com/trueprodigy/cadpublic/auth/token {"office":X}`
+→ `resp.user.token` → RAW token (no "Bearer") as the Authorization header → list files via
+`GET https://prod-container.trueprodigyapi.com/public/reportcategory/{Category}/search`
+(bare-host `/public/...` paths, NOT under /trueprodigy/cadpublic) → download via
+`GET .../public/filedownload/{urlencoded reportS3ID}`. **McLennan**: portal 204s on every
+category. Both → records request.
 
 **PARTIALS TO FIX:**
-- **Grayson** (48181) + **Kaufman** (48257): rolls load & join (pools landed: 2,567 / 3,891)
-  but their dwelling type vocabulary doesn't match the regex → sqft missed (Kaufman sqft=1!).
-  Re-download (Grayson: maps.graysonappraisal.org/ORR_Export/GCAD_Export.zip; Kaufman:
-  kaufman-cad.org/wp-content/uploads/2026/05/2026-Preliminary-Full-Roll-Export.zip), dump
-  distinct (type_cd, desc) counts like the Guadalupe RES1 diagnosis, extend DWELLING_RE.
 - **Fort Bend** (48157): 93,774/291K — FBCAD CamaSummary `UID` overlaps only ⅓ of StratMap
   Prop_IDs. Try XReference/PropertyNu ↔ parcels.apn, or hunt a PACS export on their site.
 - **El Paso** (48141): 26,978/548K — EPCAD dump pids ≠ StratMap ids mostly. Their
@@ -170,7 +151,8 @@ elpaso, fortbend). All are idempotent COALESCE-fills; rerunnable for refreshes.
 
 **RECORDS-REQUEST-ONLY counties (hunters exhausted all six source types):** Comal (PIA already
 with Frederick — comalad@co.comal.tx.us), Medina, Kendall, Atascosa, Parker
-(parkercad@parkercad.org), Ellis, Hidalgo (full roll; their shapefile+DBF is a weak fallback).
+(parkercad@parkercad.org), Ellis, Hidalgo (full roll; their shapefile+DBF is a weak fallback),
+**Webb** (PDF-only portal), **McLennan** (empty portal).
 Template = the BCAD letter in chat/PROGRESS (swap county name; from info@tapowner.com).
 
 **PENDING ARRIVALS (watch for):**
@@ -223,13 +205,15 @@ Template = the BCAD letter in chat/PROGRESS (swap county name; from info@tapowne
 
 ## 7. NEXT-SESSION PRIORITY ORDER (unless Frederick redirects)
 
-1. **Ship build #11** if Frederick blesses the redesign queue (farm actions).
-2. **Fix Grayson/Kaufman vocab** (fast win, rolls already known-good).
-3. **Work the ready-to-load county queue** (§4) — Rockwall/Amarillo/Johnson/Bell/Webb/etc.
-4. **Watch for BCAD** (transforms his home county) + Guadalupe July-22 refresh.
-5. **~Jul 28+:** pull `parcel_viewed` gap stats; revisit buy-vs-build with data.
-6. Backlog nice-to-haves: F-hygiene (style dedup, `charged_via='cache'` never recorded,
-   is_absentee city-only caveat), Fort Bend/El Paso key remaps, casita schema design.
+1. **Ship build #12** when Frederick blesses it (farm flow v2 — unlock-all-first sheet,
+   Email/Letter toggle in FarmDraftScreen; committed 2026-07-14, no server changes).
+2. **Fort Bend/El Paso key remaps** (the two big partials: 291K and 548K parcel counties).
+3. **Watch for BCAD** (transforms his home county) + Guadalupe July-22 refresh + Tarrant
+   PIA + Travis pool-code legend.
+4. **~Jul 28+:** pull `parcel_viewed` gap stats; revisit buy-vs-build with data.
+5. Backlog nice-to-haves: F-hygiene (style dedup, `charged_via='cache'` never recorded,
+   is_absentee city-only caveat), casita schema design, records-request follow-ups
+   (Comal/Medina/Kendall/Atascosa/Parker/Ellis/Hidalgo/Webb/McLennan).
 
 *Written by Claude Fable 5 at Frederick's request: "guarantee that we can keep going with the
 same type of quality." The quality bar is: verify live, quantify honestly, ship small, let
