@@ -11,6 +11,7 @@ import { FALLBACK_CONFIG, fetchConfig, trackEvent, type AppConfig } from './api'
 import { AppContext, type AppContextValue } from './AppContext';
 import type { RootStackParamList } from './navigation';
 import { MapScreen } from './MapScreen';
+import { FarmResultsScreen } from './FarmResultsScreen';
 import { PipelineScreen } from './PipelineScreen';
 import { PipelineDetailScreen } from './PipelineDetailScreen';
 import { AccountScreen } from './AccountScreen';
@@ -182,6 +183,11 @@ function AppInner() {
             name="PipelineDetail"
             component={PipelineDetailScreen}
             options={{ title: 'Saved property', headerBackTitle: 'CRM' }}
+          />
+          <Stack.Screen
+            name="FarmResults"
+            component={FarmResultsScreen}
+            options={{ title: 'Farm area owners', headerBackTitle: 'Map' }}
           />
         </Stack.Navigator>
       </NavigationContainer>

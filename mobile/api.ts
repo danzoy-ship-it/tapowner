@@ -307,6 +307,45 @@ export async function exportSavedPropertiesCsv(token: string): Promise<string> {
   return res.text();
 }
 
+// Farm mode: all owners inside a drawn polygon ([lng,lat] vertices).
+export interface FarmParcel {
+  id: number;
+  owner_name: string;
+  situs_address: string | null;
+  situs_city: string | null;
+  situs_zip: string | null;
+  mailing_address: string | null;
+  mailing_city: string | null;
+  mailing_state: string | null;
+  mailing_zip: string | null;
+  is_absentee: boolean;
+}
+
+export interface FarmResult {
+  count: number;
+  capped: boolean;
+  parcels: FarmParcel[];
+}
+
+export async function farmSearch(token: string, polygon: [number, number][]): Promise<FarmResult> {
+  const res = await timedFetch(`${API_BASE}/parcels/within`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ polygon }),
+  });
+  return handleJson(res);
+}
+
+export async function farmCsv(token: string, polygon: [number, number][]): Promise<string> {
+  const res = await timedFetch(`${API_BASE}/parcels/within`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ polygon, format: 'csv' }),
+  });
+  if (!res.ok) throw new Error('Export failed');
+  return res.text();
+}
+
 export async function updateSavedPropertyStatus(
   token: string,
   id: number,
