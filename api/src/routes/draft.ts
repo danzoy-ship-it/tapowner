@@ -211,6 +211,7 @@ export async function draftRoutes(app: FastifyInstance) {
     app.post<{
         Body: {
             tone?: string;
+            template_id?: string;
             criteria?: {
                 min_sqft?: number;
                 min_beds?: number;
@@ -226,6 +227,13 @@ export async function draftRoutes(app: FastifyInstance) {
         const tone = (request.body.tone ?? "professional") as DraftTone;
         if (!DRAFT_TONES.includes(tone)) {
             return reply.code(400).send({ error: "Invalid tone" });
+        }
+        // Any standard template works on a farm list; the reverse-prospect
+        // letter is just buyer_neighborhood_match (the default).
+        const template =
+            DRAFT_TEMPLATES.find((t) => t.id === (request.body.template_id ?? "buyer_neighborhood_match"));
+        if (!template) {
+            return reply.code(400).send({ error: "Invalid template_id" });
         }
         const c = request.body.criteria ?? {};
         const criteria = {
@@ -265,7 +273,7 @@ export async function draftRoutes(app: FastifyInstance) {
             return reply.code(503).send({ error: "AI drafting not configured yet" });
         }
 
-        const prompt = buildFarmDraftPrompt({ tone, agentName, agentBrokerage, agentPhone, criteria });
+        const prompt = buildFarmDraftPrompt({ template, tone, agentName, agentBrokerage, agentPhone, criteria });
 
         const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
             method: "POST",
@@ -298,7 +306,7 @@ export async function draftRoutes(app: FastifyInstance) {
             subject = String(parsed.subject ?? "").trim();
             body = String(parsed.body ?? "").trim();
         } catch {
-            subject = "A buyer may be looking for your home";
+            subject = template.label;
             body = text.trim();
         }
         if (!subject || !body) {
@@ -312,6 +320,7 @@ export async function draftRoutes(app: FastifyInstance) {
             session.userId,
             JSON.stringify({
                 farm: true,
+                template_id: template.id,
                 tone,
                 criteria,
                 input_tokens: data.usage?.input_tokens ?? 0,

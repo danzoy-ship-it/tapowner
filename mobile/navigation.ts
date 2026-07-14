@@ -7,6 +7,12 @@ export type RootStackParamList = {
   DraftEmail: { parcelId: number; emails: string[] };
   PipelineDetail: { savedPropertyId: number };
   FarmResults: { polygon: [number, number][]; result: FarmResult };
+  FarmDraft: {
+    mode: 'email' | 'letter';
+    criteria: import('./api').FarmCriteria;
+    // One entry per home; each home's traced email addresses (email mode).
+    emailGroups: string[][];
+  };
 };
 
 export type RootNav = NativeStackNavigationProp<RootStackParamList>;

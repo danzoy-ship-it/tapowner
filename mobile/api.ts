@@ -384,17 +384,18 @@ export interface FarmCriteria {
   single_story?: boolean;
 }
 
-// Reverse-prospecting letter: one AI-drafted letter for every home matching
-// the criteria (mail-merge ready; signature appended server-side).
+// Farm outreach letter: one AI-drafted letter for every home on the filtered
+// list, using any standard template (signature appended server-side).
 export async function farmDraft(
   token: string,
+  templateId: string,
   tone: string,
   criteria: FarmCriteria
 ): Promise<{ subject: string; body: string }> {
   const res = await timedFetch(`${API_BASE}/draft/farm`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ tone, criteria }),
+    body: JSON.stringify({ template_id: templateId, tone, criteria }),
   });
   return handleJson(res);
 }

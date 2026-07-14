@@ -13,6 +13,7 @@ import { AppContext, type AppContextValue } from './AppContext';
 import type { RootStackParamList } from './navigation';
 import { MapScreen } from './MapScreen';
 import { FarmResultsScreen } from './FarmResultsScreen';
+import { FarmDraftScreen } from './FarmDraftScreen';
 import { PipelineScreen } from './PipelineScreen';
 import { PipelineDetailScreen } from './PipelineDetailScreen';
 import { AccountScreen } from './AccountScreen';
@@ -208,6 +209,11 @@ function AppInner() {
             name="FarmResults"
             component={FarmResultsScreen}
             options={{ title: 'Farm area owners', headerBackTitle: 'Map' }}
+          />
+          <Stack.Screen
+            name="FarmDraft"
+            component={FarmDraftScreen}
+            options={{ title: 'Outreach letter', headerBackTitle: 'Back' }}
           />
         </Stack.Navigator>
       </NavigationContainer>
