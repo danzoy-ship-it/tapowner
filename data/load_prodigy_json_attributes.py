@@ -88,59 +88,74 @@ def main() -> None:
 
     print(f"scanned {bytes_seen/1e9:.2f} GB, {len(props):,} properties ({time.time() - started:.0f}s)", flush=True)
 
-    conn = psycopg2.connect(os.environ["DATABASE_URL"])
-    cur = conn.cursor()
-    cur.execute("CREATE TEMP TABLE pj_attrs (pid TEXT PRIMARY KEY, living INT, yr INT, stories NUMERIC)")
-    buf = io.StringIO()
-    for pid, (living, yr, stories) in props.items():
-        buf.write(
-            "\t".join(
-                [
-                    str(pid),
-                    r"\N" if living is None else str(living),
-                    r"\N" if yr is None else str(yr),
-                    r"\N" if stories is None else str(stories),
-                ]
-            )
-            + "\n"
-        )
-    buf.seek(0)
-    cur.copy_expert("COPY pj_attrs FROM STDIN", buf)
-
     # Some counties' StratMap ids carry a float artifact ("120780.00000000").
     join_expr = (
         "regexp_replace(p.source_property_id, '\\.0+$', '')" if normalize_float else "p.source_property_id"
     )
 
-    cur.execute(
-        f"""SELECT count(*) FROM pj_attrs a
-            JOIN parcels p ON p.county_fips = %s AND {join_expr} = a.pid""",
-        (fips,),
-    )
-    print(f"joinable parcel rows: {cur.fetchone()[0]:,}", flush=True)
+    # The public proxy drops long-lived/slow connections; the parsed dict is
+    # in memory, so the whole DB phase (temp COPY + UPDATE) simply retries on
+    # a fresh keepalive'd connection.
+    for attempt in range(3):
+        try:
+            conn = psycopg2.connect(
+                os.environ["DATABASE_URL"],
+                keepalives=1,
+                keepalives_idle=30,
+                keepalives_interval=10,
+                keepalives_count=10,
+            )
+            cur = conn.cursor()
+            cur.execute("CREATE TEMP TABLE pj_attrs (pid TEXT PRIMARY KEY, living INT, yr INT, stories NUMERIC)")
+            buf = io.StringIO()
+            for pid, (living, yr, stories) in props.items():
+                buf.write(
+                    "\t".join(
+                        [
+                            str(pid),
+                            r"\N" if living is None else str(living),
+                            r"\N" if yr is None else str(yr),
+                            r"\N" if stories is None else str(stories),
+                        ]
+                    )
+                    + "\n"
+                )
+            buf.seek(0)
+            cur.copy_expert("COPY pj_attrs FROM STDIN", buf)
 
-    if dry_run:
-        conn.rollback()
-        print("dry-run complete, rolled back")
-        return
+            if dry_run:
+                cur.execute(
+                    f"""SELECT count(*) FROM pj_attrs a
+                        JOIN parcels p ON p.county_fips = %s AND {join_expr} = a.pid""",
+                    (fips,),
+                )
+                print(f"joinable parcel rows: {cur.fetchone()[0]:,}", flush=True)
+                conn.rollback()
+                print("dry-run complete, rolled back")
+                return
 
-    cur.execute(
-        f"""UPDATE parcels p SET
-                living_area_sqft = COALESCE(a.living, p.living_area_sqft),
-                year_built       = COALESCE(p.year_built, a.yr),
-                stories          = COALESCE(a.stories, p.stories)
-            FROM pj_attrs a
-            WHERE p.county_fips = %s AND {join_expr} = a.pid""",
-        (fips,),
-    )
-    print("parcel rows updated:", cur.rowcount, flush=True)
-    conn.commit()
+            cur.execute(
+                f"""UPDATE parcels p SET
+                        living_area_sqft = COALESCE(a.living, p.living_area_sqft),
+                        year_built       = COALESCE(p.year_built, a.yr),
+                        stories          = COALESCE(a.stories, p.stories)
+                    FROM pj_attrs a
+                    WHERE p.county_fips = %s AND {join_expr} = a.pid""",
+                (fips,),
+            )
+            print("parcel rows updated:", cur.rowcount, flush=True)
+            conn.commit()
 
-    cur.execute(
-        "SELECT count(*) FROM parcels WHERE county_fips = %s AND living_area_sqft IS NOT NULL",
-        (fips,),
-    )
-    print(f"parcels with sqft now: {cur.fetchone()[0]:,}", flush=True)
+            cur.execute(
+                "SELECT count(*) FROM parcels WHERE county_fips = %s AND living_area_sqft IS NOT NULL",
+                (fips,),
+            )
+            print(f"parcels with sqft now: {cur.fetchone()[0]:,}", flush=True)
+            return
+        except psycopg2.OperationalError as err:
+            print(f"DB phase attempt {attempt + 1} failed ({err}); retrying…", flush=True)
+            time.sleep(5)
+    raise RuntimeError("DB phase failed after 3 attempts")
 
 
 if __name__ == "__main__":
