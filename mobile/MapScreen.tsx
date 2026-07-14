@@ -113,6 +113,12 @@ export function MapScreen() {
   // exactly once per tap whether or not a parcel was hit.
   const handleMapPress: NonNullable<MapProps['onPress']> = (event) => {
     Keyboard.dismiss();
+    // Sheet mental model: while a property card is open, touching the map
+    // anywhere just closes it (the next touch selects a house again).
+    if (!farmMode && selectedId !== null) {
+      closeCard();
+      return;
+    }
     if (!farmMode) return;
     const { lngLat } = event.nativeEvent;
     const vertex: [number, number] = [lngLat[0], lngLat[1]];
@@ -146,6 +152,9 @@ export function MapScreen() {
     // In Farm mode parcel taps are corner drops (handled by the map-level
     // press), not owner lookups.
     if (farmMode) return;
+    // Card already open: this tap is a dismiss (the bubbled map-level press
+    // closes it) -- don't immediately select the tapped parcel.
+    if (selectedId !== null) return;
     const { lngLat, features } = event.nativeEvent;
     const feature = features[0];
     const rawId = feature?.properties?.id;
