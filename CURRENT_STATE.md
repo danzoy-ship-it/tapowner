@@ -11,13 +11,15 @@ but isn't in the "Verified" table here with evidence, treat it as unverified.
 
 ## THE ONE-LINE TRUTH
 
-**The production app has never successfully launched.** The startup hang was root-caused
-with source-level evidence (a wrong-version `expo-font` thrown at bundle eval) and fixed on
-disk — but that fix has NOT yet been proven by a real build. The backend, data, and web are
-genuinely built and largely verified; the entire problem is the mobile app's unverified tail.
+**✅ 2026-07-13 (late): the production app now LAUNCHES.** The startup hang (wrong-version
+`expo-font` thrown at bundle eval) is fixed and CONFIRMED on a real TestFlight build — the app
+opens and behaves as intended on Frederick's device. Email delivery is live (Resend) so login
+uses real emailed codes. The backend has also had its top §7 billing bugs fixed + verified
+(trace reset, atomic charge, protected-record gate, referral gating, OTP throttle).
 
-**Single next action:** apply the must-fix-before-rebuild items (below), then ONE production
-build → confirm it launches + login works on a real device → only then resume feature work.
+**Next:** full on-device smoke test of the redesigned flows, then continue down the backend
+backlog (auth on data endpoints, the 51 mis-projected counties, DB password rotation), then
+a final production build for founding-agent TestFlight.
 
 ---
 
