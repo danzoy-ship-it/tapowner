@@ -109,8 +109,18 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     if (prior.status === "trialing" && subscription.status === "active") {
         await logEvent(userId, "trial_converted", { tier: newTier });
     }
-    if (prior.tier === "prospector" && newTier === "closer") {
-        await logEvent(userId, "upgrade_prospector_to_closer", {});
+    if (prior.tier !== "closer" && newTier === "closer") {
+        // Upgrade into Closer: grant the included traces now (the generic upsert
+        // deliberately doesn't touch the balance, to avoid mid-period refills).
+        const cfg = await getProductConfig();
+        await pool.query(
+            `UPDATE subscriptions SET included_traces_remaining = $2, updated_at = now()
+             WHERE stripe_subscription_id = $1`,
+            [subscription.id, cfg.closer_included_traces ?? 0]
+        );
+        if (prior.tier === "prospector") {
+            await logEvent(userId, "upgrade_prospector_to_closer", {});
+        }
     }
 }
 
@@ -149,11 +159,23 @@ async function handleInvoicePaid(stripe: Stripe, invoice: Stripe.Invoice, eventI
     if (!subscriptionId) return;
 
     const { rows: subRows } = await pool.query(
-        `SELECT user_id FROM subscriptions WHERE stripe_subscription_id = $1`,
+        `SELECT user_id, tier FROM subscriptions WHERE stripe_subscription_id = $1`,
         [subscriptionId]
     );
     const userId = subRows[0]?.user_id;
     if (!userId) return;
+
+    // §7: reset the Closer's included traces at each billing-period boundary.
+    // invoice.paid fires once per period (base + metered usage together), so
+    // this only runs at boundaries -- never a mid-period refill.
+    if (subRows[0].tier === "closer") {
+        const cfg = await getProductConfig();
+        await pool.query(
+            `UPDATE subscriptions SET included_traces_remaining = $2, updated_at = now()
+             WHERE stripe_subscription_id = $1`,
+            [subscriptionId, cfg.closer_included_traces ?? 0]
+        );
+    }
 
     const { rows: referralRows } = await pool.query(
         `SELECT id, partner_id, first_paid_at FROM referrals WHERE referred_user_id = $1`,

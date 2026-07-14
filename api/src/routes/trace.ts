@@ -13,19 +13,35 @@ import {
 } from "../lib/entitlements.js";
 import { logEvent } from "../lib/events.js";
 
-async function chargeForTrace(
+// Atomically consume one included trace. The `AND included_traces_remaining > 0`
+// guard + Postgres row lock means two concurrent traces can't both decrement a
+// balance of 1 (the second sees 0 rows affected). Returns true iff one was used.
+async function tryConsumeIncludedTrace(sub: Subscription): Promise<boolean> {
+    if (sub.tier !== "closer") return false;
+    const res = await pool.query(
+        `UPDATE subscriptions SET included_traces_remaining = included_traces_remaining - 1
+         WHERE id = $1 AND included_traces_remaining > 0`,
+        [sub.id]
+    );
+    return res.rowCount === 1;
+}
+
+async function refundIncludedTrace(sub: Subscription): Promise<void> {
+    await pool.query(
+        `UPDATE subscriptions SET included_traces_remaining = included_traces_remaining + 1 WHERE id = $1`,
+        [sub.id]
+    );
+}
+
+// Report one metered trace to Stripe. The deterministic `identifier` makes this
+// idempotent -- a client retry (or duplicate delivery) with the same user+parcel
+// is counted once by Stripe, never double-billed.
+async function reportMeteredTrace(
     stripe: Stripe,
     sub: Subscription,
-    config: Record<string, any>
-): Promise<{ chargedVia: "included" | "metered"; chargedCents: number }> {
-    if (sub.tier === "closer" && sub.included_traces_remaining > 0) {
-        await pool.query(
-            `UPDATE subscriptions SET included_traces_remaining = included_traces_remaining - 1 WHERE id = $1`,
-            [sub.id]
-        );
-        return { chargedVia: "included", chargedCents: 0 };
-    }
-
+    userId: string | number,
+    parcelId: number
+): Promise<void> {
     const tracePriceId = process.env.STRIPE_PRICE_TRACE;
     if (!tracePriceId) {
         throw new Error("STRIPE_PRICE_TRACE is not configured");
@@ -33,23 +49,18 @@ async function chargeForTrace(
     if (!sub.stripe_subscription_id || !sub.stripe_customer_id) {
         throw new Error(`Subscription ${sub.id} is usable but missing Stripe ids`);
     }
-
     const items = await stripe.subscriptionItems.list({ subscription: sub.stripe_subscription_id });
-    const hasTraceItem = items.data.some((i) => i.price.id === tracePriceId);
-    if (!hasTraceItem) {
+    if (!items.data.some((i) => i.price.id === tracePriceId)) {
         await stripe.subscriptionItems.create({
             subscription: sub.stripe_subscription_id,
             price: tracePriceId,
         });
     }
-
     await stripe.billing.meterEvents.create({
         event_name: "trace_used",
+        identifier: `trace-${userId}-${parcelId}`,
         payload: { stripe_customer_id: sub.stripe_customer_id, value: "1" },
     });
-
-    const priceCents = config.trace_price_cents ?? 29;
-    return { chargedVia: "metered", chargedCents: priceCents };
 }
 
 export async function traceRoutes(app: FastifyInstance) {
@@ -83,13 +94,26 @@ export async function traceRoutes(app: FastifyInstance) {
         }
 
         const { rows: parcelRows } = await pool.query(
-            `SELECT id, apn, county_fips, owner_name, situs_address, situs_city, situs_state, situs_zip
+            `SELECT id, apn, county_fips, owner_name, is_protected, situs_address, situs_city, situs_state, situs_zip
              FROM parcels WHERE id = $1`,
             [parcelId]
         );
         const parcel = parcelRows[0];
         if (!parcel) {
             return reply.code(404).send({ error: "Parcel not found" });
+        }
+
+        // Protected records (Texas Tax Code §25.025) and owner-less parcels must
+        // never be sent to the vendor -- it's a compliance line, and their null
+        // owner_name would also crash the NOT NULL owner_name_hash insert. Reject
+        // BEFORE any vendor call or charge.
+        if (parcel.is_protected || !parcel.owner_name) {
+            return reply.code(403).send({
+                error: "This is a protected record and can't be traced.",
+                protected: true,
+                phones: [],
+                emails: [],
+            });
         }
 
         const config = await getProductConfig();
@@ -158,13 +182,33 @@ export async function traceRoutes(app: FastifyInstance) {
             return reply.code(503).send({ error: "Billing not configured yet" });
         }
 
-        const { chargedVia, chargedCents } = await chargeForTrace(stripe, sub, config);
+        // Decide the charge method atomically (included first), but DON'T bill
+        // Stripe yet.
+        const usedIncluded = await tryConsumeIncludedTrace(sub);
+        const chargedVia: "included" | "metered" = usedIncluded ? "included" : "metered";
+        const chargedCents = usedIncluded ? 0 : (config.trace_price_cents ?? 29);
 
-        await pool.query(
+        // Concurrency gate: UNIQUE(user_id, parcel_id) lets exactly one request
+        // record (and therefore charge) this trace. A concurrent double-tap or
+        // retry that loses the race is refunded and served free -- so a trace is
+        // never billed twice.
+        const { rows: gateRows } = await pool.query(
             `INSERT INTO user_traces (user_id, parcel_id, trace_result_id, charged_cents, charged_via)
-             VALUES ($1, $2, $3, $4, $5)`,
+             VALUES ($1, $2, $3, $4, $5)
+             ON CONFLICT (user_id, parcel_id) DO NOTHING
+             RETURNING id`,
             [session.userId, parcelId, traceResultId, chargedCents, chargedVia]
         );
+
+        if (gateRows.length === 0) {
+            if (usedIncluded) await refundIncludedTrace(sub);
+            return reply.send({ matched: true, ...payload, matchQuality, freeReview: true });
+        }
+
+        // We won the gate -- now (and only now) bill Stripe for a metered trace.
+        if (!usedIncluded) {
+            await reportMeteredTrace(stripe, sub, session.userId, parcelId);
+        }
 
         await logEvent(session.userId, "trace_purchased", {
             parcel_id: parcelId,
