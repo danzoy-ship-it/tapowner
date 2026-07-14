@@ -9,19 +9,43 @@ export default function Home() {
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-brand-orange-50 to-transparent" />
         <div className="relative mx-auto flex w-full max-w-5xl flex-col items-center px-6 py-20 text-center sm:py-28">
           <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-brand-orange/30 bg-brand-orange-50 px-3 py-1 text-xs font-medium text-brand-orange-dark">
-            📍 Texas · iPhone · owner data on tap
+            📍 Texas · iPhone · from a single tap to a 500-home campaign
           </span>
           <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-brand-navy sm:text-6xl">
-            Know who owns it.
+            Tap one house.
             <br />
-            <span className="text-brand-orange">Before you knock.</span>
+            <span className="text-brand-orange">Or farm the whole street.</span>
           </h1>
           <p className="mt-6 max-w-2xl text-lg text-zinc-600 sm:text-xl">
-            Tap any property in Texas and see the owner of record — free. Unlock
-            their verified phone and email for{' '}
-            <strong className="text-brand-navy">29¢</strong>, then let AI draft
-            the outreach and save them straight to your CRM.
+            TapOwner turns your phone into a full prospecting desk. See any Texas
+            owner of record <strong className="text-brand-navy">free</strong>,
+            unlock their verified phone &amp; email for{' '}
+            <strong className="text-brand-navy">29¢</strong>, let AI draft the
+            outreach, and track it in a built-in CRM — then draw a whole
+            neighborhood, filter by beds, baths, and pools, and export a{' '}
+            <strong className="text-brand-navy">500-home mailing list</strong> for
+            a direct-mail campaign, right from the sidewalk.
           </p>
+
+          {/* Breadth at a glance — one small app that does a lot. */}
+          <div className="mt-7 flex max-w-2xl flex-wrap items-center justify-center gap-2">
+            {[
+              'Owner of record — free',
+              'Verified phone & email',
+              'AI outreach drafting',
+              'Mini-CRM & pipeline',
+              'Neighborhood farming',
+              'Direct-mail export',
+            ].map((cap) => (
+              <span
+                key={cap}
+                className="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-brand-navy shadow-sm"
+              >
+                {cap}
+              </span>
+            ))}
+          </div>
+
           <div className="mt-9 flex flex-col items-center gap-3 sm:flex-row">
             <Link
               href="/signup"
@@ -33,7 +57,7 @@ export default function Home() {
               href="/#reverse-prospecting"
               className="rounded-full px-6 py-3.5 text-base font-medium text-brand-navy hover:text-brand-navy-700"
             >
-              See Reverse Prospecting →
+              See it farm a neighborhood →
             </Link>
           </div>
           <p className="mt-4 text-sm text-zinc-500">
@@ -41,9 +65,11 @@ export default function Home() {
             Prospector at $9.99. Card required, cancel anytime.
           </p>
           <p className="mt-10 max-w-xl text-sm text-zinc-500">
-            The <strong className="font-medium text-brand-navy">$9.99</strong>{' '}
-            alternative to $99–232/mo prospecting tools — built for listing
-            agents and new agents doing 20–80 lookups a month, not 500.
+            Everything the{' '}
+            <strong className="font-medium text-brand-navy">$99–232/mo</strong>{' '}
+            prospecting tools do — owner data, skip tracing, AI outreach, a CRM,
+            and neighborhood farming — in one app that fits in your pocket, from{' '}
+            <strong className="font-medium text-brand-navy">$9.99</strong>.
           </p>
         </div>
       </section>
@@ -87,12 +113,13 @@ export default function Home() {
                 Reverse Prospecting: farm a whole neighborhood in one screen.
               </h2>
               <p className="mt-5 text-lg text-blue-100/80">
-                Draw an area on the map. See every owner inside it. Then filter by
-                the details that matter —{' '}
+                Draw an area on the map. See every owner inside it — up to 500
+                homes at a time. Then filter by the details that matter —{' '}
                 <strong className="text-white">
                   find every 4-bed, 3-bath home with a pool on the block
                 </strong>{' '}
-                — and reach the whole list at once.
+                — and reach the whole list at once: call them, email them, or
+                export the addresses for a direct-mail campaign.
               </p>
               <p className="mt-5 rounded-xl border border-brand-orange/30 bg-brand-orange/10 p-4 text-base text-blue-50">
                 “I may have a motivated, qualified buyer looking for a home exactly
@@ -121,7 +148,7 @@ export default function Home() {
                 <FlagStep
                   n={4}
                   title="Contact the whole list"
-                  body="Unlock all contacts (included traces first, no-match free), then email each owner, draft one letter, add to Contacts, save to CRM, or export CSV."
+                  body="Unlock all contacts (included traces first, no-match free), then email each owner, generate a letter for every home, save them to your CRM — or export the whole list for a direct-mail campaign."
                 />
               </ol>
             </div>
