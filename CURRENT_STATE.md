@@ -4,28 +4,64 @@
 Rewrite the top section every working session. If a phase says "PASSED" in PROGRESS.md
 but isn't in the "Verified" table here with evidence, treat it as unverified.
 
-**Last updated:** 2026-07-14 (overnight backend-hardening + 2nd TestFlight build).
-**Reports backing this doc:** `scratchpad/reeval/01..06` (spec, api, mobile, web/compliance, data/infra, timeline).
+**Last updated:** 2026-07-15 (early AM — Frederick asleep, standing order: keep mining
+county attribute data; docs refreshed first per his anti-drift instruction).
 
 ---
 
-## THE ONE-LINE TRUTH
+## THE ORIGINAL INTENT (never drift from this)
 
-**✅ Core product is solid: app launches, backlog cleared, builds flowing.** Build #5 is
-confirmed working on-device; build #6 (in flight, auto-submits) adds the keyboard fix,
-read-only CRM + Export CSV, and the draft-email/vCard fixes. The re-eval backlog is done
-except two deliberate deferrals. DB password rotated (C1 ✅). B5 superseded by the shipped
-read-only mode. Stripe Customer Portal configured by Frederick (2026-07-14) — plan
-switching/cancel work once the "Manage billing" web page ships.
+TapOwner (`TAPOWNER_BUILD.md` is still the constitution): an iPhone app for Texas real
+estate agents — tap any property → owner of record FREE → $0.29 unlocks phone/email →
+AI-drafted outreach + mini-CRM. Two tiers (Prospector $9.99 / Closer $19.99, 30-day Closer
+trial, card required). Core is vertical-agnostic (roofing app is vertical #2 later).
+Frederick decides money/business; Claude decides technical; no "PASSED" without on-device
+proof; costs stated before incurring them.
 
-**Still open (deliberately):** C2 (auth on `/tiles`, `/parcels/at`, `/geocode` — needs a
-coordinated backend+client ship + signed-tile scheme), D1 (reload 51 mis-projected counties —
-~half-day data job), "Manage billing" web page, F hygiene.
+## WHERE IT IS RIGHT NOW
 
-**Next up (Frederick priorities, 2026-07-14):** (1) property attributes — sqft, pool,
-stories, etc. via per-county CAD exports (StratMap doesn't carry them for ANY county;
-documented Phase-1 gap; start with Bexar); (2) **Farm mode** — draw an area on the map →
-every owner inside → export/mail-merge (design below in roadmap).
+**The app is feature-complete for founding-agent beta and hardened.** Ten TestFlight builds;
+build #9 confirmed on-device; #10 (tap-map-to-dismiss card, merged phone-first "Contact
+owners" flow) submitted. The entire 6-agent audit backlog (A boot / B billing / C security /
+D data / E mobile) is CLOSED — including C2 (data endpoints now REQUIRE auth; anonymous
+scraping 401s) and D1 (51 mis-projected counties repaired in place). Farm mode grew into
+**Reverse Prospecting**: draw area → filter by beds/sqft/pool/stories → one-button Contact
+owners (auto-unlock w/ cost confirm → phones-first, emails secondary, ≤15 or CSV mail-merge)
+→ criteria-woven AI letter. Export pricing: 10¢/row at launch; evaluator mode now = free,
+300 rows/month (config-flip to enforce). tapowner.com is live (billing portal page works
+end-to-end). Apple demo account live (review@tapowner.com, code in Railway env).
+
+**Data moat (Frederick's active priority):** building attributes mined from FREE county
+sources — see scoreboard below. `parcel_viewed` events log per-card attribute gaps so the
+buy-vs-build API decision is made from real usage (~2-4 weeks of data; paid API assessed
+and declined 2026-07-14 — unit economics + scraped-source legal risk).
+
+## WHERE IT'S GOING (near-term order)
+
+1. **Keep mining counties** (standing order): El Paso, Galveston, Brazoria, Bell, McLennan,
+   Nueces, Lubbock, Smith next; the recipe is in Task #11 and the loaders in `data/`.
+2. **Pending county arrivals:** BCAD (Bexar beds/baths/pool/casita — Frederick's PIA sent
+   2026-07-14, due ≤10 business days) · Tarrant PIA + Travis code-legend (drafts given) ·
+   Comal + Guadalupe PIA (texts given, Frederick sending).
+3. **Business chain (Frederick, reminder running):** LLC → EIN → bank → Stripe live mode;
+   legal gate (attorney ToS review, TX Data Broker reg, insurance, BatchData addendum).
+4. **Then:** App Store submission (demo account + review notes ready; builds proven).
+
+## COUNTY ATTRIBUTE SCOREBOARD (all free, ~4.44M+ parcels enriched)
+
+| County | Parcels | Pools | Extras | Source/loader |
+|---|---|---|---|---|
+| Harris | 1,248,998 | 124,542 | beds/baths | HCAD zip (`load_harris_attributes.py`) |
+| Bexar | 617,058 | pending BCAD | stories | county GIS (`load_bexar_attributes.py`) |
+| Tarrant | 618,423 | 83,674 | — | TAD zip (`load_tarrant_attributes.py`) |
+| Dallas | 589,491 | 64,367 | beds/baths/stories | DCAD zip (`load_dallas_attributes.py`) |
+| Collin | 344,684 | 62,787 | — | Socrata (`load_collin_attributes.py`) |
+| Travis | 342,851 | codes undecoded | stories | TCAD 30GB JSON (`load_travis_attributes.py`) |
+| Denton | 311,480 | — | — | prodigy CSV (`load_prodigy_csv_attributes.py`) |
+| Williamson | 233,017 | 17,212 | garage | WCAD Socrata (`load_williamson_attributes.py`) |
+| Montgomery | 247,131 | — | stories | prodigy JSON (`load_prodigy_json_attributes.py`) |
+| Fort Bend | 93,774 (partial, ⅓ id overlap — revisit) | — | — | FBCAD hub (`load_fortbend_attributes.py`) |
+| Hays | 51,187 | 3,792 | beds | HaysCAD zip (`load_hays_attributes.py`) |
 
 ---
 
