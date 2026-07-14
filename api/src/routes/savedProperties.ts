@@ -2,12 +2,14 @@ import type { FastifyInstance } from "fastify";
 import { pool } from "../db.js";
 import { requireAuth } from "../auth/middleware.js";
 import { requireFeature } from "../lib/entitlements.js";
+import { formatSitusAddress } from "../lib/address.js";
 
 const STATUSES = ["new", "contacted", "follow_up", "appointment", "listed", "dead"] as const;
 type Status = (typeof STATUSES)[number];
 
 const PARCEL_FIELDS = `
-    p.owner_name, p.situs_address, p.situs_city, p.situs_state, p.situs_zip,
+    p.owner_name, p.situs_address, p.situs_number, p.situs_street,
+    p.situs_city, p.situs_state, p.situs_zip,
     p.is_absentee, p.is_protected
 `;
 
@@ -79,6 +81,7 @@ export async function savedPropertiesRoutes(app: FastifyInstance) {
             [session.userId, status ?? null]
         );
 
+        for (const row of rows) row.situs_address = formatSitusAddress(row);
         return reply.send(rows);
     });
 
@@ -102,7 +105,9 @@ export async function savedPropertiesRoutes(app: FastifyInstance) {
             [savedPropertyId]
         );
 
-        return reply.send({ ...savedProperty, ...parcelRows[0], notes });
+        const merged = { ...savedProperty, ...parcelRows[0], notes };
+        merged.situs_address = formatSitusAddress(merged);
+        return reply.send(merged);
     });
 
     app.patch<{ Params: { id: string }; Body: { status?: string } }>(

@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { pool } from "../db.js";
+import { formatSitusAddress } from "../lib/address.js";
 
 const PARCEL_FIELDS = `
     id, apn, source_property_id, county_fips, county_name,
@@ -52,7 +53,9 @@ export async function parcelsRoutes(app: FastifyInstance) {
                 return reply.code(404).send({ error: "No parcel found at this location" });
             }
 
-            return reply.send(result.rows[0]);
+            const parcel = result.rows[0];
+            parcel.situs_address = formatSitusAddress(parcel);
+            return reply.send(parcel);
         }
     );
 }

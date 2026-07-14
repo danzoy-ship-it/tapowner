@@ -3,6 +3,7 @@ import { pool } from "../db.js";
 import { requireAuth } from "../auth/middleware.js";
 import { getProductConfig } from "../lib/config.js";
 import { requireFeature } from "../lib/entitlements.js";
+import { formatSitusAddress } from "../lib/address.js";
 import { DRAFT_TEMPLATES, DRAFT_TONES, buildDraftPrompt, type DraftTone } from "../draft/templates.js";
 
 const ANTHROPIC_MODEL = "claude-haiku-4-5-20251001";
@@ -119,7 +120,7 @@ export async function draftRoutes(app: FastifyInstance) {
                 agentBrokerage,
                 agentPhone,
                 ownerName: parcel.owner_name,
-                situsAddress: parcel.situs_address,
+                situsAddress: formatSitusAddress(parcel),
                 propertyDetails: formatPropertyDetails(parcel),
             });
 
