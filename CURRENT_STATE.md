@@ -128,6 +128,10 @@ report category). The ready-to-load queue from the 2026-07-15 hunt is fully clea
   are mis-projected and effectively invisible (see fix D1).
 - **Web** — signup→OTP→Stripe-checkout flow, referral landing, partner dashboard, ToS/privacy
   drafts (all 5 mandated clauses present), config-driven data-broker notice. Deployed.
+  **Redesigned 2026-07-14:** real marketing homepage (logo, hero, how-it-works, features,
+  Closer-highlighted pricing, trust row) + admin **`/admin`** commission/referral manager
+  (list all partners w/ owed, create, record payout, revoke — the previously-missing manager
+  half; `commission_ledger.paid_out_at` now settable). Both live on tapowner.com, verified.
 - **AI drafting, trace caching/metering, CRM API** — built and server-verified.
 
 ## WHAT WAS CLAIMED BUT IS NOT TRUE / NOT VERIFIED

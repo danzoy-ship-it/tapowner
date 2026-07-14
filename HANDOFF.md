@@ -53,7 +53,13 @@ transcription artifacts; give layman step-by-step for anything he must do):**
   `farm_export_beta_cap_rows`); geocode 200/day/user; draft 30/day/user.
 - **Web:** tapowner.com + www live (Railway `web` service, custom domains verified).
   /billing → OTP → Stripe Customer Portal works end-to-end (portal configured by Frederick).
-  `WEB_BASE_URL=https://tapowner.com` on the api service.
+  `WEB_BASE_URL=https://tapowner.com` on the api service. **Redesigned 2026-07-14:** real
+  marketing homepage (logo mark in `web/app/logo.tsx`, sticky header, hero, how-it-works,
+  features, Closer-highlighted pricing, trust) replacing the placeholder. **Admin console at
+  `/admin`** — Frederick's referral/commission manager: enter `ADMIN_SECRET` (same one gating
+  `POST /partners`), see every partner with owed/earned/clicks/conversions, create partners,
+  record payouts (`POST /admin/partners/:id/payout` settles unpaid ledger rows), revoke codes.
+  Partners still see their own numbers at `/partner`.
 - **Apple demo account (for App Review):** review@tapowner.com, fixed code in Railway env
   (`DEMO_EMAIL`, `DEMO_OTP_CODE` — code is 824140), user id 18,永-active no-Stripe Closer with
   999 traces. At submission: paste email+code into App Store Connect review notes.
