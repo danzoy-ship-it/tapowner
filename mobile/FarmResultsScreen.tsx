@@ -105,6 +105,9 @@ export function FarmResultsScreen() {
   const [poolOnly, setPoolOnly] = useState(false);
   const [singleStory, setSingleStory] = useState(false);
   const [traced, setTraced] = useState<Record<number, Contact>>({});
+  // Homes the vendor returned no verified contact for (session-scoped). They
+  // count as "worked", not "locked", so unlock-all can't loop on them forever.
+  const [noMatchIds, setNoMatchIds] = useState<Set<number>>(new Set());
   // One shared "busy" line so only one bulk operation runs at a time.
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -153,7 +156,7 @@ export function FarmResultsScreen() {
   // ---------- Stage 1: unlock ----------
 
   function handleUnlock() {
-    const toUnlock = filtered.filter((p) => !isUnlocked(p));
+    const toUnlock = filtered.filter((p) => !isUnlocked(p) && !noMatchIds.has(p.id));
     if (toUnlock.length === 0) return;
     const already = filtered.length - toUnlock.length;
     const maxCost = ((toUnlock.length * config.trace_price_cents) / 100).toFixed(2);
@@ -172,6 +175,7 @@ export function FarmResultsScreen() {
     let noMatch = 0;
     let stopped: string | null = null;
     const found: Record<number, Contact> = {};
+    const misses: number[] = [];
     for (let i = 0; i < targets.length; i++) {
       try {
         const r = await traceParcel(token, targets[i].id);
@@ -182,6 +186,7 @@ export function FarmResultsScreen() {
           };
         } else {
           noMatch += 1;
+          misses.push(targets[i].id);
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Trace failed';
@@ -190,11 +195,15 @@ export function FarmResultsScreen() {
           break;
         }
         noMatch += 1;
+        misses.push(targets[i].id);
       }
       setBusy(`Unlocking ${i + 1}/${targets.length}…`);
     }
     const merged = { ...traced, ...found };
     setTraced(merged);
+    if (misses.length > 0) {
+      setNoMatchIds((prev) => new Set(Array.from(prev).concat(misses)));
+    }
     setBusy(null);
     const phones = filtered.filter((p) => contactsFor(p, merged).phones.length > 0).length;
     const emails = filtered.filter((p) => contactsFor(p, merged).emails.length > 0).length;
@@ -279,22 +288,50 @@ export function FarmResultsScreen() {
 
   function handleActions() {
     if (filtered.length === 0) return;
+    const n = filtered.length;
+    const plural = n === 1 ? '' : 's';
     const withEmails = filtered.filter((p) => contactsFor(p, traced).emails.length > 0);
     const withContacts = filtered.filter((p) => isUnlocked(p));
     const phones = filtered.filter((p) => contactsFor(p, traced).phones.length > 0).length;
-    // All counts below cover unlocked homes only — say so, or "phones for 9"
-    // reads as "only 9 of 13 are reachable" when 4 simply aren't unlocked yet.
-    const locked = filtered.length - withContacts.length;
+    const noMatch = filtered.filter((p) => !isUnlocked(p) && noMatchIds.has(p.id)).length;
+    const locked = n - withContacts.length - noMatch;
 
     const options: string[] = [];
     const handlers: Array<() => void> = [];
+
+    // Frederick's flow (2026-07-14 evaluation): while any home is still locked,
+    // lead with unlocking ALL of them — then the actions can honestly say
+    // "all 13" instead of counts that read like only some owners are reachable.
+    if (locked > 0) {
+      const maxCost = ((locked * config.trace_price_cents) / 100).toFixed(2);
+      options.push(`🔓 Unlock contacts for all ${n} · up to $${maxCost}`);
+      handlers.push(handleUnlock);
+      options.push('📄 Export CSV (owner mailing addresses — free)');
+      handlers.push(() => void handleExport());
+      options.push('Cancel');
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          title: `${n} home${plural} · ${withContacts.length} unlocked · ${locked} locked`,
+          message: `Unlock the locked home${locked === 1 ? '' : 's'} first — then email, save, and export cover all ${n} at once.`,
+          options,
+          cancelButtonIndex: options.length - 1,
+        },
+        (index) => {
+          if (index < handlers.length) handlers[index]();
+        }
+      );
+      return;
+    }
+
+    // Everything is worked: phrase actions over the whole list wherever true.
+    const allOf = (count: number) => (count === n ? `all ${n}` : `${count} of ${n}`);
 
     if (withEmails.length > 0) {
       if (withEmails.length > EMAIL_MAX) {
         options.push(`📧 Email via CSV mail merge (${withEmails.length})`);
         handlers.push(() => void handleExport());
       } else {
-        options.push(`📧 Email owners (${withEmails.length})`);
+        options.push(`📧 Email owners (${allOf(withEmails.length)} have emails)`);
         handlers.push(() => {
           if (!features.draft_email) return showUpgrade();
           navigation.navigate('FarmDraft', {
@@ -304,20 +341,17 @@ export function FarmResultsScreen() {
           });
         });
       }
+    } else {
+      // No emails came back — the outreach screen still offers the letter.
+      options.push('📧 Draft outreach letter');
+      handlers.push(() => {
+        if (!features.draft_email) return showUpgrade();
+        navigation.navigate('FarmDraft', { mode: 'letter', criteria, emailGroups: [] });
+      });
     }
 
-    options.push('✍ Draft letter only');
-    handlers.push(() => {
-      if (!features.draft_email) return showUpgrade();
-      navigation.navigate('FarmDraft', { mode: 'letter', criteria, emailGroups: [] });
-    });
-
     if (withContacts.length > 0) {
-      options.push(
-        locked > 0
-          ? `👤 Add ${withContacts.length} unlocked to Contacts`
-          : `👤 Add ${withContacts.length} owner${withContacts.length === 1 ? '' : 's'} to Contacts`
-      );
+      options.push(`👤 Add ${allOf(withContacts.length)} to Contacts`);
       handlers.push(() => {
         Alert.alert(
           `Add ${withContacts.length} to Contacts?`,
@@ -329,11 +363,7 @@ export function FarmResultsScreen() {
         );
       });
 
-      options.push(
-        locked > 0
-          ? `💼 Save ${withContacts.length} unlocked to CRM`
-          : `💼 Save ${withContacts.length} to CRM`
-      );
+      options.push(`💼 Save ${allOf(withContacts.length)} to CRM`);
       handlers.push(() => void runBulkCrm(withContacts));
     }
 
@@ -345,13 +375,10 @@ export function FarmResultsScreen() {
     ActionSheetIOS.showActionSheetWithOptions(
       {
         title:
-          locked > 0
-            ? `${filtered.length} home${filtered.length === 1 ? '' : 's'} · ${withContacts.length} unlocked · ${locked} locked`
-            : `${filtered.length} home${filtered.length === 1 ? '' : 's'} · all unlocked`,
-        message:
-          locked > 0
-            ? `Phone/email counts cover the ${withContacts.length} unlocked home${withContacts.length === 1 ? '' : 's'} only (${phones} with phones · ${withEmails.length} with emails). Unlock the other ${locked} to add them.`
-            : `${phones} with phones · ${withEmails.length} with emails.`,
+          noMatch > 0
+            ? `${n} home${plural} · ${withContacts.length} unlocked · ${noMatch} no contact found`
+            : `${n} home${plural} · all unlocked`,
+        message: `${phones} with phones · ${withEmails.length} with emails.${noMatch > 0 ? ` No verified contact for ${noMatch} — you were not charged.` : ''}`,
         options,
         cancelButtonIndex: options.length - 1,
       },

@@ -17,15 +17,20 @@ import { useApp } from './AppContext';
 import type { RootNav, RootStackParamList } from './navigation';
 
 // Farm outreach: the SAME templates & tones as individual drafting, applied to
-// the whole filtered list. One letter generates, then either the share sheet
-// (letter mode -- postcards/mail merge) or one pre-addressed Mail composer per
-// home, sent one by one (email mode).
+// the whole filtered list. Email vs letter is picked HERE (Frederick's
+// 2026-07-14 note: a standalone "Draft letter only" action read as noise —
+// outreach type belongs with the template/tone choices). One letter generates,
+// then either the share sheet (letter -- postcards/mail merge) or one
+// pre-addressed Mail composer per home, sent one by one (email).
 export function FarmDraftScreen() {
   const navigation = useNavigation<RootNav>();
   const route = useRoute<RouteProp<RootStackParamList, 'FarmDraft'>>();
   const { mode, criteria, emailGroups } = route.params;
   const { token, config } = useApp();
 
+  const [outreach, setOutreach] = useState<'email' | 'letter'>(
+    mode === 'letter' || emailGroups.length === 0 ? 'letter' : 'email'
+  );
   const [templateId, setTemplateId] = useState<string>('buyer_neighborhood_match');
   const [toneId, setToneId] = useState('professional');
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
@@ -36,7 +41,7 @@ export function FarmDraftScreen() {
     try {
       const { subject, body } = await farmDraft(token, templateId, toneId, criteria);
 
-      if (mode === 'letter') {
+      if (outreach === 'letter') {
         await Share.share({ message: `Subject: ${subject}\n\n${body}` });
         navigation.goBack();
         return;
@@ -71,14 +76,39 @@ export function FarmDraftScreen() {
   }
 
   const buttonLabel =
-    mode === 'email'
+    outreach === 'email'
       ? `Generate & open ${emailGroups.length} email${emailGroups.length === 1 ? '' : 's'}`
       : 'Generate letter';
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <Text style={styles.sectionLabel}>Outreach</Text>
+      <View style={styles.chipRow}>
+        <TouchableOpacity
+          style={[
+            styles.chip,
+            outreach === 'email' && styles.chipSelected,
+            emailGroups.length === 0 && styles.chipDisabled,
+          ]}
+          disabled={emailGroups.length === 0}
+          onPress={() => setOutreach('email')}
+        >
+          <Text style={[styles.chipText, outreach === 'email' && styles.chipTextSelected]}>
+            ✉️ Emails{emailGroups.length > 0 ? ` (${emailGroups.length})` : ''}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.chip, outreach === 'letter' && styles.chipSelected]}
+          onPress={() => setOutreach('letter')}
+        >
+          <Text style={[styles.chipText, outreach === 'letter' && styles.chipTextSelected]}>
+            📄 Letter
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       <Text style={styles.scopeText}>
-        {mode === 'email'
+        {outreach === 'email'
           ? `One email per home — ${emailGroups.length} on your filtered list. You review and send each.`
           : 'One letter for your whole filtered list — share it into notes, print, or a mail-merge tool.'}
       </Text>
@@ -139,12 +169,16 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   scopeText: {
+    marginTop: 12,
     fontSize: 13,
     color: '#6b7280',
     backgroundColor: '#f3f4f6',
     borderRadius: 10,
     padding: 12,
     lineHeight: 18,
+  },
+  chipDisabled: {
+    opacity: 0.4,
   },
   sectionLabel: {
     marginTop: 16,
