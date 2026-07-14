@@ -33,6 +33,23 @@ async function refundIncludedTrace(sub: Subscription): Promise<void> {
     );
 }
 
+// Metered ("pay-as-you-go") spend already booked this billing cycle. The window
+// is anchored to the subscription's period_end (one month back), so it resets
+// when Stripe renews and invoices the overage; if period_end is unset we fall
+// back to a rolling 30-day window. Used to enforce `metered_cap_cents`.
+async function meteredSpentThisCycleCents(userId: string | number, subId: number): Promise<number> {
+    const { rows } = await pool.query(
+        `SELECT COALESCE(SUM(charged_cents), 0)::int AS spent
+         FROM user_traces
+         WHERE user_id = $1 AND charged_via = 'metered'
+           AND created_at >= COALESCE(
+               (SELECT period_end FROM subscriptions WHERE id = $2) - interval '1 month',
+               now() - interval '30 days')`,
+        [userId, subId]
+    );
+    return rows[0].spent as number;
+}
+
 // Report one metered trace to Stripe. The deterministic `identifier` makes this
 // idempotent -- a client retry (or duplicate delivery) with the same user+parcel
 // is counted once by Stripe, never double-billed.
@@ -93,6 +110,25 @@ export async function traceRoutes(app: FastifyInstance) {
             return reply.code(402).send({ error: "Your subscription is inactive", subscription_inactive: true });
         }
 
+        const config = await getProductConfig();
+
+        // Metered spend cap. Only relevant once the included allowance is spent
+        // (that's when a trace bills per-use); checked BEFORE the vendor call so
+        // a capped account can't run up vendor cost on traces we'll refuse. This
+        // is a safety ceiling, not a hard financial boundary -- highly concurrent
+        // taps can overshoot by a few cents, which is fine.
+        if (sub.tier === "closer" && sub.included_traces_remaining <= 0) {
+            const capCents = config.metered_cap_cents ?? 2500;
+            const nextChargeCents = config.trace_price_cents ?? 29;
+            const spent = await meteredSpentThisCycleCents(session.userId, sub.id);
+            if (spent + nextChargeCents > capCents) {
+                return reply.code(402).send({
+                    error: `You've hit your $${Math.round(capCents / 100)} monthly cap on pay-as-you-go traces. It resets when your plan renews.`,
+                    metered_cap_reached: true,
+                });
+            }
+        }
+
         const { rows: parcelRows } = await pool.query(
             `SELECT id, apn, county_fips, owner_name, is_protected, situs_address, situs_city, situs_state, situs_zip
              FROM parcels WHERE id = $1`,
@@ -116,7 +152,6 @@ export async function traceRoutes(app: FastifyInstance) {
             });
         }
 
-        const config = await getProductConfig();
         const ttlDays = config.trace_cache_ttl_days ?? 90;
         const ownerNameHash = parcel.owner_name
             ? createHash("sha256").update(parcel.owner_name).digest("hex")

@@ -34,9 +34,16 @@ export async function parcelsRoutes(app: FastifyInstance) {
             }
 
             const result = await pool.query(
+                // A point can fall inside several overlapping parcels (condo
+                // units share a building footprint). Without an ORDER BY, LIMIT 1
+                // returns an arbitrary row that can change tap-to-tap. Order by
+                // smallest area first (the specific unit over a building-envelope
+                // parcel), with id as a unique tiebreaker so the same tap always
+                // resolves to the same parcel.
                 `SELECT ${PARCEL_FIELDS}
                  FROM parcels
                  WHERE ST_Contains(geom, ST_SetSRID(ST_MakePoint($1, $2), 4326))
+                 ORDER BY ST_Area(geom) ASC, id ASC
                  LIMIT 1`,
                 [lngNum, latNum]
             );
