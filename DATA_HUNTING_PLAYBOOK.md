@@ -92,6 +92,15 @@ BASE = https://prod-container.trueprodigyapi.com     # always send -A 'Mozilla/5
 5. GET  /public/propertyaccount/improvement/{pImprovementID}/features
         -> features[] under category "Rooms":  "Rooms: Bedrooms 3", "Rooms: Bathrooms 2"
 ```
+**⚠️ API DRIFT (observed 2026-07-15) — the recipe above has changed:** (1) the auth token is
+now **JSON-wrapped**: `POST .../auth/token` returns `{"user":{"token":"…"}}` — read
+`.user.token` (still send it raw, NO `Bearer`). (2) `POST /public/property/search` with the old
+`?searchField=pid&searchText=…` querystring now returns "No search criteria was specified" — the
+payload format changed; check `/public/config/propertysearch` (lists field `pid`, operator `=`)
+and send the search as the current body shape. officelookup + raw-token-no-Bearer still hold.
+This affects the app-lane fill-on-blank recipe for Travis / Tarrant / Denton / Montgomery /
+McLennan / Ellis / Johnson (all True Prodigy, bulk beds unavailable).
+
 **Parse nuance:** some properties split rooms across multiple `ResMain` segments as *fractional*
 values that SUM to whole counts (e.g. `0.4539 + 2.5461 = 3` bedrooms). **Sum per property.**
 **Scale nuance:** this is per-property (no bulk file). Use **fill-on-blank + cache-forever** — fetch
@@ -210,6 +219,28 @@ every county later is the expensive path.
 | Grayson | DFW | PACS | ATTR `Plumbing`="1 Bath" (no beds published) | ✅ | **LOADED baths 6.2K** |
 | Travis | Austin | True Prodigy | bulk export REMOVED from tad-style site; report categories 204; GIS layers bedless → **per-property API only** | ⚠️ | **APP LANE** (fill-on-blank; bulk no longer public) |
 | Tarrant | Fort Worth | True Prodigy | live API `Rooms: Bedrooms/Bathrooms` | ✅ | **APP LANE** (fill-on-blank API) |
+
+**Wave-2 statewide sweep (2026-07-15) — 26 counties now carry beds (3.42M / 23.9%).** New
+cracks worth reusing, beyond the PACS ATTR recipe:
+- **Collin** — beds are NOT in its Socrata set; they're in CCAD's **"Appraisal Data Export"
+  LiteDatabase** (`AD_Public.mdb`, MS Access, 504K rows) via the 64-bit Access ODBC driver,
+  key `prop_id`. 288K beds. (`load_collin_mdb_attributes.py`.)
+- **Williamson** — beds/baths WERE in its Socrata set all along as **sparse columns Socrata
+  omits on null rows** (`fbedrooms`/`fplumbing`/`fnumhalfbath`) — invisible on a first-row key
+  dump. Always request the field explicitly. 67K beds.
+- **Fort Bend** — runs **Tyler Orion**, not PACS; its CamaSummary GIS has NO bedroom column.
+  Beds are in FBCAD's **Orion residential-segment export** (`WebsiteResidentialSegs.xlsx`,
+  `fBedrooms`/`fPlumbing`), key `PropertyNumber == apn`. 187K beds. (`load_fortbend_orion_*`.)
+- **El Paso** — the ABE dumps are bedless; the full **certified-export zip** (`export.epcad.org/
+  datasets/2025_Certified_Export_Files.zip`) is standard PACS with `IMPROVEMENT_DETAIL_ATTR`.
+  153K beds. (Dedicated loader to avoid regressing the ABE floor-summed sqft.)
+- **`data/texas_county_system_map.md`** classifies all 253 counties by software: ~28 PACS with
+  roll URLs (next batch), ~73 PACS-portal (bulk page not yet located), 78 Pritchard&Abbott
+  (records-request — the free-source dead-end), 2 app-lane (Travis/Tarrant + Denton/Montgomery/
+  McLennan/Ellis/Johnson), 69 unclassified/no-domain. This is the queue for finishing the state.
+- **Junk-value trap:** PACS `Plumbing` is overloaded — some districts stuff it with septic/
+  garage/material codes ("S1-MUNICIP", "2 CAR", "METAL"). The loader now accepts a bath value
+  ONLY if it's a bare number or literally says "BATH" (caught inflating Nueces/Guadalupe).
 
 **PACS ATTR beds/baths recipe (cracked 2026-07-15):** beds/baths are NOT in the
 `IMPROVEMENT_DETAIL` file — they're improvement *characteristics* in the sibling
