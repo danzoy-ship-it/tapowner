@@ -327,9 +327,17 @@ Walker (notice PDFs), Jasper (FILE_INFO export lacks the improvement members).
   fill-on-blank; source_property_id resolves as the TP pid. NB for the app: the
   FIRST improvement on a Denton account often returns empty features — iterate
   ALL improvements; the `MA` (main-area) one carries the rooms.
-- **Travis** — API has baths (251) but NO bedrooms; beds only in the removed bulk → PIA.
-- **Montgomery** — API returns empty features (no rooms); its bulk (20GB Drive
-  protaxExport) is bedless like Travis → beds via PIA / MCAD certified export TBD.
+- **Travis** — ✅ SOLVED, DATA-LANE (2026-07-15). Beds are in the FREE bulk file
+  `traviscad.org/wp-content/largefiles/improvement_detail_2026.zip` (69MB, 4 CSVs;
+  on TCAD's /publicinformation page). Coded rows: `imprvDetailTypeDesc` BEDROOMS
+  (=252)/BATHROOM(251)/HALF BATHROOM(250), count in `area`, SUMMED per pID. The TP
+  API STRIPS the 252 bed rows (app confirmed); the bulk keeps them. Loaded via
+  `load_travis_improvement_detail.py` → 100,419 beds / 307,689 baths / 47,566 pools.
+  Sample: pid 100107 → 5bd/4ba/1half. **App session: de-register Travis from
+  fill-on-blank — it's a bulk load now.**
+- **Montgomery** — API returns empty features (no rooms). CHECK for an equivalent
+  free `improvement_detail` bulk file on MCAD's site (Travis's door) before PIA —
+  same True Prodigy software, likely publishes the same coded-row file.
 - **McLennan** (48309) — RECORDS-REQUEST: TP report categories all 204 (no bulk),
   and our stored ids don't resolve as TP pids (no geoID→pid crosswalk available).
   A certified-roll PIA yields both the beds AND the crosswalk.

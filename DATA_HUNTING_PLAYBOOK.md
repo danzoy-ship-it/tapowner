@@ -101,6 +101,23 @@ and send the search as the current body shape. officelookup + raw-token-no-Beare
 This affects the app-lane fill-on-blank recipe for Travis / Tarrant / Denton / Montgomery /
 McLennan / Ellis / Johnson (all True Prodigy, bulk beds unavailable).
 
+**⚠️ TWO HARD-WON LESSONS (2026-07-15):**
+1. **Per-office backends fail INDEPENDENTLY.** Each county runs its own TP backend
+   (`{office}-public.trueprodigy-scaler.com`); one can be 200/healthy the same minute
+   another 500s on 100% of feature calls. So **NEVER classify a TP county's fields from
+   one time window** — a "no beds" verdict may just be a flaky window. Count fetch
+   FAILURES separately from genuine empties; require a healthy window (some 200s with
+   real features) before concluding a field is absent. (This caused contradictory
+   Denton verdicts: one session hit a healthy window and saw beds, another hit a dead
+   window and saw "empty" — the beds were always there.)
+2. **The bulk file and the API expose DIFFERENT fields — check BOTH.** TCAD's TP API
+   STRIPS bedrooms (only serves 251 baths), but TCAD's FREE bulk `improvement_detail`
+   file KEEPS them (coded rows 252). So for any TP county, before declaring beds
+   "API-only" or "PIA-only," check the CAD's own `/publicinformation` and
+   `/wp-content/largefiles/` for a bulk `improvement_detail_{year}.zip` — the file is
+   often there, just not linked from the homepage. (This solved Travis, the state's
+   biggest TP county: 0 → 100K beds, free, data-lane.)
+
 **Parse nuance:** some properties split rooms across multiple `ResMain` segments as *fractional*
 values that SUM to whole counts (e.g. `0.4539 + 2.5461 = 3` bedrooms). **Sum per property.**
 **Scale nuance:** this is per-property (no bulk file). Use **fill-on-blank + cache-forever** — fetch
