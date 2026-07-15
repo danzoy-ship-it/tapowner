@@ -454,3 +454,21 @@ Bandera(48019).
 
 ## Court-records leads (for the APP SESSION's parcel_signals lane — Miner drops URLs here, does NOT chase)
 - (none yet — will note any county-clerk foreclosure/probate/tax-delinquency feeds tripped over during roll hunting)
+
+### Batch D findings (2026-07-16) — mostly PROBLEMATIC (defer to fable-5 ultracode / records-request pass)
+- **True Prodigy SPAs (no bulk file, browser/records-request only):** Denton(48121), Montgomery(48339), Cooke(48097), Wharton(48481), ValVerde(48465), JimWells(48249), Burleson(48051). Also Fannin(48147, SouthwestDataSolutions Blazor SPA behind Cloudflare).
+- **PACS/TrueAutomation esearch — HAS improvements internally but export is records-request only:** Tyler(48457, tylercad.net), Upshur(48459, upshur-cad.org), Kendall(48259, kendallad.org). GOOD $0-records-request targets (the data exists, just not posted).
+- **P&A/BIS ProTax CSV (owner/value/EXEMPTION roll, NO building features):** Jones(48253) `jonescad.org/Forms/ExcelDownload?subPath=Data Records&fileName=...2025+Jones+CAD+Certified+Appraisal+Roll...csv`; Leon(48289) same pattern. ~110 cols incl. State_Homestead/Over65/Disabled_Veteran exemption flags + values. EASY partial win = exemptions (no improv/beds). ProTax parser also unlocks Brazoria(48039, which DOES have an ImprovementFeatures export).
+- **Grimes(48185)** — 96MB fixed-width PRINT report (`grimescad.org/Portals/0/Documents/Appraisal Roll/2025 Certified Roll.txt`), owner/value/exemption only, painful to parse, no features.
+- **Brown(48049)** — P&A search portal only.
+
+### Batches E+F findings (2026-07-16)
+**PACS golds LOADED via load_pacs_roll.py:** Aransas(48007, improv 16.2K/beds 7.6K/sale 22.7K), Trinity(48455, 8.0K/sale 14.3K), Milam(48331, 12.8K/sale 17.4K). Hudspeth(48229) full PACS schema but STALE (newest export 2021) — load stale or email for current.
+**Value/EXEMPTION-only CSVs (Harris Govern eSearch `/Forms/ExcelDownload?subPath=Data Records&fileName=...csv` — owner/value/HS+Over65+DV exemptions, NO building features; easy exemption win via one parser):** Eastland(48133), DeWitt(48123), Gonzales(48177), Marion(48315), Hutchinson(48233), Panola(48365), Houston(48225), Freestone(48161). Plus P&A collector CSVs: Jones(48253), Leon(48289), Howard(48227, 2022).
+**PROBLEMATIC — defer to fable-5/records-request:**
+- True Prodigy SPAs: Maverick(48323), Limestone(48293, limestonecad.com), + batch-D set. (fable-5 crack IN PROGRESS.)
+- BIS "True Prospect"/GIS-viewer (search/cart only): Uvalde(48463), Hale(48189), Jackson(48239), Falls(48145), Colorado(48089), Calhoun(48057), Austin(48015), Lubbock, Comal, Wichita, Burnet, Waller, Cherokee, Medina.
+- whoownsit.com search portals: Hopkins(48223), Montague(48337), Sabine(48403), Brown(48049), Bowie(48037), SanPatricio(48409), Anderson, Hardin, Atascosa.
+- iswdata/SouthwestData: Erath(48143), Llano(48299), PaloPinto(48363), Fannin(48147), TomGreen(48451).
+- Tyler SPA: Brewster(48043), Bosque(48035). Wix: Shelby(48419). GIS-shapefile-only: Fayette(48149), Starr, Hill, Jasper.
+**Domain corrections:** Trinity=trinitycad.net, Erath=erathcad.com, Limestone=limestonecad.com, burnet=burnet-cad.org, nacogdoches=nacocad.org.
