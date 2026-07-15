@@ -44,7 +44,9 @@ UA = (
 POOL_CODES = {"RSW"}
 CASITA_CODES = {"DLA", "DLA1"}
 SHED_CODES = {"SH1", "SH2", "SH3", "SH4", "SH5", "RSH", "SHD", "SH"}
-GARAGE_CODES = {"GAR", "GR", "CAR", "CARP", "CP"}
+# AG = attached garage, DG = detached garage in BCAD's Imprv_Type vocabulary
+# (Frederick's own house has AG and was has_garage=false — caught 2026-07-15).
+GARAGE_CODES = {"GAR", "GR", "CAR", "CARP", "CP", "AG", "DG"}
 
 
 def fetch_page(offset: int):
