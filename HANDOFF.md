@@ -107,6 +107,23 @@ transcription artifacts; give layman step-by-step for anything he must do):**
   payload `{userId, email}` (user **5** has an agent profile + real sub; user **18** = demo).
 - NEVER print secrets; env vars only; delete `_tmp_*.mjs` scripts after use.
 
+### ⚠️ THE BULK-DDL RULE (from the 2026-07-15 production incident — parcels is LIVE)
+A materialization pass took the app down mid-evaluation: a long UPDATE on parcels was
+running while a second script instance's `ALTER TABLE parcels…` queued behind it waiting
+for ACCESS EXCLUSIVE — and a *waiting* ACCESS EXCLUSIVE blocks EVERY new query on the
+table (tiles, /parcels/at, farm, CRM all timed out). Frederick tests on-device at any
+hour; treat parcels as production, always:
+1. `SET lock_timeout='2s'` on every session BEFORE any DDL — DDL must FAIL fast, never queue.
+2. DDL on parcels runs at most ONCE, checked via information_schema/pg_indexes first
+   (`ADD COLUMN IF NOT EXISTS` still takes ACCESS EXCLUSIVE as a no-op), and NEVER inside
+   a retry wrapper or per-invocation setup phase.
+3. Bulk UPDATEs: 50–100K-id batches, one transaction each — never a minutes-long single
+   transaction (starves autovacuum, bloats WAL, makes any queued DDL catastrophic).
+4. Indexes on parcels: `CREATE INDEX CONCURRENTLY` (autocommit session) only.
+5. One instance at a time: pre-flight `pg_stat_activity` check for competing bulk/DDL
+   queries on parcels; abort if found. If you kill a client, its server-side query keeps
+   running — terminate the backend too (`pg_terminate_backend`) before relaunching.
+
 ### Machine quirks (also in auto-memory)
 - Frederick's own terminal: PowerShell blocks npx → he uses cmd; `npx eas-cli` not `eas`.
 - Claude's Bash tool: heredocs mangle backslashes in JS regex — write files with the Write
