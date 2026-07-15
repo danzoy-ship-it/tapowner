@@ -199,6 +199,20 @@ every county later is the expensive path.
   — "Pagination is not supported" — then page differently or use the FeatureServer).
 - **Big zips:** partial-inflate / stream `unzip -p file.zip member | head` to read a header or
   sample without downloading/expanding gigabytes.
+- **Deflate64 zips (compression method 9):** Python `zipfile`, bsdtar, and PS
+  `Expand-Archive` all refuse them (Yoakum, Andrews). Windows Explorer handles them:
+  `(New-Object -ComObject Shell.Application).NameSpace($zip).Items()` + `CopyHere` the
+  needed members, then repack with normal deflate for the loader.
+- **WordPress CADs — query the media library directly:** many hide roll zips in
+  wp-uploads with no page linking them. `https://{cad}/wp-json/wp/v2/media?search=certified`
+  (also try `export`, `roll`, `2025`) returns `source_url`s — found Angelina, Titus,
+  Gillespie, Caldwell, Coryell, Lavaca, Comanche, Hockley, Newton, Andrews, Mitchell,
+  Delta, Hudspeth this way in one batched pass.
+- **Remote zip-tail peek before downloading:** HEAD for size, ranged GET of the last
+  ~256KB, parse the central directory for member names/sizes — tells you in seconds
+  whether a 50MB "certified roll" zip actually contains IMPROVEMENT_DETAIL(+ATTR) or
+  just PDFs (Matagorda) / GIS shapefiles (Lamar, Starr). Script pattern in the wave-3
+  session; rebuild from `PK` central-directory records.
 - **SPA portals:** open the property-search page and watch the **network XHR** to discover the
   backing API base + endpoints; the JS bundle reveals endpoint paths.
 

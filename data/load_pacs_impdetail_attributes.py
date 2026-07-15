@@ -164,7 +164,10 @@ def main() -> None:
                 e["shed"] = True
             if GARAGE_RE.search(u):
                 e["garage"] = True
-            if (DWELLING_RE.search(u) or cd in ("MA", "MH", "HSE")) and not EXCLUDE_RE.search(u):
+            # cd "RES" = Delta's (48119) only dwelling label (bare 'RES'/'RES';
+            # 10,844 rows, no finer segment coding) — verified unique to Delta
+            # in improvement_labels_seen.md before widening.
+            if (DWELLING_RE.search(u) or cd in ("MA", "MH", "HSE", "RES")) and not EXCLUDE_RE.search(u):
                 living = to_int(line[93:108], 1, 2_000_000)
                 yr = to_int(line[85:89], 1800, 2027)
                 if living:

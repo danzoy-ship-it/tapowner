@@ -66,7 +66,7 @@ Which CAMA/appraisal software each Texas county runs, its free bulk-roll URL whe
 | hunt | 48231 | 69,728 | unknown | unclassified | - | hunt-cad.org |  |
 | randall | 48381 | 64,824 | PACS (PRAD) | PACS-loadable | beds+baths+sqft | prad.org | Randall certified roll ATTR (loaded) |
 | bastrop | 48021 | 63,357 | PACS/TrueAutomation | PACS-portal(no bulk found) | beds+baths+sqft | bastropcad.org |  |
-| angelina | 48005 | 60,693 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | angelinacad.org |  |
+| angelina | 48005 | 60,693 | PACS/TrueAutomation | PACS-loadable | sqft only * | angelinacad.org | https://www.angelinacad.org/media-records/2025Sup20_03102026.zip (open-records page; 'Plumbing'=FIXTURE counts — baths guarded off; beds not published) |
 | polk | 48373 | 60,178 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | polkcad.org |  |
 | wichita | 48485 | 58,742 | BIS Consultants | BIS-gis (sqft only) | - | wadtx.com | gis.bisclient.com/wichitacad |
 | tomgreen | 48451 | 58,686 | Pritchard & Abbott | P&A-hard | - | tomgreencad.com |  |
@@ -95,7 +95,7 @@ Which CAMA/appraisal software each Texas county runs, its free bulk-roll URL whe
 | starr | 48427 | 38,571 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | starrcad.org |  |
 | rusk | 48401 | 37,967 | Pritchard & Abbott | P&A-hard | - | ruskcad.org |  |
 | chambers | 48071 | 37,510 | Pritchard & Abbott | P&A-hard | - | chamberscad.org |  |
-| matagorda | 48321 | 37,211 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | matagorda-cad.org |  |
+| matagorda | 48321 | 37,211 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | matagorda-cad.org | wp-uploads 2025_CERTIFIED_APPRAISAL_ROLL.zip is PDF-only (like Webb) -> PIA |
 | jasper | 48241 | 37,136 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | jaspercad.org |  |
 | kerr | 48265 | 36,913 | PACS | PACS-loadable | beds+baths+sqft * | kerrcad.org | https://kerrcad.org/wp-content/uploads/2025/11/2025-Cert-Export-Files.zip |
 | atascosa | 48013 | 36,791 | unknown | unclassified | - | atascosacad.org |  |
@@ -106,9 +106,9 @@ Which CAMA/appraisal software each Texas county runs, its free bulk-roll URL whe
 | bandera | 48019 | 33,261 | unknown | unclassified | - | banderacad.org |  |
 | cooke | 48097 | 33,170 | unknown | unclassified | - | cookecad.org |  |
 | tyler | 48457 | 33,043 | unknown | unclassified | - | tylercad.org |  |
-| gillespie | 48171 | 32,351 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | gillespiecad.org |  |
+| gillespie | 48171 | 32,351 | PACS | PACS-loadable | sqft only * | gillespiecad.org | https://gillespiecad.org/wp-content/uploads/2025/08/Gillespie-CAD-2025-Certified-Roll-Export.zip ('Plumbing'=presence flag — baths guarded off) |
 | wharton | 48481 | 31,888 | unknown | unclassified | - | whartoncad.net |  |
-| coryell | 48099 | 31,711 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | coryellcad.org |  |
+| coryell | 48099 | 31,711 | PACS | PACS-loadable | beds+baths+sqft * | coryellcad.org | https://coryellcad.org/wp-content/uploads/2026/02/2025-Certified-Appraisal-Roll-as-of-Supplement-48.zip |
 | valverde | 48465 | 31,635 | unknown | unclassified | - | valverdecad.org |  |
 | brown | 48049 | 31,411 | unknown | unclassified | - | browncad.org |  |
 | upshur | 48459 | 30,293 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | upshur-cad.org |  |
@@ -122,19 +122,19 @@ Which CAMA/appraisal software each Texas county runs, its free bulk-roll URL whe
 | burleson | 48051 | 27,282 | unknown | unclassified | - | burlesoncad.com |  |
 | aransas | 48007 | 26,690 | Pritchard & Abbott | P&A-hard | - | aransascad.org |  |
 | houston | 48225 | 26,611 | Pritchard & Abbott | P&A-hard | - | houstoncad.org |  |
-| caldwell | 48055 | 26,155 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | caldwellcad.org |  |
+| caldwell | 48055 | 26,155 | PACS | PACS-loadable | beds+baths+sqft * | caldwellcad.org | https://caldwellcad.org/wp-content/uploads/2026/06/2026-Caldwell-CAD-export_June-5-2026.zip (posts fresh exports ~monthly) |
 | maverick | 48323 | 26,048 | unknown | unclassified | - | maverickcad.org |  |
 | trinity | 48455 | 25,952 | unknown | unclassified | - | trinitycad.com |  |
 | hopkins | 48223 | 25,149 | unknown | unclassified | - | hopkinscad.org |  |
 | montague | 48337 | 24,836 | unknown | unclassified | - | montaguecad.org |  |
 | erath | 48143 | 24,656 | unknown | unclassified | - | erathcad.org |  |
 | freestone | 48161 | 23,979 | Pritchard & Abbott | P&A-hard | - | freestonecad.org |  |
-| hudspeth | 48229 | 23,954 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | hudspethcad.org |  |
+| hudspeth | 48229 | 23,954 | PACS | PACS-loadable | sqft only * | hudspethcad.org | https://hudspethcad.org/wp-content/uploads/2023/08/2021-HUDSPETH-PRELIMINARY-ROLL-EXPORT.zip (2021 latest; ATTR ~empty, mostly land) |
 | fayette | 48149 | 23,882 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | fayettecad.org |  |
 | bee | 48025 | 23,864 | PACS | PACS-loadable | baths+sqft * | beecad.org | BEE-CAD-2025-CERTIFIED-APPRAISAL-ROLL-CSV.zip (no beds published) |
 | washington | 48477 | 23,475 | PACS | PACS-loadable | - | washingtoncad.org | https://washingtoncad.org/wp-content/uploads/2026/03/2025-Certified-Appraisal-Roll.zip |
 | sabine | 48403 | 23,352 | unknown | unclassified | - | sabinecad.org |  |
-| newton | 48351 | 23,278 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | newtoncad.org |  |
+| newton | 48351 | 23,278 | PACS | PACS-loadable | beds+baths+sqft * | newtoncad.org | https://newtoncad.org/wp-content/uploads/2025/08/2025-CERTIFIED-APP-ROLL.zip |
 | colorado | 48089 | 22,756 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | coloradocad.org |  |
 | calhoun | 48057 | 22,678 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | calhouncad.org |  |
 | austin | 48015 | 22,581 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | austincad.org |  |
@@ -143,22 +143,22 @@ Which CAMA/appraisal software each Texas county runs, its free bulk-roll URL whe
 | eastland | 48133 | 21,448 | Pritchard & Abbott | P&A-hard | - | eastlandcad.org |  |
 | shelby | 48419 | 21,378 | Pritchard & Abbott | P&A-hard | - | shelbycad.com |  |
 | milam | 48331 | 20,992 | unknown | unclassified | - | milamcad.org |  |
-| titus | 48449 | 20,833 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | titus-cad.org |  |
+| titus | 48449 | 20,833 | PACS | PACS-loadable | sqft only * | titus-cad.org | https://titus-cad.org/wp-content/uploads/2026/03/2025-CERTIFIED-AS-OF-LAST-SUPP.zip (beds/baths published only sparsely) |
 | dewitt | 48123 | 20,802 | Pritchard & Abbott | P&A-hard | - | dewittcad.org |  |
-| howard | 48227 | 20,654 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | howardcad.org |  |
+| howard | 48227 | 20,654 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | howardcad.org | publishes only collector tax-roll CSVs (no improvement files) -> PIA |
 | gonzales | 48177 | 20,420 | Pritchard & Abbott | P&A-hard | - | gonzalescad.org |  |
 | brewster | 48043 | 20,287 | unknown | unclassified | - | brewstercad.org |  |
 | bosque | 48035 | 19,975 | unknown | unclassified | - | bosquecad.org |  |
 | marion | 48315 | 19,841 | unknown | unclassified | - | marioncad.org |  |
-| lavaca | 48285 | 19,767 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | lavacacad.com |  |
+| lavaca | 48285 | 19,767 | PACS | PACS-loadable | baths+sqft * | lavacacad.com | https://lavacacad.com/wp-content/uploads/2025/07/2025-CERTIFIED-REAL-PROPERTY-FILES.zip (no beds published) |
 | hale | 48189 | 19,108 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | halecad.org |  |
 | hutchinson | 48233 | 18,938 | Pritchard & Abbott | P&A-hard | - | hutchinsoncad.org |  |
 | panola | 48365 | 18,812 | Pritchard & Abbott | P&A-hard | - | panolacad.org |  |
 | falls | 48145 | 18,581 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | fallscad.net |  |
 | jackson | 48239 | 18,453 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | jacksoncad.org |  |
 | presidio | 48377 | 18,436 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | presidiocad.org |  |
-| comanche | 48093 | 17,580 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | comanchecad.org |  |
-| hockley | 48219 | 17,242 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | hockleycad.org |  |
+| comanche | 48093 | 17,580 | PACS | PACS-loadable | beds+baths+sqft * | comanchecad.org | https://comanchecad.org/wp-content/uploads/2025/07/Cert-Real-Roll-100000-Ex.zip |
+| hockley | 48219 | 17,242 | PACS | PACS-loadable | baths+sqft * | hockleycad.org | https://www.hockleycad.org/wp-content/uploads/2026/04/2026-PRELIMINARY-APPRAISAL-ROLL.zip (no beds published) |
 | robertson | 48395 | 16,935 | unknown | unclassified | - | robertsoncad.org |  |
 | liveoak | 48297 | 16,839 |  | no-domain | - |  |  |
 | gaines | 48165 | 16,576 | PACS | PACS-loadable | - | gainescad.org | https://gainescad.org/wp-content/uploads/2026/04/2025-Gaines-Real-Certified.zip |
@@ -193,7 +193,7 @@ Which CAMA/appraisal software each Texas county runs, its free bulk-roll URL whe
 | refugio | 48391 | 12,478 | Pritchard & Abbott | P&A-hard | - | refugiocad.org |  |
 | rains | 48379 | 12,301 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | rainscad.org |  |
 | moore | 48341 | 12,256 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | moorecad.org |  |
-| callahan | 48059 | 12,064 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | callahancad.org |  |
+| callahan | 48059 | 12,064 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | callahancad.org | publishes only tax-roll books (no improvement files) -> PIA |
 | wilbarger | 48487 | 11,894 | unknown | unclassified | - | wilbargercad.org |  |
 | jack | 48237 | 11,866 | unknown | unclassified | - | jackcad.org |  |
 | morris | 48343 | 11,857 | unknown | unclassified | - | morriscad.org |  |
@@ -203,7 +203,7 @@ Which CAMA/appraisal software each Texas county runs, its free bulk-roll URL whe
 | kinney | 48271 | 11,010 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | kinneycad.org |  |
 | deafsmith | 48117 | 10,901 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | deafsmithcad.org |  |
 | mcculloch | 48307 | 10,778 | Pritchard & Abbott | P&A-hard | - | mccullochcad.org |  |
-| andrews | 48003 | 10,522 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | andrewscad.org |  |
+| andrews | 48003 | 10,522 | PACS | PACS-loadable | baths+sqft * | andrewscad.org | https://andrewscad.org/wp-content/uploads/2024/08/2024-Certified-Appraisal-Roll.zip (deflate64 — Explorer-COM extract + repack; sparse beds) |
 | lasalle | 48283 | 10,341 |  | no-domain | - |  |  |
 | goliad | 48175 | 10,314 | Pritchard & Abbott | P&A-hard | - | goliadcad.org |  |
 | madison | 48313 | 10,307 | Pritchard & Abbott | P&A-hard | - | madisoncad.org |  |
@@ -218,14 +218,14 @@ Which CAMA/appraisal software each Texas county runs, its free bulk-roll URL whe
 | terry | 48445 | 9,113 | unknown | unclassified | - | terrycad.org |  |
 | mason | 48319 | 9,096 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | masoncad.org |  |
 | mills | 48333 | 9,025 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | millscad.org |  |
-| mitchell | 48335 | 8,743 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | mitchellcad.org |  |
+| mitchell | 48335 | 8,743 | PACS | PACS-loadable | sqft only * | mitchellcad.org | https://mitchellcad.org/wp-content/uploads/2024/08/2024-Certified-Roll-all-types-Properties.zip (sparse beds/baths) |
 | real | 48385 | 8,272 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | realcad.org |  |
 | coke | 48081 | 8,271 | Pritchard & Abbott | P&A-hard | - | cokecad.org |  |
 | concho | 48095 | 8,034 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | conchocad.org |  |
 | upton | 48461 | 7,846 | Pritchard & Abbott | P&A-hard | - | uptoncad.org |  |
 | wheeler | 48483 | 7,676 | Pritchard & Abbott | P&A-hard | - | wheelercad.org |  |
 | lynn | 48305 | 7,324 | Pritchard & Abbott | P&A-hard | - | lynncad.org |  |
-| yoakum | 48501 | 7,291 | PACS | PACS-loadable | - | yoakumcad.org | https://yoakumcad.org/wp-content/uploads/2025/09/2025-CERTIFIED-APPRAISAL-ROLL.zip |
+| yoakum | 48501 | 7,291 | PACS | PACS-loadable | baths+sqft * | yoakumcad.org | https://yoakumcad.org/wp-content/uploads/2025/09/2025-CERTIFIED-APPRAISAL-ROLL.zip (deflate64 — Explorer-COM extract + repack; no beds published) |
 | martin | 48317 | 7,255 | Pritchard & Abbott | P&A-hard | - | martincad.org |  |
 | winkler | 48495 | 7,234 | Pritchard & Abbott | P&A-hard | - | winklercad.org |  |
 | jeffdavis | 48243 | 7,175 | Pritchard & Abbott | P&A-hard | - | jeffdaviscad.org |  |
@@ -241,7 +241,7 @@ Which CAMA/appraisal software each Texas county runs, its free bulk-roll URL whe
 | schleicher | 48413 | 6,559 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | schleichercad.org |  |
 | ochiltree | 48357 | 6,521 | Pritchard & Abbott | P&A-hard | - | ochiltreecad.org |  |
 | castro | 48069 | 6,466 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | castrocad.org |  |
-| delta | 48119 | 6,461 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | delta-cad.org |  |
+| delta | 48119 | 6,461 | PACS | PACS-loadable | baths+sqft * | delta-cad.org | https://delta-cad.org/wp-content/uploads/2025/12/1733946367_2024-10-02_000533_APPRAISAL_ABSTRACT_SUBDV-2024-Certified-Tax-Roll.zip (dwelling cd is bare 'RES') |
 | knox | 48275 | 6,408 | unknown | unclassified | - | knoxcad.org |  |
 | baylor | 48023 | 6,349 | Pritchard & Abbott | P&A-hard | - | baylorcad.org |  |
 | hall | 48191 | 6,347 | Pritchard & Abbott | P&A-hard | - | hallcad.org |  |
@@ -299,13 +299,26 @@ free-source dead-ends are far fewer than the map first estimated.
 
 **PIA TARGET LIST (PACS counties, data confirmed to exist, no free bulk posted —
 a $0–75 records request each unlocks beds/baths/pool/improvements):**
-Waller, Medina, Cherokee, Matagorda, Upshur, Jasper, Hill, Starr, Cass, Fayette,
-Colorado, Austin, Uvalde, Howard, Lampasas, Callahan, Comanche, Moore, Willacy,
-Hale, Falls, Jackson, Presidio, Hockley, Blanco, Lamb, Zapata, Camp, Kinney,
-Deaf Smith (note: advertises $75 data fee), Andrews, Edwards, Mason, Mills, Real,
+Waller, Medina, Cherokee, Matagorda (roll posted but PDF-only), Upshur, Jasper,
+Hill, Starr, Cass, Fayette (posts only a parcels shapefile, 6 admin fields),
+Colorado, Austin, Uvalde, Howard (posts only collector tax-roll CSVs), Lampasas,
+Callahan (tax-roll books only), Moore, Willacy,
+Hale, Falls, Jackson, Presidio, Blanco, Lamb, Zapata, Camp, Kinney,
+Deaf Smith (note: advertises $75 data fee), Edwards, Mason, Mills, Real,
 Concho, Somervell, Parmer, Schleicher, Castro, Dallam, Sutton, Brooks, Hartley,
 Shackelford, McMullen, Oldham, Kenedy, Calhoun — plus earlier Comal, Henderson,
 Parker, Smith. (~50 counties, almost all small/rural, low parcel weight.)
+
+**Wave-3A addendum (2026-07-15, second agent):** Comanche, Hockley, Andrews, Hudspeth,
+Yoakum + Angelina all came OFF the PIA list — free rolls found and loaded (URLs in their
+rows above; Yoakum/Andrews zips are deflate64 → Windows-Explorer-COM extract + repack).
+Angelina's pre-guard fixture-baths (28,222 rows, median 8) were nulled and the county
+reloaded clean. Delta's dwelling rows are bare cd 'RES' — loader widened, sqft 223 → 2,624.
+Dead ends verified this pass: Howard (collector CSVs only), Callahan (tax-roll books),
+Matagorda (PDF roll), Fayette (shapefile with 6 admin fields), Grimes (printed-report
+roll), Gray (report CSVs), Hill/Cherokee/Starr (BIS esearch + GIS with no CAMA fields —
+Cherokee's FeatureServer carries ownership/value only), Lamar/Starr wp-zips (GIS only),
+Walker (notice PDFs), Jasper (FILE_INFO export lacks the improvement members).
 
 **App-lane (True Prodigy, per-property API — data session should NOT harvest):**
 - **Tarrant** (live), **Ellis** (live, done — beds as WORD features "FOUR BEDROOM").
