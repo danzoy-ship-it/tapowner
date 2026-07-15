@@ -7,8 +7,8 @@ Regenerate with `python data/build_coverage_log.py` after each mining batch (ref
 ## Scoreboard (253 counties)
 
 - ☑ **Mined (has improvements/feature tags): 70** / 253
-- Full attributes (improv+dims): 40  ·  Partial: 45  ·  Geometry-only (need mining): 168  ·  Missing from DB: 0
-- Seller-signals — sale date: 71 counties  ·  exemptions (homestead/over-65/DV tenure): 111 counties  ·  **any seller-signal: 128 counties**
+- Full attributes (improv+dims): 40  ·  Partial: 47  ·  Geometry-only (need mining): 166  ·  Missing from DB: 0
+- Seller-signals — sale date: 73 counties  ·  exemptions (homestead/over-65/DV tenure): 112 counties  ·  **any seller-signal: 131 counties**
 
 Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISSING. % = share of the county's parcels with that attribute.
 
@@ -34,12 +34,12 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Medina | 48325 | 44,330 | · | · | · | · | 88 | · | PARTIAL |
 | [ ] | Vanzandt | 48467 | 43,963 | · | · | · | · | 93 | · | PARTIAL |
 | [ ] | Anderson | 48001 | 43,894 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Hill | 48217 | 39,355 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Llano | 48299 | 38,879 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Hill | 48217 | 39,355 | · | · | · | · | 33 | · | PARTIAL |
+| [ ] | Llano | 48299 | 38,879 | · | · | · | · | 87 | · | PARTIAL |
 | [ ] | Palopinto | 48363 | 38,698 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Starr | 48427 | 38,571 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Rusk | 48401 | 37,967 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Chambers | 48071 | 37,510 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Chambers | 48071 | 37,510 | · | · | · | · | · | 38 | GEOM-ONLY |
 | [ ] | Matagorda | 48321 | 37,211 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Jasper | 48241 | 37,136 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Atascosa | 48013 | 36,791 | · | · | · | · | · | · | GEOM-ONLY |
@@ -220,7 +220,7 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [x] | Johnson | 48251 | 101,847 | 68 | · | · | 72 | · | · | PARTIAL |
 | [x] | Ellis | 48139 | 98,803 | 81 | · | · | 81 | 95 | 53 | PARTIAL |
 | [x] | Guadalupe | 48187 | 95,571 | 72 | 37 | 43 | 78 | 93 | 48 | FULL+SIGNALS |
-| [x] | Kaufman | 48257 | 94,650 | 71 | 4 | 7 | 78 | 91 | 48 | PARTIAL |
+| [x] | Kaufman | 48257 | 94,650 | 78 | 4 | 8 | 78 | 91 | 50 | PARTIAL |
 | [x] | Grayson | 48181 | 89,348 | 59 | · | 7 | 68 | · | · | PARTIAL |
 | [x] | Gregg | 48183 | 77,816 | 71 | 16 | 59 | 74 | · | · | FULL |
 | [x] | Midland | 48329 | 75,645 | 80 | · | · | 75 | 88 | 46 | PARTIAL |
@@ -246,7 +246,7 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [x] | Bandera | 48019 | 33,261 | 44 | · | · | 44 | 74 | 19 | PARTIAL |
 | [x] | Gillespie | 48171 | 32,351 | 54 | 1 | · | 65 | 84 | 25 | PARTIAL |
 | [x] | Coryell | 48099 | 31,711 | 68 | 7 | 65 | 77 | 86 | 44 | FULL+SIGNALS |
-| [x] | Wilson | 48493 | 28,827 | 58 | 3 | 18 | 70 | 84 | 45 | FULL+SIGNALS |
+| [x] | Wilson | 48493 | 28,827 | 70 | 3 | 18 | 70 | 84 | 45 | FULL+SIGNALS |
 | [x] | Aransas | 48007 | 26,690 | 60 | 29 | 35 | 61 | 85 | 25 | FULL+SIGNALS |
 | [x] | Caldwell | 48055 | 26,155 | 59 | 34 | 34 | 75 | 88 | 33 | FULL+SIGNALS |
 | [x] | Trinity | 48455 | 25,952 | 30 | 1 | 7 | 31 | 55 | 14 | PARTIAL |

@@ -609,3 +609,18 @@ BATH SCHEMA NOTE: McLennan ATTR uses NUMBERED attr names — `22 No of Full Bath
 - **Anderson 48001** — UNSOLVED. andersoncad.net = TrueProdigy SPA, bulk-export API auth-gated (401); no BIS org, not on pandai server. Records-request only.
 
 ### Reusable BIS discovery pattern (from waves 4-5): a TP-SPA CAD's real parcel FeatureServer lives in its OWN AGOL org, found via `gis.bisclient.com/{cad}/config.json` → webmap item → operationalLayers, OR the `utility.arcgis.com/usrsvcs/servers/{serverId}/rest/services/{Name}CADWebService/FeatureServer` proxy (some need `Referer: https://gis.bisclient.com/`). These are deed-date + sometimes YearBuilt, never segments.
+
+## 2026-07-15 — crack fleet wave 6 (mid-size, 8 counties) harvested
+### SOLVED full PACS (load_pacs_roll.py)
+- **Kaufman 48257** — `kaufman-cad.org/wp-content/uploads/2026/01/2025-Complete-Roll-as-of-01202026.zip`. improv 74K, sqft 74K, sale 87K, exempt 47K (beds sparse 3.9K, baths avg 1.90). Layout 8.0.33.
+- **Wood 48499** — `woodcad.net/wp-content/uploads/2025/09/2025-Certified-Roll-as-of-Supp-1.zip`. improv 24K, sqft 24K, sale 39K, exempt 14K (baths fixture-only, dropped).
+- **Wilson 48493** — `wilson-cad.org/wp-content/uploads/2024/09/2024-WCAD-APPR-ROLL.zip` (2024; site is wilson-cad.org NOT wilsoncad.org). improv 20K, sqft 20K, sale 24K, exempt 13K, baths avg 1.82.
+### SOLVED signals
+- **Chambers 48071** — Harris-eSearch CSV (`chamberscad.org/Forms/ExcelDownload?...fileName=1752950178_2025+Chambers...csv` — KEEP literal '+' signs, %2B fails). exemptions 14K.
+- **Hill 48217** — `hillcad.org/wp-content/uploads/2026/07/HillCADMapFiles.zip` → Parcels_export.dbf. NEW `load_parcels_dbf.py` → sale 13K + **SALE PRICE 12,774 (sl_price)** + year. FIRST county with real sale prices (non-disclosure TX leak) — the neighbor-sold-high signal! Also AGOL `services6.arcgis.com/c1IEzrw0UDP7bzay/HillCADWebService/FeatureServer/0`.
+- **Llano 48299** — BIS AGOL `services.arcgis.com/3fXpNNO2cx0O3RtY/LlanoCADWebService/FeatureServer/0`. sale 34K, year 18K.
+### PENDING / dead-end
+- **Rusk 48401** — Harris-eSearch clone of Chambers but site currently `UserLockedOut`/maintenance. URL: `ruskcad.org/Forms/ExcelDownload?...fileName=1753054070_2025+Rusk+CAD+Certified...csv`. RETRY when site is back.
+- **Palo Pinto 48363** — records-request (ISW/SWData portal 403s; StratMap has empty YEAR_BUILT). geometry upgrade only via StratMap25.
+
+**NEW: look for `sl_price` in CAD GIS map-file DBFs (HillCADMapFiles pattern) — a rare free SALE PRICE source. load_parcels_dbf.py captures sl_dt + sl_price + yr_blt, join spid==prop_id / apn==geo_id.**
