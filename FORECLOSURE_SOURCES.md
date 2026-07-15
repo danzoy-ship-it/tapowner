@@ -13,6 +13,38 @@ county-CLERK/COURT records, not the appraisal roll. Goal (Frederick): 100% of th
   stale notices expire) = the daily-alerts diff (SIGNALS_ROADMAP.md).
 - **Storage:** `parcel_signals` table (app-session DDL; separate from `parcels` → no lock collision).
 
+## ✅ LOADED — 15 counties, ~845 foreclosures tied to parcels (as of 2026-07-15)
+The CivicPlus/CivicLive PDF path (dismissed as "phase-2, not built" in the older survey notes
+below) **is built and running.** Workhorse loader: `api/scripts/signals/load_pdf_foreclosures.mjs`
+(OCR + text-layer PDF → multi-strategy join: direct situs match + free Census geocode +
+legal-description). Bexar stays on the ArcGIS `load_county_foreclosures.mjs`. Run one county:
+`node scripts/signals/load_pdf_foreclosures.mjs <source>` (idempotent; ON CONFLICT bumps last_seen).
+
+| platform | counties (source `<name>_cc`, tie %) |
+|---|---|
+| arcgis | Bexar 97 |
+| CivicPlus | Fort Bend 72, Bell 72, Ellis 51, Hays 78, Kaufman 75, Rockwall 80, Randall 81, Parker 72\*, Ector 35, Comal 82, McLennan 41 |
+| CivicLive | Guadalupe 57, Bowie 25, Lubbock 32 |
+
+\*Parker migrated to a React DocumentCenter whose antiforgery-token flow couldn't be replayed from
+curl/fetch → its config uses a **pinned monthly doc URL**; needs a monthly pin refresh (stable
+folder ids in the loader config comment). Everything else auto-discovers its current month.
+
+**GOV_OWNER guard** (threaded through all 3 match queries): courthouse / county / city / ISD / MUD
+parcels can NEVER become a foreclosure match — notices name the courthouse VENUE and the foreclosing
+PARTY (e.g. "ELLIS COUNTY OF") as addresses, which otherwise false-match a gov parcel. Verified 0
+gov false positives across all 15 counties. NB: Postgres `\m`/`\M` word-boundary escapes silently
+fail through param binding on this DB — the guard uses bare substrings for the two-word civic phrases.
+
+**Platform migrations found (the survey tables below are STALE — always re-verify a county's CURRENT
+foreclosure page before assuming its platform):** Ector left CivicLive → CivicPlus. Midland's
+CivicPlus feed died in 2019; Jefferson publishes no notice PDFs; Smith is search-only. All three
+→ **Kofile-only** (parked, see below).
+
+**Next targets:** the parked ~46-county Kofile load (biggest single unlock) + big-metro structured
+feeds not yet cracked (Dallas, Tarrant, Collin, Denton, Harris, Travis, Williamson). Collin's Blazor
+app is the best remaining geocoded (coordinate-bearing) source after Bexar.
+
 ## Honest reality (unlike CAD, this is fragmented)
 CAD data had 2-3 dominant systems (PACS, True Prodigy) covering most counties. Foreclosure posting
 is MORE fragmented — Bexar's clean ArcGIS feed is somewhat exceptional; Harris/Dallas/Tarrant each
@@ -145,7 +177,9 @@ FRESH IP with a polite single-connection + backoff — no re-cracking needed.
   Bell/Smith. Parked behind the reliable PDF path for now.
 
 ## Signal status
-- ✅ **pre_foreclosure** — Bexar live (mortgage+tax). Surfaced in API (`/parcels/at.event_signals`,
-  `/parcels/within.signal_types`). App UI (badge + "foreclosures in my farm" filter) = next build.
+- ✅ **pre_foreclosure** — 15 counties live (Bexar arcgis + 14 CivicPlus/CivicLive PDF; table up
+  top). Surfaced in API (`/parcels/at.event_signals`, `/parcels/within.signal_types`) AND in the
+  app: "Pre-foreclosure" badge on the property card + "Pre-foreclosure" farm filter (shipped). New
+  counties surface automatically via the generic `parcel_signals` read — no app change per county.
 - ⏳ probate, divorce, evictions, liens, tax-delinquency, WARN, permits, code-violations — queued;
   same parcel_signals + (spatial or address) join pattern once each source is cracked.
