@@ -27,7 +27,7 @@ Which CAMA/appraisal software each Texas county runs, its free bulk-roll URL whe
 | county | fips | parcels | system | verdict | load status | domain | free bulk roll URL |
 |---|---|---|---|---|---|---|---|
 | harris | 48201 | 1,523,641 | PACS (HCAD) | PACS-loadable | beds+baths+sqft | hcad.org | Real_building_land.zip (fixtures.txt) |
-| travis | 48453 | 828,773 | True Prodigy | app-lane | sqft only | traviscad.org | per-property API (fill-on-blank) |
+| travis | 48453 | 828,773 | PACS/True Prodigy | PACS-loadable | beds+baths+sqft | traviscad.org | FREE improvement_detail_2026.zip @ /wp-content/largefiles/ (coded rows 252=beds/251=baths); DATA-LANE not app-lane |
 | tarrant | 48439 | 757,161 | True Prodigy | app-lane | sqft only | tad.org | live API Rooms: Bedrooms/Bathrooms |
 | bexar | 48029 | 709,541 | PACS -> SARA ArcGIS | PACS-loadable | beds+baths+sqft | bcad.org | SARA BCAD_Parcels_PROD FeatureServer |
 | dallas | 48113 | 694,160 | PACS/TrueAutomation | PACS-loadable | beds+baths+sqft | dallascad.org | NUM_BEDROOMS bulk export |
