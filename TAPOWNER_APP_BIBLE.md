@@ -117,8 +117,11 @@ book permission), and **Share Contact** (builds a vCard file and opens the share
 ### PropertyCard.tsx — the tap-a-parcel sheet
 Not a route — a component `MapScreen` shows over the map. Two modes: a **compact bottom card** and
 a **full-screen expanded** view (toggled by the "More ▴ / Less ▾" handle). Compact shows: address,
-badges (Absentee owner / Pool / Garage), OWNER + MAILING ADDRESS blocks, a facts line
-(built/sqft/stories/lot/assessed), and the **CTA button**. The CTA reads **"Contact this person —
+badges (Absentee owner / Pool / Garage / **"Owns N more"** — the owner-portfolio badge, from
+`owner_portfolio_count` = other parcels sharing owner name AND mailing address), OWNER + MAILING
+ADDRESS blocks, a facts line (built/sqft/stories/lot/assessed), and the **CTA button**. Expanded
+Property details also carries **Pool (Yes/No), Garage (Yes/No), and a Features line** (spa, casita,
+deck… from `features[]`, labels in `featureTags.ts`), and Record carries an **"Also owns"** row. The CTA reads **"Contact this person —
 Free"** (green) when `detail.already_unlocked` is true, else **"Contact this person — $0.29"**
 (blue). Protected records (`is_protected`) show a red notice and no CTA. Expanded view adds full
 property details (year, living area, stories, beds, baths, lot), valuation (land/improvement/total
