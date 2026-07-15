@@ -6,9 +6,9 @@ Regenerate with `python data/build_coverage_log.py` after each mining batch (ref
 
 ## Scoreboard (253 counties)
 
-- ☑ **Mined (has improvements/feature tags): 49** / 253
-- Full attributes (improv+dims): 33  ·  Partial: 17  ·  Geometry-only (need mining): 203  ·  Missing from DB: 0
-- Seller-signals (sale date) loaded: 33 counties
+- ☑ **Mined (has improvements/feature tags): 53** / 253
+- Full attributes (improv+dims): 34  ·  Partial: 20  ·  Geometry-only (need mining): 199  ·  Missing from DB: 0
+- Seller-signals (sale date) loaded: 37 counties
 
 Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISSING. % = share of the county's parcels with that attribute.
 
@@ -42,8 +42,6 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Nacogdoches | 48347 | 48,003 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Cherokee | 48073 | 46,761 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Navarro | 48349 | 46,167 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Victoria | 48469 | 45,104 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Wood | 48499 | 44,576 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Medina | 48325 | 44,330 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Vanzandt | 48467 | 43,963 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Anderson | 48001 | 43,894 | · | · | · | · | · | · | GEOM-ONLY |
@@ -57,10 +55,8 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Matagorda | 48321 | 37,211 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Jasper | 48241 | 37,136 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Atascosa | 48013 | 36,791 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Sanjacinto | 48407 | 36,346 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Walker | 48471 | 35,582 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Cass | 48067 | 34,816 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Bandera | 48019 | 33,261 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Cooke | 48097 | 33,170 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Tyler | 48457 | 33,043 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Wharton | 48481 | 31,888 | · | · | · | · | · | · | GEOM-ONLY |
@@ -247,8 +243,12 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [x] | Rockwall | 48397 | 52,739 | 84 | 49 | 66 | 87 | 97 | 63 | FULL+SIGNALS |
 | [x] | Orange | 48361 | 50,337 | 43 | · | · | 47 | · | · | PARTIAL |
 | [x] | Wise | 48497 | 48,705 | 54 | · | 38 | 67 | · | · | FULL |
+| [x] | Victoria | 48469 | 45,104 | 76 | 58 | · | 76 | 86 | 42 | FULL+SIGNALS |
+| [x] | Wood | 48499 | 44,576 | 54 | · | · | 54 | 87 | 32 | PARTIAL |
 | [x] | Kerr | 48265 | 36,913 | 61 | 22 | 47 | 61 | · | · | FULL |
+| [x] | Sanjacinto | 48407 | 36,346 | 44 | 4 | · | 44 | 83 | 22 | PARTIAL |
 | [x] | Lamar | 48277 | 36,246 | 52 | 6 | 49 | 65 | 81 | 33 | FULL+SIGNALS |
+| [x] | Bandera | 48019 | 33,261 | 44 | · | · | 44 | 74 | 19 | PARTIAL |
 | [x] | Gillespie | 48171 | 32,351 | 54 | 1 | · | 65 | 84 | 25 | PARTIAL |
 | [x] | Coryell | 48099 | 31,711 | 68 | 7 | 65 | 77 | 86 | 44 | FULL+SIGNALS |
 | [x] | Wilson | 48493 | 28,827 | 58 | 3 | 18 | 70 | 84 | 45 | FULL+SIGNALS |
@@ -268,9 +268,11 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [x] | Yoakum | 48501 | 7,291 | 38 | · | 11 | 49 | 59 | 22 | PARTIAL |
 | [x] | Delta | 48119 | 6,461 | 41 | · | 27 | 49 | 86 | 22 | FULL+SIGNALS |
 
-## Known bulk-data gaps / blockers (exhausted attempts → need decision or later work)
+## Known bulk-data gaps / blockers (exhausted attempts → circle back later)
 
 Goal is 100% of NEEDED data on 100% of counties. Where an attribute isn't in any free bulk source after exhausting attempts, it's logged here with the path to close it.
+
+**DECISION (Frederick, 2026-07-16):** do NOT mass-harvest per-property APIs (unethical/ToS/data-broker risk + ~9 days/county). App-lane / SPA / search-portal counties are logged as **PROBLEMATIC** and deferred to a later aggressive pass (fable-5 ultracode mode) + $0 electronic open-records requests. Take ALL easy bulk wins first. Every blocker stays tracked here so nothing is lost.
 
 | County | Missing | Status of attempts | Path to 100% |
 |--------|---------|--------------------|--------------|

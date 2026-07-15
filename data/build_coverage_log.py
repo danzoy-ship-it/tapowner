@@ -93,9 +93,14 @@ for name, fips, tot, m, status, mined in rows:
 # ---- Known bulk-data gaps / blockers (the "log what we can't get yet" list,
 # per the 100%-coverage mandate). Update as attempts are exhausted; details +
 # investigation trails live in texas_county_system_map.md.
-out.append("\n## Known bulk-data gaps / blockers (exhausted attempts → need decision or later work)\n")
+out.append("\n## Known bulk-data gaps / blockers (exhausted attempts → circle back later)\n")
 out.append("Goal is 100% of NEEDED data on 100% of counties. Where an attribute isn't in any "
            "free bulk source after exhausting attempts, it's logged here with the path to close it.\n")
+out.append("**DECISION (Frederick, 2026-07-16):** do NOT mass-harvest per-property APIs "
+           "(unethical/ToS/data-broker risk + ~9 days/county). App-lane / SPA / search-portal "
+           "counties are logged as **PROBLEMATIC** and deferred to a later aggressive pass "
+           "(fable-5 ultracode mode) + $0 electronic open-records requests. Take ALL easy bulk "
+           "wins first. Every blocker stays tracked here so nothing is lost.\n")
 out.append("| County | Missing | Status of attempts | Path to 100% |")
 out.append("|--------|---------|--------------------|--------------|")
 GAPS = [
