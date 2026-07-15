@@ -127,8 +127,14 @@ assessed, last sale), and record fields (county, APN, land use, legal descriptio
 
 ### FarmResultsScreen.tsx — Reverse Prospecting results
 Reached after drawing a polygon on the map (farm mode). Shows the count ("N properties" or "N of M
-match"), a **Refine** button (filters: min sqft, beds, baths, pool, single-story — with a live
-match count), a non-clickable **status line** ("7 of 11 unlocked · 4 left to unlock" / "✓ All 11
+match"), a **Refine** button (filters: min sqft, beds, baths, pool, single-story, **plus
+data-driven feature chips** — the canonical 16-tag vocabulary (casita, shed/workshop, spa,
+fireplace, solar, RV, boat dock, barn, basement, sport court, carport, garage, waterfront,
+corner lot); only tags present in the drawn area render, each with a live count
+("Casita / guest house (4)"), multi-select = must-have-all; tags arrive per-parcel as
+`features[]` from `/parcels/within`, derived server-side via `api/src/lib/improvementTags.ts` +
+the embedded crosswalk — after ANY `data/improvement_crosswalk.json` edit run
+`cd api && npm run sync:crosswalk` and redeploy), a non-clickable **status line** ("7 of 11 unlocked · 4 left to unlock" / "✓ All 11
 unlocked"), and a filled-blue **"Actions for these N homes"** button that opens a native iOS action
 sheet. The sheet is **two-stage**:
 - **While any home is locked:** leads with a **red (destructive) "🔓 Unlock remaining X · up to
