@@ -370,17 +370,26 @@ Walker (notice PDFs), Jasper (FILE_INFO export lacks the improvement members).
 
 ## Standing capture directives (added 2026-07-15, from the app session)
 
-- **TENURE / last-sale (product: poor-man's SmartZip "likely-to-sell").**
-  `parcels.last_sale_date` and `last_sale_price` are **EMPTY statewide (0 of
-  14.3M, verified 2026-07-15)** — the schema columns exist but were never
-  populated (StratMap doesn't carry sale history). Standing ask: on every future
-  county pass, **opportunistically capture `last_sale_date` (+`last_sale_price`
-  where present)** into these existing columns, and note per-county availability
-  here. Likely sources by system: PACS certified rolls carry deed/sale date
-  fields (deed_dt / sale_dt in the SALES or CHG_OF_OWNER / DEED files); Collin's
-  data.texas.gov feed has `deedeffdate`/`deedfiledate` (NO price); TAD/BCAD/ProTax
-  exports — check for a sale-history segment. Tenure ("owned 15+ years") is the
-  high-value derived signal; even date-only (no price) unlocks it.
+- **TENURE / last-sale + EXEMPTIONS — PIPELINE BUILT 2026-07-15.**
+  `data/load_pacs_appraisal_info.py` parses **File #2 (APPRAISAL_INFO.TXT)** of
+  the PACS certified roll: `deed_dt` (cols 2034-2058, MMDDYYYY) → `last_sale_date`
+  and the exemption T/F block (hs 2609, ov65 2610, ov65s, dp, dv1-4(+s), ex) →
+  new **`parcels.exemptions text[]`** (GIN-indexed; app derives has_homestead /
+  has_over65; homestead-DROP #9 needs a 2nd snapshot later). **Texas is
+  NON-DISCLOSURE: no sale PRICE in the roll**, so `last_sale_price` stays null —
+  date alone unlocks tenure ("owned 15+ years"). Positions from the official
+  8.0.31 layout (shipped in GCAD_Export.zip), verified on Gregg+Kaufman. Two
+  guards: sanity gate (hs/ov65 ≥95% T/F AND deed_dt parses, else abort on drift)
+  + join-rate guard (<20% aborts = wrong roll for that county's key).
+  `batch_appraisal_info.py` sweeps all cached rolls with APPRAISAL_INFO.
+  **Per-county availability (join% / deed-date / exemptions):** Kaufman 93% /
+  86.4K / 45.6K, Angelina 56.8K / 21.8K, Bastrop 58.5K / 24.4K, Caldwell 23.0K /
+  8.6K, Coleman(48093), Coryell 27.4K / 14.1K, Delta 5.5K / 1.4K … (batch
+  ongoing). **Position-drift aborts (need county-specific offsets, NOT loaded):**
+  Cameron(48061) — deed_dt parses 0% (exemptions fine); Gregg(48183) — roll/key
+  mismatch (GCAD_Export prop_id space ≠ DB source_property_id). Future non-PACS
+  systems: Collin's data.texas.gov feed has `deedeffdate`/`deedfiledate` (no
+  price); TAD/BCAD/ProTax sale-history segments TBD.
 - **Bare improvement CODES are NOT Bexar-only (label-ledger grep 2026-07-15).**
   Bare `AG`/`GAR`/`CP`/`CPT` also appear in these small PACS counties: AG →
   Lamar(48277) 7,847, Mitchell(48335) 570, Gaines(48165) 20; GAR → Andrews(48003)

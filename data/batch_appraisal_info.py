@@ -50,8 +50,13 @@ def already_loaded(fips):
 
 def main():
     dry = "--dry-run" in sys.argv
+    # Optional: pass explicit fips codes to process only those (skips the
+    # already-loaded / known-abort scanning that otherwise front-loads each run).
+    only = {a for a in sys.argv[1:] if a.isdigit() and len(a) == 5}
     loaded, skipped, failed = [], [], []
     for fips, zipname in COUNTIES.items():
+        if only and fips not in only:
+            continue
         path = os.path.join(ROLLS, zipname)
         if not os.path.exists(path):
             print(f"== {fips}: {zipname} MISSING, skip", flush=True)

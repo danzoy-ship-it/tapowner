@@ -64,9 +64,10 @@ def _slice(line, s, e):
 
 
 def parse_deed_dt(raw):
-    """PACS deed_dt is MMDDYYYY (8 digits). -> date or None (guarded)."""
-    s = raw.strip()
-    if len(s) != 8 or not s.isdigit():
+    """PACS deed_dt, MMDDYYYY — some counties dash/slash it (Cameron: MM-DD-YYYY).
+    Strip separators, then parse 8 digits. -> date or None (guarded)."""
+    s = "".join(ch for ch in raw.strip() if ch.isdigit())
+    if len(s) != 8:
         return None
     mm, dd, yyyy = int(s[0:2]), int(s[2:4]), int(s[4:8])
     if not (1 <= mm <= 12 and 1 <= dd <= 31 and 1900 <= yyyy <= date.today().year):
