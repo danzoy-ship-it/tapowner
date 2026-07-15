@@ -51,6 +51,9 @@ export interface ParcelDetail {
   // Canonical feature tags (pool, spa, casita, …) derived server-side from the
   // county's improvement records. Optional: older API responses lack it.
   features?: string[];
+  // How many OTHER properties this owner holds (same owner name + same mailing
+  // address, statewide). 0 or absent = none known.
+  owner_portfolio_count?: number;
 }
 
 export interface TierConfig {

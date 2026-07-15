@@ -97,6 +97,13 @@ export function PropertyCard({
           <Text style={styles.badgeText}>Garage</Text>
         </View>
       )}
+      {(detail.owner_portfolio_count ?? 0) > 0 && (
+        <View style={[styles.badge, styles.badgePortfolio]}>
+          <Text style={styles.badgeText}>
+            Owns {detail.owner_portfolio_count} more
+          </Text>
+        </View>
+      )}
     </View>
   );
 
@@ -215,6 +222,14 @@ export function PropertyCard({
           />
 
           <Text style={styles.sectionHeader}>Record</Text>
+          <DetailRow
+            label="Also owns"
+            value={
+              (detail.owner_portfolio_count ?? 0) > 0
+                ? `${detail.owner_portfolio_count} other propert${detail.owner_portfolio_count === 1 ? 'y' : 'ies'} (same owner & mailing address)`
+                : null
+            }
+          />
           <DetailRow label="County" value={detail.county_name} />
           <DetailRow label="Parcel ID (APN)" value={detail.apn} />
           <DetailRow label="Land use" value={detail.land_use} />
@@ -373,6 +388,9 @@ const styles = StyleSheet.create({
   },
   badgePool: {
     backgroundColor: '#dbeafe',
+  },
+  badgePortfolio: {
+    backgroundColor: '#e0e7ff',
   },
   badgeText: {
     fontSize: 12,

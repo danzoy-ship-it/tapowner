@@ -85,6 +85,29 @@ export async function parcelsRoutes(app: FastifyInstance) {
             const parcel = result.rows[0];
             parcel.situs_address = formatSitusAddress(parcel);
 
+            // Owner portfolio: how many OTHER properties this owner holds.
+            // Identity = same owner name AND same mailing address (the standard
+            // portfolio-linking rule -- name alone conflates common names).
+            // Skipped for placeholder owners, protected records, or a missing
+            // mailing address. Uses idx_parcels_owner_name_upper.
+            parcel.owner_portfolio_count = 0;
+            if (
+                parcel.owner_name &&
+                !isPlaceholderOwner(parcel.owner_name) &&
+                !parcel.is_protected &&
+                parcel.mailing_address
+            ) {
+                const { rows: pf } = await pool.query(
+                    `SELECT count(*)::int AS n FROM parcels
+                     WHERE upper(owner_name) = upper($1)
+                       AND upper(coalesce(mailing_address, '')) = upper($2)
+                       AND is_protected = false
+                       AND id <> $3`,
+                    [parcel.owner_name, parcel.mailing_address, parcel.id]
+                );
+                parcel.owner_portfolio_count = pf[0].n;
+            }
+
             // Canonical feature tags for the card's Features row (materialized
             // column preferred, live derivation as fallback). Raw labels stay
             // server-side.
