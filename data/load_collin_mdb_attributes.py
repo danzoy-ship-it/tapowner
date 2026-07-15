@@ -82,14 +82,19 @@ def main() -> None:
         r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=%s;" % mdb
     )
     cur = cn.cursor()
+    # One pass, ALL roll fields (per the 100%-coverage directive): also grab
+    # exemptions, deed_dt (sale date / tenure), and lot size.
     cur.execute(
-        "SELECT prop_id, beds, baths, stories, pool, living_area, yr_blt FROM AD_Public"
+        "SELECT prop_id, beds, baths, stories, pool, living_area, yr_blt, "
+        "exemptions, deed_dt, land_total_sqft, land_sqft FROM AD_Public"
     )
 
-    # pid -> [beds, bfull, bhalf, stories, pool, living, yr]
+    # pid -> [beds, bfull, bhalf, stories, pool, living, yr, exemptions, sale_dt, lot]
     acc = {}
     n = 0
-    for prop_id, beds, baths, stories, pool, living, yr in cur:
+    for row in cur:
+        prop_id, beds, baths, stories, pool, living, yr = row[:7]
+        exempt_raw, deed_dt, land_tot, land_sqft = row[7:11]
         if prop_id is None:
             continue
         pid = str(int(prop_id)) if isinstance(prop_id, (int, float)) else str(prop_id).strip()
@@ -99,9 +104,16 @@ def main() -> None:
         pl = str(pool).strip().upper() == "Y" if pool is not None else None
         liv = to_int(living, 1, 2_000_000)
         yb = to_int(yr, 1800, 2027)
-        if b is None and bfull is None and st is None and pl is None and liv is None and yb is None:
+        # exemptions: text like 'HS' / 'HS,OV65' -> list of codes
+        ex = None
+        if exempt_raw:
+            codes = [c.strip().upper() for c in re.split(r"[,;\s]+", str(exempt_raw)) if c.strip()]
+            ex = codes or None
+        sale_dt = deed_dt.date() if hasattr(deed_dt, "date") else None
+        lot = to_int(land_tot, 1, 500_000_000) or to_int(land_sqft, 1, 500_000_000)
+        if all(v is None for v in (b, bfull, st, pl, liv, yb, ex, sale_dt, lot)):
             continue
-        acc[pid] = [b, bfull, bhalf, st, pl, liv, yb]
+        acc[pid] = [b, bfull, bhalf, st, pl, liv, yb, ex, sale_dt, lot]
         n += 1
         if dry_run and n >= 20000:
             break
@@ -116,10 +128,12 @@ def main() -> None:
     pcur.execute(
         """CREATE TEMP TABLE collin_mdb (
                pid TEXT PRIMARY KEY, beds INT, bfull INT, bhalf INT,
-               stories INT, pool BOOLEAN, living INT, yr INT)"""
+               stories INT, pool BOOLEAN, living INT, yr INT,
+               exemptions TEXT[], sale_dt DATE, lot INT)"""
     )
     buf = io.StringIO()
-    for pid, (b, bf, bh, st, pl, liv, yb) in acc.items():
+    for pid, (b, bf, bh, st, pl, liv, yb, ex, sale_dt, lot) in acc.items():
+        arr = "{" + ",".join(ex) + "}" if ex else r"\N"
         buf.write("\t".join([
             pid,
             r"\N" if b is None else str(b),
@@ -129,6 +143,9 @@ def main() -> None:
             r"\N" if pl is None else ("t" if pl else "f"),
             r"\N" if liv is None else str(liv),
             r"\N" if yb is None else str(yb),
+            arr,
+            r"\N" if sale_dt is None else sale_dt.isoformat(),
+            r"\N" if lot is None else str(lot),
         ]) + "\n")
     buf.seek(0)
     pcur.copy_expert("COPY collin_mdb FROM STDIN", buf)
@@ -155,7 +172,10 @@ def main() -> None:
                stories          = COALESCE(a.stories, p.stories),
                has_pool         = COALESCE(p.has_pool, FALSE) OR COALESCE(a.pool, FALSE),
                living_area_sqft = COALESCE(p.living_area_sqft, a.living),
-               year_built       = COALESCE(p.year_built, a.yr)
+               year_built       = COALESCE(p.year_built, a.yr),
+               exemptions       = COALESCE(a.exemptions, p.exemptions),
+               last_sale_date   = COALESCE(p.last_sale_date, a.sale_dt),
+               lot_size_sqft    = COALESCE(p.lot_size_sqft, a.lot)
            FROM collin_mdb a
            WHERE p.county_fips = %s AND p.source_property_id = a.pid""",
         (FIPS,),
@@ -168,12 +188,15 @@ def main() -> None:
                   count(*) FILTER (WHERE baths_full IS NOT NULL),
                   count(*) FILTER (WHERE stories IS NOT NULL),
                   count(*) FILTER (WHERE has_pool),
-                  count(*) FILTER (WHERE living_area_sqft IS NOT NULL)
+                  count(*) FILTER (WHERE last_sale_date IS NOT NULL),
+                  count(*) FILTER (WHERE array_length(exemptions,1)>0),
+                  count(*) FILTER (WHERE lot_size_sqft IS NOT NULL)
            FROM parcels WHERE county_fips = %s""",
         (FIPS,),
     )
-    beds, baths, st, pools, sqft = pcur.fetchone()
-    print(f"Collin: beds={beds:,} baths={baths:,} stories={st:,} pool={pools:,} sqft={sqft:,}", flush=True)
+    beds, baths, st, pools, sale, ex, lot = pcur.fetchone()
+    print(f"Collin: beds={beds:,} baths={baths:,} stories={st:,} pool={pools:,} "
+          f"sale={sale:,} exempt={ex:,} lot={lot:,}", flush=True)
 
 
 if __name__ == "__main__":
