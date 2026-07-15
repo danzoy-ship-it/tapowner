@@ -90,6 +90,33 @@ Reusable extractors cover ~13-16 of the top 35, but each is real engineering, no
 Recommended order: Bexar (done) → Tier-1 PDF counties (Fort Bend/Bell/Dallas/Williamson) → Kofile
 cluster → Collin → the .aspx one-offs. Big metros hold most volume, so effort there pays off.
 
+## 🎯 VENDOR SURVEY — THE BIG UNLOCK (agent, 2026-07-16; corrects the pessimism above)
+The deep vendor survey found the consolidation the first two agents missed. Frederick's crack-by-
+system thesis holds far better than the "fragmented" read suggested:
+- **Kofile == GovOS PublicSearch are ONE platform** (`{county}.tx.publicsearch.us` AND
+  `{county}.tx.ds.search.govos.com` = byte-identical app, same `ko-search-api` GraphQL backend).
+  **~46 TX counties**, incl. nearly every metro: Dallas, Tarrant, Bexar, Collin, Denton, Hidalgo,
+  Cameron, Nueces, Williamson, Montgomery, Bell, Smith, Grayson, Guadalupe, Brazos, Midland, Potter
+  + ~30 rural. **The INDEX is PUBLIC (no login)**; foreclosures are a dedicated "department" with
+  doc types NOTICE OF FORECLOSURE / FORECLOSURE SALE / SUBSTITUTE TRUSTEE. Only document IMAGES are
+  paywalled. Data via a Web-Worker GraphQL call (page-derived `ort` token) OR a "Download Report"
+  export. **ONE crack ≈ 46 counties.** This is the single highest-leverage move in the project.
+  Verified param format: `https://{county}.tx.publicsearch.us/results?department=RP&searchType=quickSearch&recordedDateRange=YYYYMMDD,YYYYMMDD`.
+- **Tyler/Govern `countygovernmentrecords.com`** = ~33 more counties (mostly rural + Waco/McLennan),
+  but LOGIN-gated (free registration). Second crack ≈ 33 counties.
+- **Big one-offs Kofile misses:** Harris (own foreclosure GridView w/ SaleDate, queryable, HTTP 200),
+  Travis (own), Fort Bend (free monthly PDF). Handle individually.
+- Aggregators (texasnts/foreclosure.com) + TexasFile = ToS-restricted, DO NOT scrape.
+
+**⚠️ THE CRUX (open, being verified by a Fable-5 agent now):** the Kofile INDEX is keyed on
+grantor/grantee NAMES + doc-type + date + doc#/book-page. It is NOT yet confirmed that the index
+row carries the PROPERTY ADDRESS (or a parcel-mappable legal description) WITHOUT opening the
+paywalled image. If the address IS in the free index → ~46 counties fall to one crack (join via
+address-match/geocode). If the address is ONLY in the paywalled image → we get names+dates but not
+the parcel tie, and the crack is far less useful. The Fable-5 Kofile agent is confirming exactly
+this. Revised outlook: NOT a multi-week fragmented slog IF the index has addresses — potentially
+~80 counties via two platform cracks + a few metro one-offs.
+
 ## Signal status
 - ✅ **pre_foreclosure** — Bexar live (mortgage+tax). Surfaced in API (`/parcels/at.event_signals`,
   `/parcels/within.signal_types`). App UI (badge + "foreclosures in my farm" filter) = next build.
