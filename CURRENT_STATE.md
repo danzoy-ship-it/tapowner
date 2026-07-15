@@ -20,12 +20,13 @@ proof; costs stated before incurring them.
 
 ## WHERE IT IS RIGHT NOW
 
-**The app is feature-complete for founding-agent beta and hardened.** Eleven TestFlight
-builds; **build #12 (farm flow v2) confirmed on-device 2026-07-14** (Frederick's screenshots
-show the unlock-all-first + "Actions for these 13 homes" layout — "way more intuitive").
-**Build #13 shipped** with his follow-up polish: post-unlock popup simplified to "All contacts
-now unlocked." and the Unlock button flips to green "✓ All contacts unlocked · $0" once the
-pass finishes. Flow builds on: unlock-all-first action sheet, "all 13" wording once worked,
+**The app is feature-complete for founding-agent beta and hardened.** Seventeen TestFlight
+builds; **build #17 (Reverse Prospecting FEATURE FILTERS — the 16-tag chips) CONFIRMED
+on-device 2026-07-15**: Frederick sees the data-driven feature chips (casita/shed/spa/garage…
+with live counts) in the farm Refine panel; tap/CRM/farm all healthy after the same-day
+lock-pileup incident was resolved (see HANDOFF "BULK-DDL RULE"). Earlier confirms: build #12
+(farm flow v2, "way more intuitive"), #13 (unlock polish), #14-16 (contact-state button, CRM
+detail/scroll, template previews, email-only outreach). Flow builds on: unlock-all-first action sheet, "all 13" wording once worked,
 session no-match tracking, Email/Letter toggle in the outreach screen. The entire 6-agent audit backlog (A boot / B billing / C security /
 D data / E mobile) is CLOSED — including C2 (data endpoints now REQUIRE auth; anonymous
 scraping 401s) and D1 (51 mis-projected counties repaired in place). Farm mode grew into
