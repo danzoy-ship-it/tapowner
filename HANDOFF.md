@@ -187,29 +187,31 @@ Template = the BCAD letter in chat/PROGRESS (swap county name; from info@tapowne
 - **Casita field**: DCAD RES_ADDL "ATTACHED QUARTERS" + BCAD equivalent → design ONE schema
   column when BCAD lands (Frederick cares about casitas).
 
-**TARRANT BEDS/BATHS — SOLVED app-side (fill-on-blank), needs ONE data step to go live:**
-Tarrant is loaded (757K parcels) with **0 beds/baths** — TAD wiped them from every bulk file
-(True Prodigy re-export 2026-06-06). They're FREE from TP's per-property API, so the app now
-fetches + caches them on first view of a null-beds Tarrant parcel and never re-charges the CAD
-(`api/src/cadattr/`, commit `a92e222`; typechecked; **NOT deployed**). It resolves each parcel by
-the numeric TP **pid**, read from **`parcels.apn`**.
-- **BLOCKER (data-session, ~2 lines in `load_tarrant_attributes.py`):** populate `parcels.apn` =
-  TAD **`Account_Num`** (col 2 of `PropertyData(Delimited)_R.txt`) for FIPS 48439, joined on
-  `GIS_Link == source_property_id`, where `apn IS NULL`. Then the fill activates automatically →
-  deploy api. Until then it self-guards (apn null ⇒ no-op), so it ships zero junk calls.
-- **Proven crosswalk (2026-07-15):** `GIS_Link 250-3-14 → Account_Num 16497 → TP pid 16497 →
-  account 708 → 3bd/2ba` (SMITH CONSUELA, 1716 N EDGEWOOD TERR) — same property in our DB, the
-  TAD file, and TP.
-- **geoID search is a DEAD END** — TP's geoID backend 500s ("Can't connect to MySQL …
-  trueprodigy-scaler"); ONLY the numeric pid search is reliable. That's why we need Account_Num,
-  not our hyphenated geoID (which is what `source_property_id` holds).
-- **Corrects the stale note** in `load_tarrant_attributes.py` ("Beds/baths … BLANK … PIA is the
-  only path"): the live API IS the path.
-- **Generalizes:** any future True-Prodigy-API-only county → load its `Account_Num`→`apn`, add its
-  `FIPS → office` to `FILL_SOURCES` in `api/src/cadattr/index.ts`. One recipe, every TP county.
-- **Live confirm still pending:** TP had a 504 outage during final testing 2026-07-15; after the
-  apn load + deploy, re-verify one Tarrant tap shows beds (fill is fire-and-forget: 1st tap kicks
-  it off, 2nd tap shows the beds).
+**TRUE PRODIGY FILL-ON-BLANK — LIVE for Tarrant + Ellis; the other TP metros are NOT app-lane.**
+For counties whose beds/baths live only behind TP's per-property API, the app fetches + caches them
+on first view of a null-beds parcel (`api/src/cadattr/`, deployed 2026-07-15). Fire-and-forget,
+COALESCE-only, 6h miss-cooldown, never re-charges the CAD. **Verified live via the deployed
+endpoint:** Tarrant `250-3-14` → 3bd/2ba, Ellis `300915` → 4bd/3ba. Each county names its pid
+column via `FILL_SOURCES.pidField` in `api/src/cadattr/index.ts`.
+- **Tarrant (48439, office Tarrant):** pid = **`apn`** (= TAD `Account_Num`; source_property_id is a
+  hyphenated geoID that TP's geoID backend won't resolve — geoID search 500s, only numeric pid works).
+  Backfilled apn for 656,287 parcels (join `GIS_Link == source_property_id`). Crosswalk:
+  `GIS_Link 250-3-14 → Account_Num 16497 → pid 16497 → 3bd/2ba`. **DURABILITY (data session):** the
+  one-off apn backfill is now folded into `load_tarrant_attributes.py` (data session confirmed), so a
+  Tarrant reload keeps it.
+- **Ellis (48139, office Ellis):** pid = **`source_property_id`** (already numeric) — no backfill.
+- **Parser handles 3 count shapes** (`roomCount`): digit (`Rooms: Bedrooms 3` — Tarrant), spelled
+  word (`Number of Bedrooms: FOUR BEDROOM`, `Plumbing: THREE BATH` — Ellis), and fraction
+  (`Plumbing: TWO 1/2 BATH` = 2.5). It **rejects code-values** — Ellis carries junk rows
+  (`Number of Bedrooms: 91`, `Plumbing: 40`) that are NOT counts — via a ≤20 plausibility cap.
+  Add a new TP county by dropping its `FIPS → {office, pidField}` into `FILL_SOURCES` — but **verify
+  its API actually exposes beds first** (below).
+- **The other 5 flagged "app-lane" counties are NOT app-session (probed live 2026-07-15):**
+  **Travis** = API exposes baths only (`251`), no bedrooms (`252`); the bulk file that had 252 is
+  gone → PIA. **Denton, Montgomery** = API returns empty features → their PACS bulk carries beds
+  (data-session lane). **McLennan** = our parcel IDs return 204 in TP (don't resolve) → needs a bulk
+  source (data-session). **Johnson** = no TP portal → PACS `.tab` bulk (data-session). Suggested
+  `texas_county_system_map.md` edits: Ellis → app-lane (DONE); McLennan → needs bulk (not app-lane).
 
 ---
 

@@ -40,13 +40,13 @@ sources — see scoreboard below. `parcel_viewed` events log per-card attribute 
 buy-vs-build API decision is made from real usage (~2-4 weeks of data; paid API assessed
 and declined 2026-07-14 — unit economics + scraped-source legal risk).
 
-**Tarrant beds/baths — app-side fill-on-blank LIVE (2026-07-15, app session).** Tarrant had
-0 beds/baths (TAD strips them from every bulk file); they're free from TAD's live True Prodigy
-API. 656,287 Tarrant parcels now carry the TP pid (`apn` = TAD Account_Num); `/parcels/at`
-fetches + caches beds/baths on first tap of a null-beds Tarrant parcel (`api/src/cadattr/`,
-deployed). Proven crosswalk `250-3-14 → 16497 → 3bd/2ba`. First real fill is pending a current
-True Prodigy outage (504) — self-heals when their API recovers; verify `250-3-14` = 3bd/2ba then.
-Generalizes to any TP-API-only county. Details in PROGRESS + HANDOFF.
+**True Prodigy fill-on-blank — LIVE + verified for Tarrant + Ellis (2026-07-15, app session).**
+For counties whose beds/baths sit only behind TP's per-property API, the app fetches + caches them
+on first tap of a null-beds parcel (`api/src/cadattr/`, deployed). Verified live end-to-end through
+the deployed endpoint: Tarrant `250-3-14` → 3bd/2ba, Ellis `300915` → 4bd/3ba. Parser reads
+digit / spelled-word / `1/2`-fraction counts and rejects code-values (`Number of Bedrooms: 91`).
+Probing all 7 flagged TP metros showed **only Tarrant + Ellis expose beds via the API**; Travis /
+Denton / Montgomery / McLennan / Johnson are data-session (bulk/PIA). Details in PROGRESS + HANDOFF.
 
 ## WHERE IT'S GOING (near-term order)
 
