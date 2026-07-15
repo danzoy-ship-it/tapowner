@@ -45,18 +45,11 @@ async function tpFetch(url: string, token: string | null, body?: unknown): Promi
     return res.json();
 }
 
-// Pull the trailing count off a feature string ("Rooms: Bedrooms 3" -> 3).
-// Fractional segments ("0.4539") are returned as-is and summed by the caller.
-function trailingNumber(s: string): number {
-    const m = /(-?\d+(?:\.\d+)?)\s*$/.exec(s.trim());
-    if (!m) return 0;
-    const n = parseFloat(m[1]!);
-    return Number.isFinite(n) ? n : 0;
-}
-
-// Some districts spell the count as a word ("Number of Bedrooms: FOUR BEDROOM",
-// "Plumbing: THREE BATH" -- Ellis) rather than a digit (Tarrant's "Rooms:
-// Bedrooms 3"). Map the number words we expect on a room feature.
+// Districts write room counts in several shapes on a feature string, e.g.
+// Tarrant "Rooms: Bedrooms 3" (trailing digit), Ellis "Number of Bedrooms: FOUR
+// BEDROOM" (spelled word) and "Plumbing: TWO 1/2 BATH" (word + "1/2" fraction).
+// Some rows also carry uninterpreted digit CODES ("Number of Bedrooms: 91",
+// "Plumbing: 40") that are NOT real counts -- those are rejected by `max`.
 const WORD_NUMBERS: Record<string, number> = {
     zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7,
     eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, thirteen: 13,
@@ -64,15 +57,36 @@ const WORD_NUMBERS: Record<string, number> = {
     nineteen: 19, twenty: 20,
 };
 
-// The room count on a feature string, whether written as a digit or a word.
-function roomCount(s: string): number {
-    const digit = trailingNumber(s);
-    if (digit > 0) return digit;
-    for (const w of s.toLowerCase().split(/[^a-z]+/)) {
-        const n = WORD_NUMBERS[w];
-        if (n !== undefined) return n;
+// The room count on a feature string -- a digit ("3", "2.5"), a spelled word
+// ("FOUR"), and/or a fraction ("1/2" -> 0.5), summed (so "TWO 1/2" -> 2.5).
+// Returns 0 when nothing plausible is found or the value exceeds `max` (a code,
+// not a count), so an unreadable/oddly-coded row leaves the field blank rather
+// than recording garbage (e.g. "Number of Bedrooms: 91").
+function roomCount(s: string, max: number): number {
+    let str = s.toLowerCase();
+    let frac = 0;
+    const fm = /(\d+)\s*\/\s*(\d+)/.exec(str);
+    if (fm) {
+        const a = parseInt(fm[1]!, 10);
+        const b = parseInt(fm[2]!, 10);
+        if (b > 0 && a < b) frac = a / b;
+        str = str.replace(fm[0], " "); // drop the fraction so it isn't re-read as a whole
     }
-    return 0;
+    let whole = 0;
+    const dm = /\d+(?:\.\d+)?/.exec(str);
+    if (dm) {
+        whole = parseFloat(dm[0]);
+    } else {
+        for (const w of str.split(/[^a-z]+/)) {
+            const n = WORD_NUMBERS[w];
+            if (n !== undefined) {
+                whole = n;
+                break;
+            }
+        }
+    }
+    const total = whole + frac;
+    return total > 0 && total <= max ? total : 0;
 }
 
 function toIntInRange(v: unknown, lo: number, hi: number): number | null {
@@ -148,8 +162,7 @@ export class TrueProdigyClient {
         const improvements = impResp.results ?? [];
 
         let beds = 0;
-        let bathWhole = 0; // full baths: "Bathrooms 2", "THREE BATH" (may be fractional)
-        let bathHalf = 0; // explicit "half bath" features, if a district lists them
+        let bathTotal = 0; // full+half baths summed: "Bathrooms 2", "TWO 1/2 BATH" -> 2.5
         let sqft: number | null = null;
         let year: number | null = null;
         const rawLabels = new Set<string>();
@@ -164,10 +177,9 @@ export class TrueProdigyClient {
             }
 
             if (imp.pImprovementID === undefined) continue;
-            // Room counts live in the improvement's features. Districts phrase them
-            // differently -- "Rooms: Bedrooms 3" (Tarrant, digit) vs "Number of
-            // Bedrooms: FOUR BEDROOM" / "Plumbing: THREE BATH" (Ellis, word) -- so
-            // match on the keyword and read the count as a digit OR a number word.
+            // Room counts live in the improvement's features. Match on the keyword
+            // ("bedroom"/"bath") and let roomCount read the count in whatever shape
+            // the district uses (digit, spelled word, or "1/2" fraction).
             try {
                 const feat = (await tpFetch(
                     `${BASE}/public/propertyaccount/improvement/${imp.pImprovementID}/features`,
@@ -177,12 +189,10 @@ export class TrueProdigyClient {
                     for (const f of row.features ?? []) {
                         rawLabels.add(f);
                         const lf = f.toLowerCase();
-                        if (lf.includes("bedroom")) {
-                            beds += roomCount(f);
-                        } else if (lf.includes("bath")) {
-                            if (lf.includes("half")) bathHalf += roomCount(f) || 1;
-                            else bathWhole += roomCount(f);
-                        }
+                        // cap 20 rejects code rows ("Number of Bedrooms: 91");
+                        // roomCount folds any "1/2" fraction into the bath total.
+                        if (lf.includes("bedroom")) beds += roomCount(f, 20);
+                        else if (lf.includes("bath")) bathTotal += roomCount(f, 20);
                     }
                 }
             } catch {
@@ -191,13 +201,10 @@ export class TrueProdigyClient {
         }
 
         const bedrooms = beds > 0 ? Math.round(beds) : null;
-        // +epsilon guards float drift (fractional segments summing to e.g. 1.9999).
-        const bathsFull = bathWhole > 0 ? Math.floor(bathWhole + 1e-6) : null;
-        // Half baths: explicit "half bath" features win; otherwise a .5+ remainder
-        // on the whole count (e.g. "Bathrooms 2.5") implies one half bath.
-        const fractionalHalf = bathWhole > 0 && bathWhole % 1 >= 0.5 ? 1 : 0;
-        const bathsHalf =
-            bathHalf > 0 ? Math.round(bathHalf) : fractionalHalf > 0 ? fractionalHalf : null;
+        // +epsilon guards float drift; a >=.5 remainder (e.g. "TWO 1/2" -> 2.5) is
+        // the half bath.
+        const bathsFull = bathTotal > 0 ? Math.floor(bathTotal + 1e-6) : null;
+        const bathsHalf = bathTotal > 0 && bathTotal % 1 >= 0.5 ? 1 : null;
 
         return {
             bedrooms,
