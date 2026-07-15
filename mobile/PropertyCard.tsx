@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { formatCents, type AppConfig, type ParcelDetail } from './api';
+import { tagLabel } from './featureTags';
 
 function formatNumber(value: string | number | null): string | null {
   if (value === null) return null;
@@ -176,6 +177,28 @@ export function PropertyCard({
           <DetailRow
             label="Lot size"
             value={formatNumber(detail.lot_size_sqft) ? `${formatNumber(detail.lot_size_sqft)} sqft` : null}
+          />
+          {/* County-recorded yes/no facts + extra features (spa, casita, deck…).
+              Rows hide when the county didn't record the fact (per build doc §4:
+              omit, never show a placeholder). */}
+          <DetailRow
+            label="Pool"
+            value={detail.has_pool === true ? 'Yes' : detail.has_pool === false ? 'No' : null}
+          />
+          <DetailRow
+            label="Garage"
+            value={detail.has_garage === true ? 'Yes' : detail.has_garage === false ? 'No' : null}
+          />
+          <DetailRow
+            label="Features"
+            value={
+              detail.features && detail.features.filter((t) => t !== 'pool' && t !== 'garage').length > 0
+                ? detail.features
+                    .filter((t) => t !== 'pool' && t !== 'garage')
+                    .map(tagLabel)
+                    .join(' · ')
+                : null
+            }
           />
 
           <Text style={styles.sectionHeader}>Valuation</Text>

@@ -66,6 +66,7 @@ export async function parcelsRoutes(app: FastifyInstance) {
                 // cosmetic -- the trace route re-checks and is the source of truth
                 // for charging -- so a null (grace-mode) viewer safely reads false.
                 `SELECT ${PARCEL_FIELDS},
+                        improvements, has_casita, has_shed,
                         EXISTS (
                             SELECT 1 FROM user_traces ut
                             WHERE ut.user_id = $3 AND ut.parcel_id = parcels.id
@@ -83,6 +84,18 @@ export async function parcelsRoutes(app: FastifyInstance) {
 
             const parcel = result.rows[0];
             parcel.situs_address = formatSitusAddress(parcel);
+
+            // Canonical feature tags for the card's Features row (same crosswalk
+            // derivation the farm endpoint uses). Raw labels stay server-side.
+            parcel.features = deriveTags(parcel.improvements, {
+                pool: parcel.has_pool,
+                garage: parcel.has_garage,
+                casita: parcel.has_casita,
+                shed: parcel.has_shed,
+            });
+            delete parcel.improvements;
+            delete parcel.has_casita;
+            delete parcel.has_shed;
 
             // Felt-gap instrumentation (property-data API decision, 2026-07-14):
             // record what each opened card was missing so the real

@@ -48,6 +48,9 @@ export interface ParcelDetail {
   // True when this viewer already traced this parcel, so re-viewing is free.
   // Optional: older API builds omit it (treated as not-yet-unlocked).
   already_unlocked?: boolean;
+  // Canonical feature tags (pool, spa, casita, …) derived server-side from the
+  // county's improvement records. Optional: older API responses lack it.
+  features?: string[];
 }
 
 export interface TierConfig {

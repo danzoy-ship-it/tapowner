@@ -15,6 +15,7 @@ import * as Contacts from 'expo-contacts';
 import { File, Paths } from 'expo-file-system';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { logFarmExport, saveProperty, traceParcel, type FarmCriteria, type FarmParcel } from './api';
+import { tagLabel } from './featureTags';
 import { useApp } from './AppContext';
 import type { RootNav, RootStackParamList } from './navigation';
 
@@ -93,31 +94,6 @@ function rowFacts(p: FarmParcel): string {
 
 const BED_OPTIONS = [0, 2, 3, 4, 5, 6] as const;
 const BATH_OPTIONS = [0, 2, 3, 4, 5, 6] as const;
-
-// Display labels for the canonical feature tags the server derives from county
-// improvement records (IMPROVEMENT_TAXONOMY.md). `pool` and `single_story` are
-// deliberately absent — they have their own dedicated chips below. Unknown tags
-// (a future crosswalk addition) fall back to the raw tag text.
-const TAG_LABELS: Record<string, string> = {
-  casita: 'Casita / guest house',
-  shed_workshop: 'Shed / workshop',
-  garage: 'Garage',
-  carport: 'Carport',
-  spa: 'Spa / hot tub',
-  fireplace: 'Fireplace',
-  solar: 'Solar',
-  rv: 'RV parking',
-  basement: 'Basement',
-  boat_dock: 'Boat dock',
-  barn_stable: 'Barn / stable',
-  sport_court: 'Sport court',
-  waterfront: 'Waterfront',
-  corner_lot: 'Corner lot',
-};
-
-function tagLabel(tag: string): string {
-  return TAG_LABELS[tag] ?? tag.replace(/_/g, ' ');
-}
 
 // Farm results, two-stage: (1) Unlock contacts for the filtered list, then
 // (2) Actions — the SAME verbs as the individual contact screen, pluralized
