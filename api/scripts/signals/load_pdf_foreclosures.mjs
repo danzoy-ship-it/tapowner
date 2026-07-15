@@ -170,6 +170,85 @@ const SOURCES = {
             return out;
         },
     },
+    // Parker County clerk (CivicPlus REACT DocumentCenter): month folders
+    // (/DocumentCenter/Index/94..107, one per calendar month, recycled yearly)
+    // render client-side; the folder-list API (POST /Admin/DocumentCenter/Home/
+    // Document_AjaxBinding + /antiforgery token) rejects every headless
+    // replay tried (curl, node fetch, even raw in-page fetch without the
+    // app's axios wiring). The packet PDF itself downloads fine, so discovery
+    // is PINNED: one {url,year,month} per posted packet, captured from the
+    // live page. Refresh monthly (folder ids: Jan=99..Sep=107, Oct=98,
+    // Nov=95, Dec=94) until the React API is cracked.
+    parker_cc: {
+        fips: "48367",
+        // sale venue: "Parker County Courthouse / District Court Building,
+        // 117 Fort Worth Street, Weatherford" (OCR also yields 17/7 variants)
+        venue: /FORT\s*WORTH\s*STREET|COURTHOUSE/i,
+        discover: async () => {
+            const pinned = [
+                { url: "https://www.parkercountytx.gov/DocumentCenter/View/13978/Foreclosures-July-2026", year: 2026, month: 7 },
+            ];
+            return pinned
+                .filter((p) => inWindow(p.year, p.month))
+                .map((p) => ({ ...p, name: `parker_${p.year}-${String(p.month).padStart(2, "0")}.pdf` }));
+        },
+    },
+    // Rockwall County clerk (CivicPlus ArchiveCenter): /792/Foreclosure-Notices
+    // links one Archive.aspx?AMID=<n> per sale month (anchor text "July 2026");
+    // each AMID page lists MANY per-notice scanned PDFs (Archive.aspx?ADID=<n>,
+    // link text "07-07-2026 10AM Z"). Image-only -> OCR.
+    rockwall_cc: {
+        fips: "48397",
+        // sale venue: 1111 E Yellowjacket Ln (courthouse; OCR: "1 I II Yellowjacket")
+        venue: /YELLOWJACKET/i,
+        discover: async () => {
+            const base = "https://www.rockwallcountytexas.com/";
+            const html = await fetchText(base + "792/Foreclosure-Notices");
+            const out = [];
+            for (const m of html.matchAll(/href="(?:https?:\/\/www\.rockwallcountytexas\.com)?\/?(Archive\.aspx\?AMID=\d+[^"]*)"[^>]*>\s*([A-Za-z]+)\s+(\d{4})/gi)) {
+                const mon = MONTHS.indexOf(m[2].slice(0, 3).toUpperCase()) + 1;
+                if (!mon || !inWindow(+m[3], mon)) continue;
+                const arch = await fetchText(base + m[1].replace(/&amp;/g, "&"));
+                for (const a of arch.matchAll(/href="(Archive\.aspx\?ADID=(\d+))"/gi))
+                    out.push({
+                        url: base + a[1],
+                        year: +m[3],
+                        month: mon,
+                        name: `rockwall_${m[3]}-${String(mon).padStart(2, "0")}_ADID${a[2]}.pdf`,
+                    });
+            }
+            return out;
+        },
+    },
+    // Randall County clerk (CivicPlus DocumentCenter): ONE packet per sale
+    // month at a REUSED document id (/DocumentCenter/View/129/Notice-of-Sale-
+    // <MM-DD-YYYY>-PDF) on the County Clerk page; the slug carries the sale
+    // date, and the prior month's packet is overwritten in place.
+    randall_cc: {
+        fips: "48381",
+        // sale venue: Randall County Justice Center, 2309 Russell Long Blvd,
+        // Canyon (direct-matches the Justice Center parcel -> must filter)
+        venue: /RUSSELL\s*LONG|JUSTICE\s*CENTER/i,
+        discover: async () => {
+            const html = await fetchText("https://www.randallcounty.gov/182/County-Clerk");
+            const out = [];
+            for (const m of html.matchAll(/href="(\/DocumentCenter\/View\/\d+\/Notice-of-Sale-(\d{2})-\d{2}-(\d{4})[^"]*)"/gi)) {
+                const mon = +m[2];
+                if (!mon || !inWindow(+m[3], mon)) continue;
+                out.push({
+                    url: "https://www.randallcounty.gov" + m[1],
+                    year: +m[3],
+                    month: mon,
+                    name: `randall_${m[3]}-${m[2]}.pdf`,
+                });
+            }
+            return out;
+        },
+    },
+    // Midland County: NOT here -- the CivicPlus archive (Archive.aspx?AMID=39)
+    // is dead since June 2019; current notices moved to Kofile/GovOS
+    // PublicSearch (midland.tx.publicsearch.us), the separate platform crack
+    // in FORECLOSURE_SOURCES.md.
 };
 
 // sale-month window for discovery on archive-style pages that list years of
