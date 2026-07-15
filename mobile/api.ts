@@ -54,6 +54,8 @@ export interface ParcelDetail {
   // How many OTHER properties this owner holds (same owner name + same mailing
   // address, statewide). 0 or absent = none known.
   owner_portfolio_count?: number;
+  // Public court-record events tied to this parcel (pre-foreclosure, etc.).
+  event_signals?: Array<{ signal_type: string; subtype?: string | null; event_date?: string | null }>;
   // "Likely to sell" owner signals (server-derived). tenure_years = years since
   // last recorded sale; senior_owner = OV65 exemption; homestead = HS exemption.
   tenure_years?: number | null;
@@ -380,6 +382,8 @@ export interface FarmParcel {
   tenure_years?: number | null;
   senior_owner?: boolean;
   homestead?: boolean;
+  // Court-record signal types tied to this parcel (e.g. 'pre_foreclosure').
+  signal_types?: string[];
   // Contacts the user already owns (traced) for this parcel.
   phones: string[];
   emails: string[];
@@ -424,14 +428,15 @@ export async function logFarmExport(
   return handleJson(res);
 }
 
+// Only physical/feature criteria describe the AI outreach letter. Seller-signal
+// filters (tenure, senior, foreclosure) are intentionally NOT here -- the letter
+// must never reveal a sensitive trigger (outreach-ethics rule, SIGNALS_ROADMAP.md).
 export interface FarmCriteria {
   min_sqft?: number;
   min_beds?: number;
   min_baths?: number;
   pool?: boolean;
   single_story?: boolean;
-  min_tenure_years?: number;
-  senior_owner?: boolean;
 }
 
 // Farm outreach letter: one AI-drafted letter for every home on the filtered

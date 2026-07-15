@@ -114,6 +114,11 @@ export function PropertyCard({
           <Text style={styles.badgeText}>Owned {detail.tenure_years}y</Text>
         </View>
       )}
+      {(detail.event_signals ?? []).some((s) => s.signal_type === 'pre_foreclosure') && (
+        <View style={[styles.badge, styles.badgeForeclosure]}>
+          <Text style={styles.badgeText}>Pre-foreclosure</Text>
+        </View>
+      )}
     </View>
   );
 
@@ -248,6 +253,21 @@ export function PropertyCard({
                   : null
             }
           />
+
+          {(() => {
+            const fc = (detail.event_signals ?? []).find((s) => s.signal_type === 'pre_foreclosure');
+            if (!fc) return null;
+            const when = fc.event_date ? new Date(fc.event_date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : null;
+            return (
+              <>
+                <Text style={styles.sectionHeader}>Public filings</Text>
+                <DetailRow
+                  label="Pre-foreclosure"
+                  value={`${fc.subtype === 'tax' ? 'Tax' : 'Mortgage'} foreclosure notice${when ? ` · sale ${when}` : ''}`}
+                />
+              </>
+            );
+          })()}
 
           <Text style={styles.sectionHeader}>Record</Text>
           <DetailRow
@@ -422,6 +442,9 @@ const styles = StyleSheet.create({
   },
   badgeSenior: {
     backgroundColor: '#fef3c7',
+  },
+  badgeForeclosure: {
+    backgroundColor: '#fecaca',
   },
   badgeText: {
     fontSize: 12,
