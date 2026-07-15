@@ -6,9 +6,9 @@ Regenerate with `python data/build_coverage_log.py` after each mining batch (ref
 
 ## Scoreboard (253 counties)
 
-- ☑ **Mined (has improvements/feature tags): 69** / 253
-- Full attributes (improv+dims): 40  ·  Partial: 40  ·  Geometry-only (need mining): 173  ·  Missing from DB: 0
-- Seller-signals — sale date: 65 counties  ·  exemptions (homestead/over-65/DV tenure): 109 counties  ·  **any seller-signal: 122 counties**
+- ☑ **Mined (has improvements/feature tags): 70** / 253
+- Full attributes (improv+dims): 40  ·  Partial: 45  ·  Geometry-only (need mining): 168  ·  Missing from DB: 0
+- Seller-signals — sale date: 71 counties  ·  exemptions (homestead/over-65/DV tenure): 111 counties  ·  **any seller-signal: 128 counties**
 
 Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISSING. % = share of the county's parcels with that attribute.
 
@@ -26,15 +26,14 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Tomgreen | 48451 | 58,686 | · | · | · | · | 98 | · | PARTIAL |
 | [ ] | Bowie | 48037 | 53,212 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Harrison | 48203 | 50,995 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Burnet | 48053 | 50,138 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Waller | 48473 | 48,136 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Nacogdoches | 48347 | 48,003 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Cherokee | 48073 | 46,761 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Burnet | 48053 | 50,138 | · | · | · | · | 92 | · | PARTIAL |
+| [ ] | Waller | 48473 | 48,136 | · | · | · | · | 88 | · | PARTIAL |
+| [ ] | Nacogdoches | 48347 | 48,003 | · | · | · | · | 17 | 38 | GEOM-ONLY |
+| [ ] | Cherokee | 48073 | 46,761 | · | · | · | · | 90 | · | PARTIAL |
 | [ ] | Navarro | 48349 | 46,167 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Medina | 48325 | 44,330 | · | · | · | · | 88 | · | PARTIAL |
-| [ ] | Vanzandt | 48467 | 43,963 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Vanzandt | 48467 | 43,963 | · | · | · | · | 93 | · | PARTIAL |
 | [ ] | Anderson | 48001 | 43,894 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Hardin | 48199 | 41,635 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Hill | 48217 | 39,355 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Llano | 48299 | 38,879 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Palopinto | 48363 | 38,698 | · | · | · | · | · | · | GEOM-ONLY |
@@ -240,6 +239,7 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [x] | Wise | 48497 | 48,705 | 54 | · | 38 | 67 | 49 | · | FULL+SIGNALS |
 | [x] | Victoria | 48469 | 45,104 | 76 | 58 | · | 76 | 86 | 42 | FULL+SIGNALS |
 | [x] | Wood | 48499 | 44,576 | 54 | · | · | 54 | 87 | 32 | PARTIAL |
+| [x] | Hardin | 48199 | 41,635 | 52 | · | 13 | 53 | 19 | 39 | PARTIAL |
 | [x] | Kerr | 48265 | 36,913 | 61 | 22 | 47 | 61 | 88 | · | FULL+SIGNALS |
 | [x] | Sanjacinto | 48407 | 36,346 | 44 | 4 | · | 44 | 83 | 22 | PARTIAL |
 | [x] | Lamar | 48277 | 36,246 | 52 | 6 | 49 | 65 | 81 | 33 | FULL+SIGNALS |
@@ -280,7 +280,7 @@ Goal is 100% of NEEDED data on 100% of counties. Where an attribute isn't in any
 | Collin (48085) | improvements (feature tags) | data.texas.gov feed is property-SUMMARY only (imprvclasscd/pool flag; no garage/shed segments). | Check collincad.org own data product for a segment/addl-improvement export (like Dallas RES_ADDL). |
 | Gregg (48183) | sale/exemptions | GCAD_Export.zip prop_id space != DB source_property_id (roll/geometry key mismatch). | Re-pull a Gregg roll whose geo_id matches, or add a geo_id crosswalk (like Tarrant). |
 | Hidalgo (48215) | improvement SEGMENTS / beds / pool-garage tags | PARTIAL: HCADShapefiles.zip data.mdb loaded (year built + main-area sqft + deed date + exemptions, ~324K parcels). True Prodigy killed the bulk roll; mdb has no segments/beds/pool. | $0 PIA to cs@hidalgoad.org for the True Prodigy 'Public Appraisal Export (Legacy 8.0.30)' — cite MCAD's public posting as precedent. |
-| Hunt/Comal/Henderson/Webb/Harrison | improvements/beds/baths | EXHAUSTED free bulk (wave-3): TP/BIS orgs expose value-only FeatureServers; Hunt's full data is SharePoint login-gated; no PACS export posted. | $0 open-records request to each district for the PACS appraisal export (imp_detail/attr/info). |
+| Hunt/Comal/Henderson/Webb/Harrison/Anderson | improvements/beds/baths | EXHAUSTED free bulk (waves 3+5): TP/BIS orgs expose value-only FeatureServers; Hunt SharePoint-gated; Anderson TP bulk-export API auth-gated (401); no PACS export posted. | $0 open-records request to each district for the PACS appraisal export (imp_detail/attr/info). |
 | Lubbock (48303) | improvement segments/beds/baths | EXHAUSTED free bulk: Orion vendor, all 8 gis.lubbockcad.org services are annotation/parcel only (no segment table); site is PDF-only; the free monthly Property Data Export (Rec4 Improvement + Rec5 ImpSegment incl. Bedrooms) was discontinued ~2015 and is now sold via Orion. | $0 open-records/25.195 request naming LCAD's own 'Property Data Export (record types 1-6)'. |
 | Smith (48423) | improvements/beds/baths/signals | EXHAUSTED free bulk: GSA Corp vendor, smithcad.org static/PDF-only, mapsite 500s, ArcGIS Hub has no CAMA. | $0 open-records request for the GSA 'Certified Data Roll' export (same product Johnson CAD posts free). |
 

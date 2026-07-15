@@ -126,8 +126,9 @@ GAPS = [
      "PARTIAL: HCADShapefiles.zip data.mdb loaded (year built + main-area sqft + deed date + exemptions, "
      "~324K parcels). True Prodigy killed the bulk roll; mdb has no segments/beds/pool.",
      "$0 PIA to cs@hidalgoad.org for the True Prodigy 'Public Appraisal Export (Legacy 8.0.30)' — cite MCAD's public posting as precedent."),
-    ("Hunt/Comal/Henderson/Webb/Harrison", "improvements/beds/baths",
-     "EXHAUSTED free bulk (wave-3): TP/BIS orgs expose value-only FeatureServers; Hunt's full data is SharePoint login-gated; no PACS export posted.",
+    ("Hunt/Comal/Henderson/Webb/Harrison/Anderson", "improvements/beds/baths",
+     "EXHAUSTED free bulk (waves 3+5): TP/BIS orgs expose value-only FeatureServers; Hunt SharePoint-gated; "
+     "Anderson TP bulk-export API auth-gated (401); no PACS export posted.",
      "$0 open-records request to each district for the PACS appraisal export (imp_detail/attr/info)."),
     ("Lubbock (48303)", "improvement segments/beds/baths",
      "EXHAUSTED free bulk: Orion vendor, all 8 gis.lubbockcad.org services are annotation/parcel only "
