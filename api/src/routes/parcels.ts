@@ -8,6 +8,7 @@ import { isPlaceholderOwner } from "../lib/owners.js";
 import { getLatestSubscription, isSubscriptionUsable } from "../lib/entitlements.js";
 import { getProductConfig } from "../lib/config.js";
 import { logEvent } from "../lib/events.js";
+import { isFillEligible, fillParcelAttrsInBackground } from "../cadattr/index.js";
 
 // Farm mode caps: a neighborhood farm is a few hundred homes. The result cap
 // keeps responses bounded; the area cap stops a polygon drawn around half the
@@ -94,6 +95,22 @@ export async function parcelsRoutes(app: FastifyInstance) {
                 has_pool_known: parcel.has_pool !== null,
                 has_year: parcel.year_built !== null,
             });
+
+            // Fill-on-blank (Reverse Prospecting data-hunt #2): for counties whose
+            // beds/baths live only behind a live CAD API (e.g. Tarrant / True
+            // Prodigy), fetch + cache this parcel's attrs the first time it's
+            // viewed with no beds. Fire-and-forget: never blocks or fails the view,
+            // so this response ships county data as-is; the next view shows the fill.
+            // Resolves via the TP pid stored in apn (== TAD Account_Num); skipped
+            // when apn is absent (parcel not yet crosswalked by the data session).
+            if (parcel.bedrooms === null && parcel.apn && isFillEligible(parcel.county_fips)) {
+                fillParcelAttrsInBackground(
+                    parcel.id,
+                    parcel.county_fips,
+                    String(parcel.apn),
+                    request.log
+                );
+            }
 
             return reply.send(parcel);
         }
