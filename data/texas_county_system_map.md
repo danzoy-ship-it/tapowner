@@ -531,3 +531,6 @@ Where beds are a GENUINE gap (district doesn't collect them — verified, not as
 - Jack(48237) 2,083 HS, SanSaba(48411) 1,420 HS via load_harris_esearch_csv.py. Callahan(48059)=PDF-only zip (dead-end). Goliad(48175)=PDFs.
 - Dead-end BIS-eSearch search-only (no FeatureServer on portal, no bulk): moore(48341), camp(48063), kinney(48271), deafsmith(48117), madison(48313), edwards(48137). Tyler+TaxNetUSA: wilbarger(48487), morris(48343).
 - Browser/API-needed (cracked vendors, curl-gated): lipscomb(48295, SWData WebForms 403), lasalle(48283, True Prodigy), zavala(48507, PACS PropAccess).
+
+### Batch J (2026-07-16): 6 Harris-eSearch homestead counties loaded
+Archer(48009) 2,690 HS, Haskell(48207) 1,479, Crockett(48105) 693, Upton(48461) 1,272, Dawson(48115) 2,351, Coke(48081) 937 — via load_harris_esearch_csv.py (Coke = direct WP .csv). BIS-eSearch search-only (open-records): Terry(48445, terrycoad.org), Mason(48319), Mills(48333), Real(48385), Concho(48095), Madison(48313), Edwards(48137), Zavala(48507, zavalacad.com). Motley(48345)=no website (Floyd CAD admin).
