@@ -64,12 +64,48 @@ requires the parcel/owner data AND the farm map AND route data in one place, whi
 3. **Phase 3 — trigger mail (ties to signals).** New probate/absentee/foreclosure signal in a farm →
    auto-draft a compliant postcard → one-tap send. The SmartZip automation play at our price. Later.
 
-## Print-vendor notes (from 2026 research)
+## Print-vendor notes (VENDOR-SOURCED 2026, from their own pricing pages)
 
-- **PostGrid** ~86¢/piece addressed, $0–99/mo tiers — good Phase-1 start, no volume commit.
-- **Lob** ~$260/mo floor — revisit at volume.
-- EDDM: needs a fulfillment vendor (many do it); DealMachine's 57¢ is a top-tier-plan bait subsidized
-  by their $232/mo subscription + volume aggregation — not magic, just scale.
+Addressed postcards, print + first-class postage, per piece, on the NO-monthly-fee entry tier:
+- **Lob** — Developer plan: **$0.905/postcard, $0/mo, up to 6,000/mo.** RECOMMENDED START (biggest
+  free-tier runway, most established API). Subscription tiers drop to ~$0.615–0.645 but carry
+  $260–550/mo minimums — only worth it at real volume. (lob.com/pricing)
+- **PostGrid** — Starter: **$0.902 (4×6), $1.023 (6×9), $0/mo, up to 500/mo.** Solid backup.
+  (postgrid.com/pricing-print-mail)
+- **Postalytics** (realtor-focused) — ~$0.72/piece but $199–399/mo flat plans; revisit only if we
+  want its built-in triggered-drip campaigns for the signals tier.
+- Two independent vendors at ~90¢ = that's the real pay-as-you-go market rate for addressed
+  postcard+postage. Retail model: pass through at cost + modest handling (~$1.00–1.25 to the agent).
+- **EDDM is a DIFFERENT vendor** — Lob/PostGrid are addressed-only. EDDM needs an EDDM-fulfillment
+  partner (Phase 2). DealMachine's 57¢ is a top-tier-plan bait subsidized by its $232/mo sub +
+  volume aggregation — not magic, just scale.
+
+## Postcard templates (predesigned, merge-field driven)
+
+Agents aren't designers — we ship a small **library of scenario templates**, each an HTML design
+with two layers of merge fields the app fills automatically:
+- **Agent branding (set once in profile):** name, photo, brokerage, logo, phone, license #.
+- **Per-send data:** owner name (addressed only), property address, and the AI-drafted headline/body.
+
+Lob and PostGrid both natively support HTML templates + merge variables, so this is a supported
+path, not custom print work — design ~4–6 templates once, they render+merge+print each send.
+
+Launch scenario set (maps to features we already have):
+- **"I may have a buyer for your home"** — the Reverse Prospecting flagship; ties to a filtered farm.
+- **Just Listed / Just Sold** — agent enters the subject address.
+- **"Thinking of selling?"** neighborhood farm — no name needed → the natural EDDM template.
+- **Absentee-owner / "do you still own…"** — ties to the Absentee + "owns N more" data.
+- **Signal-based (Phase 3):** generic-framing ONLY per the outreach-ethics rule — never names the
+  trigger.
+
+**Two hard requirements baked into every template:**
+1. **TREC advertising disclosures** — Texas real-estate ads must carry broker name + required
+   disclosures; the templates bake these placeholders in so agents stay compliant by default.
+2. **Honest-at-scale copy** — "may have a motivated, qualified buyer," never a fabricated specific
+   buyer (build-doc rule), and never a sensitive signal (SIGNALS_ROADMAP.md).
+
+The AI-draft engine we already ship (letters/emails) generates the postcard's words too — the
+template is the physical skin over the same copy engine.
 
 ## Open decisions for Frederick
 
