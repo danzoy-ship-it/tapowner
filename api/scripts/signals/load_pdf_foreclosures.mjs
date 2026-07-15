@@ -332,6 +332,93 @@ const SOURCES = {
             return out;
         },
     },
+    // Comal County clerk (CivicPlus -- migrated comalcountytx.gov ->
+    // comalcounty.gov; the old domain's DNS zone is EMPTY and every legacy
+    // co.comal.tx.us path soft-lands on the new homepage): /213/Foreclosure-
+    // Sales links ONE packet per sale month at /DocumentCenter/View/<id>/
+    // <Month>-Foreclosure-Sales (no year in the slug -> near-future roll like
+    // Bell). Image-only scan, NO text layer -> OCR.
+    comal_cc: {
+        fips: "48091",
+        discover: async () => {
+            const base = "https://www.comalcounty.gov";
+            const html = await fetchText(base + "/213/Foreclosure-Sales");
+            const now = new Date();
+            const out = [], seen = new Set();
+            for (const m of html.matchAll(/href="(\/DocumentCenter\/View\/\d+\/([A-Za-z]+)-Foreclosure-Sales[^"]*)"/gi)) {
+                const mon = MONTHS.indexOf(m[2].slice(0, 3).toUpperCase()) + 1;
+                if (!mon) continue;
+                // slug carries no year: sale months are near-future
+                let year = now.getFullYear();
+                if (mon - (now.getMonth() + 1) < -6) year += 1;
+                const name = `comal_${year}-${String(mon).padStart(2, "0")}.pdf`;
+                if (!inWindow(year, mon) || seen.has(name)) continue;
+                seen.add(name);
+                out.push({ url: base + m[1], year, month: mon, name });
+            }
+            return out;
+        },
+    },
+    // McLennan County clerk (CivicPlus ArchiveCenter -- migrated
+    // co.mclennan.tx.us -> mclennan.gov): Archive.aspx?AMID=41 ("Notice of
+    // Trustee's Sale") lists one consolidated packet per sale month, link text
+    // "AUGUST 4, 2026 SALE DATE (Notices filed 05-21-2026 thru 07-14-2026)".
+    // Good embedded text layer.
+    mclennan_cc: {
+        fips: "48309",
+        // sale venue: McLennan County Courthouse, 501 Washington Ave, Waco.
+        // The GOV_OWNER guard blocks the courthouse PARCEL, but the venue line
+        // then suffix-matched 501 Washington St in McGREGOR (a private home)
+        // -> drop the line itself, number-pinned (other Washingtons are real).
+        venue: /\b501\s+WASHINGTON\b/i,
+        discover: async () => {
+            const html = await fetchText("https://www.mclennan.gov/Archive.aspx?AMID=41");
+            const out = [];
+            for (const m of html.matchAll(/href="(Archive\.aspx\?ADID=(\d+))"[\s\S]{0,120}?([A-Za-z]+)\s+\d{1,2},\s*(\d{4})\s+SALE\s+DATE/gi)) {
+                const mon = MONTHS.indexOf(m[3].slice(0, 3).toUpperCase()) + 1;
+                if (!mon || !inWindow(+m[4], mon)) continue;
+                out.push({
+                    url: new URL(m[1], "https://www.mclennan.gov/").href,
+                    year: +m[4],
+                    month: mon,
+                    name: `mclennan_${m[4]}-${String(mon).padStart(2, "0")}_ADID${m[2]}.pdf`,
+                });
+            }
+            return out;
+        },
+    },
+    // Lubbock County clerk (eGov/CORE Business Technologies -- migrated OFF
+    // CivicLive co.lubbock.tx.us -> lubbockcounty.gov, so the CivicLive
+    // template no longer applies): /department/division.php?structureid=270
+    // ("Notice of Trustee Sales") is an HTML table, one row per notice:
+    // <filed date> | <sale date> | Download Document -> /egov/apps/document/
+    // center.egov?view=item&id=<n> (per-notice PDF, ~3pp). The regex anchors
+    // on the date cell immediately followed by the link cell, so it captures
+    // the SALE date, not the filed date. Image-only scans -> OCR.
+    lubbock_cc: {
+        fips: "48303",
+        discover: async () => {
+            const html = await fetchText("https://www.lubbockcounty.gov/department/division.php?structureid=270");
+            const out = [], seen = new Set();
+            for (const m of html.matchAll(/(\d{1,2})\/\d{1,2}\/(\d{4})\s*<\/td>\s*<td[^>]*>\s*<a[^>]*href="(?:https?:\/\/www\.lubbockcounty\.gov)?\/?egov\/apps\/document\/center\.egov\?view=item&(?:amp;)?id=(\d+)"/gi)) {
+                const mon = +m[1], year = +m[2];
+                if (!mon || mon > 12 || !inWindow(year, mon) || seen.has(m[3])) continue;
+                seen.add(m[3]);
+                out.push({
+                    url: `https://www.lubbockcounty.gov/egov/apps/document/center.egov?view=item&id=${m[3]}`,
+                    year,
+                    month: mon,
+                    name: `lubbock_${year}-${String(mon).padStart(2, "0")}_id${m[3]}.pdf`,
+                });
+            }
+            return out;
+        },
+    },
+    // Smith County: NOT here -- smith-county.com/298/Foreclosures (CivicPlus)
+    // publishes NO notice PDFs (re-verified 2026-07: prose + one dead
+    // DocumentCenter link + no trustee-sale ArchiveCenter module); notices
+    // live only in smith.tx.publicsearch.us (Kofile/GovOS PublicSearch), the
+    // separate parked platform crack in FORECLOSURE_SOURCES.md.
     // Jefferson County: NOT here -- the clerk's foreclosure-information page
     // (jeffcotxvotes.gov, WordPress) publishes NO notice PDFs; it points to
     // jefferson.tx.publicsearch.us (Kofile/GovOS PublicSearch, paywalled
