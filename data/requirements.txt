@@ -1,0 +1,6 @@
+# Python deps for the county-data mining loaders (data/*.py).
+# Install: python -m pip install -r data/requirements.txt
+psycopg2-binary>=2.9      # Postgres (Railway parcels DB via the tokaido proxy)
+openpyxl>=3.1             # GSA Corp certified-roll .xlsx (load_gsa_roll_xlsx.py)
+pyodbc>=5.0               # Access .mdb rolls (load_collin_mdb_attributes.py, load_hcad_data_mdb.py) — needs the MS Access ODBC driver on Windows
+dbfread>=2.0             # CAD GIS Parcels_export.dbf incl. sl_price (load_parcels_dbf.py)
