@@ -116,6 +116,14 @@ build as the first surfaced signal.
 
 ## STATUS (2026-07-16, app session overnight)
 
+- ✅ **SHIPPED — #1 pre-foreclosure, 17 counties live (2026-07-15):** Bexar (arcgis) + 14 CivicPlus/
+  CivicLive PDF counties + Dallas/Williamson metros, ~1,070 foreclosures tied to parcels (system map
+  + tie rates in FORECLOSURE_SOURCES.md; loader `api/scripts/signals/load_pdf_foreclosures.mjs`).
+  Surfaced as the "Pre-foreclosure" property-card badge + farm filter — but only while the sale date
+  is still **pending** (`event_date >= current_date`); past auctions drop the label (deployed
+  2026-07-15). GOV_OWNER guard blocks courthouse/gov parcels from false-matching. New counties
+  surface automatically (generic `parcel_signals` read). **Parked next:** the ~46-county Kofile crack
+  (biggest single unlock; Frederick's call to unpark) + own-system metros (Harris/Collin/Travis).
 - ✅ **SHIPPED — tenure filter + senior-owner (#10 current-state):** the data session captured
   1.49M `last_sale_date` + 571K `exemptions` (HS 564K / OV65 216K). App now derives `tenure_years`,
   `senior_owner`, `homestead` (`api/src/lib/ownerSignals.ts`); Reverse Prospecting has "Owned
