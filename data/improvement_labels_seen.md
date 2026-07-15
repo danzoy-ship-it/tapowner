@@ -5225,3 +5225,170 @@ Append-only log so the app session can extend the canonical crosswalk.
 | PACS | fips 48119 | `WOOD PORCH` | 1 |
 | PACS | fips 48119 | `COVERED PORCH` | 1 |
 | PACS | fips 48119 | `ATTACHED GARAGE` | 1 |
+| PACS | fips 48003 | `MAIN AREA` | 6920 |
+| PACS | fips 48003 | `ROOF COV PATIO` | 6453 |
+| PACS | fips 48003 | `DET CARPORT` | 4238 |
+| PACS | fips 48003 | `COMMERCIAL` | 4157 |
+| PACS | fips 48003 | `STORAGE 4` | 1982 |
+| PACS | fips 48003 | `GAR 2 CAR` | 1889 |
+| PACS | fips 48003 | `STORAGE 3` | 1628 |
+| PACS | fips 48003 | `STORAGE 1` | 1597 |
+| PACS | fips 48003 | `FLAT VALUE` | 1304 |
+| PACS | fips 48003 | `SHED` | 1000 |
+| PACS | fips 48003 | `STORAGE 2` | 830 |
+| PACS | fips 48003 | `GAR,SHOP,BARN` | 824 |
+| PACS | fips 48003 | `GAR` | 817 |
+| PACS | fips 48003 | `GAR 1 CAR` | 756 |
+| PACS | fips 48003 | `COVERED PORCH` | 703 |
+| PACS | fips 48003 | `STORAGE` | 527 |
+| PACS | fips 48003 | `CARPORT` | 521 |
+| PACS | fips 48003 | `WD DECK 1` | 464 |
+| PACS | fips 48003 | `WD DECK 1R` | 387 |
+| PACS | fips 48003 | `ADDITION` | 334 |
+| PACS | fips 48003 | `2ND STORY` | 200 |
+| PACS | fips 48003 | `GAR 3 CAR` | 176 |
+| PACS | fips 48003 | `CONC 2` | 172 |
+| PACS | fips 48003 | `FENCE` | 154 |
+| PACS | fips 48003 | `PERGOLA` | 131 |
+| PACS | fips 48003 | `ENCL PORCH` | 117 |
+| PACS | fips 48003 | `COV CUSTOM PATIO` | 94 |
+| PACS | fips 48003 | `POOL 3` | 84 |
+| PACS | fips 48003 | `SCRN PORCH` | 72 |
+| PACS | fips 48003 | `PAVING` | 71 |
+| PACS | fips 48003 | `POOL 2` | 67 |
+| PACS | fips 48003 | `WD DECK 2R` | 66 |
+| PACS | fips 48003 | `WD DECK 2` | 61 |
+| PACS | fips 48003 | `BALCONY` | 41 |
+| PACS | fips 48003 | `MH SGLWD 2` | 30 |
+| PACS | fips 48003 | `GLASS PORCH` | 28 |
+| PACS | fips 48003 | `HALF STORY` | 25 |
+| PACS | fips 48003 | `POOL 1` | 25 |
+| PACS | fips 48003 | `BASEMENT` | 22 |
+| PACS | fips 48003 | `GAR 4 CAR` | 20 |
+| PACS | fips 48003 | `GREENHSE 1` | 17 |
+| PACS | fips 48003 | `CONC 1` | 16 |
+| PACS | fips 48003 | `BREEZEWAY` | 16 |
+| PACS | fips 48003 | `MH SGLWD 1` | 15 |
+| PACS | fips 48003 | `WD DECK 3R` | 12 |
+| PACS | fips 48003 | `COV POR 1` | 10 |
+| PACS | fips 48003 | `WD DECK 3` | 10 |
+| PACS | fips 48003 | `COV POR 2` | 6 |
+| PACS | fips 48003 | `MH DBLWD 3` | 5 |
+| PACS | fips 48003 | `OPEN PORCH` | 5 |
+| PACS | fips 48003 | `PATIO COVER` | 5 |
+| PACS | fips 48003 | `GREENHSE 2` | 4 |
+| PACS | fips 48003 | `WD DECK 4` | 3 |
+| PACS | fips 48003 | `GAR APT - POOR 2ND STY` | 2 |
+| PACS | fips 48003 | `PATIO OPEN` | 2 |
+| PACS | fips 48003 | `GREENHSE 4` | 2 |
+| PACS | fips 48003 | `MH DBLWD 2` | 1 |
+| PACS | fips 48003 | `CONC 3` | 1 |
+| PACS | fips 48003 | `WAREHSE 3 GOOD` | 1 |
+| PACS | fips 48003 | `GREENHSE 3` | 1 |
+| PACS | fips 48003 | `APT 2 AVG` | 1 |
+| PACS | fips 48003 | `MH` | 1 |
+| PACS | fips 48003 | `GLASS PO 2` | 1 |
+| PACS | fips 48003 | `MAIN AREA` | 6920 |
+| PACS | fips 48003 | `ROOF COV PATIO` | 6453 |
+| PACS | fips 48003 | `DET CARPORT` | 4238 |
+| PACS | fips 48003 | `COMMERCIAL` | 4157 |
+| PACS | fips 48003 | `STORAGE 4` | 1982 |
+| PACS | fips 48003 | `GAR 2 CAR` | 1889 |
+| PACS | fips 48003 | `STORAGE 3` | 1628 |
+| PACS | fips 48003 | `STORAGE 1` | 1597 |
+| PACS | fips 48003 | `FLAT VALUE` | 1304 |
+| PACS | fips 48003 | `SHED` | 1000 |
+| PACS | fips 48003 | `STORAGE 2` | 830 |
+| PACS | fips 48003 | `GAR,SHOP,BARN` | 824 |
+| PACS | fips 48003 | `GAR` | 817 |
+| PACS | fips 48003 | `GAR 1 CAR` | 756 |
+| PACS | fips 48003 | `COVERED PORCH` | 703 |
+| PACS | fips 48003 | `STORAGE` | 527 |
+| PACS | fips 48003 | `CARPORT` | 521 |
+| PACS | fips 48003 | `WD DECK 1` | 464 |
+| PACS | fips 48003 | `WD DECK 1R` | 387 |
+| PACS | fips 48003 | `ADDITION` | 334 |
+| PACS | fips 48003 | `2ND STORY` | 200 |
+| PACS | fips 48003 | `GAR 3 CAR` | 176 |
+| PACS | fips 48003 | `CONC 2` | 172 |
+| PACS | fips 48003 | `FENCE` | 154 |
+| PACS | fips 48003 | `PERGOLA` | 131 |
+| PACS | fips 48003 | `ENCL PORCH` | 117 |
+| PACS | fips 48003 | `COV CUSTOM PATIO` | 94 |
+| PACS | fips 48003 | `POOL 3` | 84 |
+| PACS | fips 48003 | `SCRN PORCH` | 72 |
+| PACS | fips 48003 | `PAVING` | 71 |
+| PACS | fips 48003 | `POOL 2` | 67 |
+| PACS | fips 48003 | `WD DECK 2R` | 66 |
+| PACS | fips 48003 | `WD DECK 2` | 61 |
+| PACS | fips 48003 | `BALCONY` | 41 |
+| PACS | fips 48003 | `MH SGLWD 2` | 30 |
+| PACS | fips 48003 | `GLASS PORCH` | 28 |
+| PACS | fips 48003 | `HALF STORY` | 25 |
+| PACS | fips 48003 | `POOL 1` | 25 |
+| PACS | fips 48003 | `BASEMENT` | 22 |
+| PACS | fips 48003 | `GAR 4 CAR` | 20 |
+| PACS | fips 48003 | `GREENHSE 1` | 17 |
+| PACS | fips 48003 | `CONC 1` | 16 |
+| PACS | fips 48003 | `BREEZEWAY` | 16 |
+| PACS | fips 48003 | `MH SGLWD 1` | 15 |
+| PACS | fips 48003 | `WD DECK 3R` | 12 |
+| PACS | fips 48003 | `COV POR 1` | 10 |
+| PACS | fips 48003 | `WD DECK 3` | 10 |
+| PACS | fips 48003 | `COV POR 2` | 6 |
+| PACS | fips 48003 | `MH DBLWD 3` | 5 |
+| PACS | fips 48003 | `OPEN PORCH` | 5 |
+| PACS | fips 48003 | `PATIO COVER` | 5 |
+| PACS | fips 48003 | `GREENHSE 2` | 4 |
+| PACS | fips 48003 | `WD DECK 4` | 3 |
+| PACS | fips 48003 | `GAR APT - POOR 2ND STY` | 2 |
+| PACS | fips 48003 | `PATIO OPEN` | 2 |
+| PACS | fips 48003 | `GREENHSE 4` | 2 |
+| PACS | fips 48003 | `MH DBLWD 2` | 1 |
+| PACS | fips 48003 | `CONC 3` | 1 |
+| PACS | fips 48003 | `WAREHSE 3 GOOD` | 1 |
+| PACS | fips 48003 | `GREENHSE 3` | 1 |
+| PACS | fips 48003 | `APT 2 AVG` | 1 |
+| PACS | fips 48003 | `MH` | 1 |
+| PACS | fips 48003 | `GLASS PO 2` | 1 |
+| PACS | fips 48501 | `CNPY` | 3021 |
+| PACS | fips 48501 | `LIVING AREA` | 2964 |
+| PACS | fips 48501 | `STORAGE` | 2769 |
+| PACS | fips 48501 | `COMMERCIAL` | 2313 |
+| PACS | fips 48501 | `CARPORT` | 1399 |
+| PACS | fips 48501 | `SHED` | 1166 |
+| PACS | fips 48501 | `BARN` | 1126 |
+| PACS | fips 48501 | `ATTACHED GARAGE` | 1013 |
+| PACS | fips 48501 | `MH` | 700 |
+| PACS | fips 48501 | `PORCHES` | 320 |
+| PACS | fips 48501 | `WD` | 237 |
+| PACS | fips 48501 | `DET GARAGE` | 192 |
+| PACS | fips 48501 | `RESIDENTIAL` | 173 |
+| PACS | fips 48501 | `UNK` | 92 |
+| PACS | fips 48501 | `STG` | 80 |
+| PACS | fips 48501 | `PENS` | 38 |
+| PACS | fips 48501 | `CP` | 36 |
+| PACS | fips 48501 | `POOL` | 34 |
+| PACS | fips 48501 | `COMM` | 22 |
+| PACS | fips 48501 | `APT` | 21 |
+| PACS | fips 48501 | `PAVING` | 13 |
+| PACS | fips 48501 | `AGF2` | 11 |
+| PACS | fips 48501 | `ADDN` | 6 |
+| PACS | fips 48501 | `GRH` | 4 |
+| PACS | fips 48501 | `GH` | 3 |
+| PACS | fips 48501 | `EP` | 3 |
+| PACS | fips 48501 | `WHSE` | 3 |
+| PACS | fips 48501 | `STR3` | 2 |
+| PACS | fips 48501 | `AGF1` | 2 |
+| PACS | fips 48501 | `LIGHT POLE` | 2 |
+| PACS | fips 48501 | `DGU2` | 2 |
+| PACS | fips 48501 | `CONCRETE RESIDENTIAL` | 1 |
+| PACS | fips 48501 | `TCL` | 1 |
+| PACS | fips 48501 | `TCR` | 1 |
+| PACS | fips 48501 | `RV HOOK UPS` | 1 |
+| PACS | fips 48501 | `RES` | 1 |
+| PACS | fips 48501 | `POOL LOW QUAL` | 1 |
+| PACS | fips 48501 | `SUPPORT` | 1 |
+| PACS | fips 48501 | `SIGN` | 1 |
+| PACS | fips 48501 | `BLDG` | 1 |
+| PACS | fips 48501 | `OUTDOOR KITCHEN` | 1 |
