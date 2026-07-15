@@ -245,6 +245,97 @@ const SOURCES = {
             return out;
         },
     },
+    // Guadalupe County clerk (CivicLive/ezTask, guadalupetx.gov -- NOT the
+    // legacy co.guadalupe.tx.us PHP site): /page/coclerk.forclosure links
+    // per-year child pages (slug spelling drifts: "forclosure2025" vs
+    // "foreclosure2026"); each year page lists one /page/open/<id>/0/<Y-M-D>
+    // link per sale date, and that URL IS the consolidated packet PDF (good
+    // embedded text layer). Future months are pre-linked before the packet is
+    // posted -- fetchPdf 404s on those are expected and logged, not fatal.
+    guadalupe_cc: {
+        fips: "48187",
+        // sale venues: 101 E Court St (courthouse north porch; OCR mangles it
+        // hard: "10 I E. Court", "101 E Com1 St", "181 L Court ... Sepia",
+        // "1 E. Court") -> drop EVERY "E Court St" spelling, but keep W Court
+        // St pinned to the Justice Center's 211 (961 W Court is a real
+        // property in the packets)
+        venue: /COURT\s*HOUSE|NORTH\s+PORCH|\b[EL1Il]{1,3}\.?\s*CO[UM][RN]?[TN1Il]{0,2}\s+ST|\b211\s+W(?:EST)?\.?\s*COURT\s+ST/i,
+        discover: async () => {
+            const base = "https://www.guadalupetx.gov";
+            let html = await fetchText(base + "/page/coclerk.forclosure");
+            const yr = new Date().getFullYear();
+            for (const s of new Set([...html.matchAll(/href="(\/page\/coclerk\.fore?closure(\d{4}))"/gi)].map((m) => m[1]))) {
+                if (Math.abs(+s.slice(-4) - yr) <= 1) html += await fetchText(base + s);
+            }
+            const out = [], seen = new Set();
+            for (const m of html.matchAll(/href="(\/page\/open\/\d+\/\d+\/(\d{4})-(\d{2})-\d{2})"/gi)) {
+                const year = +m[2], mon = +m[3];
+                if (!mon || !inWindow(year, mon)) continue;
+                const name = `guadalupe_${m[2]}-${m[3]}.pdf`;
+                if (seen.has(name)) continue;
+                seen.add(name);
+                out.push({ url: base + m[1], year, month: mon, name });
+            }
+            return out;
+        },
+    },
+    // Bowie County clerk (CivicLive/CIRA, co.bowie.tx.us): /page/
+    // bowie.Foreclosures links one packet PDF per sale month at
+    // /upload/page/<id>/<M-D-YY> foreclosure.pdf (older: <MM-DD-YYYY>FS.pdf).
+    // Image-only scans, NO text layer -> tesseract OCR.
+    bowie_cc: {
+        fips: "48037",
+        // sale venue: Bowie County Courthouse, 710 James Bowie Dr, New Boston
+        // (number-pinned: James Bowie Dr has real properties)
+        venue: /COURT\s*HOUSE|\b710\s+JAMES\s*BOWIE/i,
+        discover: async () => {
+            const base = "https://www.co.bowie.tx.us";
+            const html = await fetchText(base + "/page/bowie.Foreclosures");
+            const out = [];
+            for (const m of html.matchAll(/href="(\/upload\/page\/\d+\/(\d{1,2})-(\d{1,2})-(\d{2,4})[^"]*\.pdf)"/gi)) {
+                const mon = +m[2];
+                let year = +m[4];
+                if (year < 100) year += 2000;
+                if (!mon || mon > 12 || !inWindow(year, mon)) continue;
+                out.push({
+                    url: base + encodeURI(m[1]),
+                    year,
+                    month: mon,
+                    name: `bowie_${year}-${String(mon).padStart(2, "0")}_${path.basename(m[1]).replace(/[^\w.-]+/g, "_")}`,
+                });
+            }
+            return out;
+        },
+    },
+    // Ector County clerk (CivicPlus ArchiveCenter -- migrated OFF CivicLive
+    // to ectorcountytx.gov): Archive.aspx?AMID=37 lists one packet per sale
+    // month (Archive.aspx?ADID=<n>, link text "July 7, 2026 - Notice of
+    // Trustee's Sale (PDF)"). Good embedded text layer.
+    ector_cc: {
+        fips: "48135",
+        // sale venue: west entrance, Ector County Courthouse, 300 N Grant Ave,
+        // Odessa (number-pinned: N Grant Ave has real properties)
+        venue: /COURT\s*HOUSE|\b300\s+N(?:ORTH)?\.?\s*GRANT/i,
+        discover: async () => {
+            const html = await fetchText("https://www.ectorcountytx.gov/Archive.aspx?AMID=37");
+            const out = [];
+            for (const m of html.matchAll(/href="(Archive\.aspx\?ADID=(\d+))"[^>]*>[\s\S]{0,120}?([A-Za-z]+)\s+\d{1,2},?\s*(\d{4})/gi)) {
+                const mon = MONTHS.indexOf(m[3].slice(0, 3).toUpperCase()) + 1;
+                if (!mon || !inWindow(+m[4], mon)) continue;
+                out.push({
+                    url: new URL(m[1], "https://www.ectorcountytx.gov/").href,
+                    year: +m[4],
+                    month: mon,
+                    name: `ector_${m[4]}-${String(mon).padStart(2, "0")}_ADID${m[2]}.pdf`,
+                });
+            }
+            return out;
+        },
+    },
+    // Jefferson County: NOT here -- the clerk's foreclosure-information page
+    // (jeffcotxvotes.gov, WordPress) publishes NO notice PDFs; it points to
+    // jefferson.tx.publicsearch.us (Kofile/GovOS PublicSearch, paywalled
+    // images), the separate platform crack in FORECLOSURE_SOURCES.md.
     // Midland County: NOT here -- the CivicPlus archive (Archive.aspx?AMID=39)
     // is dead since June 2019; current notices moved to Kofile/GovOS
     // PublicSearch (midland.tx.publicsearch.us), the separate platform crack
@@ -629,6 +720,20 @@ function parsePacket(text, { zipSet, citySet } = {}) {
 
 // ------------------------------------------------------------ parcel join --
 
+// Gov-owned parcels (courthouse, county land, city lots, school/ISD, MUDs) are
+// never foreclosure TARGETS -- when a notice's VENUE or foreclosing-PARTY
+// address happens to match one, it's a false positive (batch 1-2 lesson:
+// "ELLIS COUNTY OF" @ courthouse, "BEXAR COUNTY", "City of Katy"). Exclude them
+// from every candidate pool so no county can ever surface one. The two-word
+// civic phrases are specific enough to use as bare substrings (they don't hit
+// "COUNTY LINE PROPERTIES LLC"); the short tokens ISD/MUD are space-guarded.
+// NB: avoid Postgres \m/\M word-boundary escapes here -- verified they silently
+// fail to match through parameter binding on this DB. Accepted tradeoff: a firm
+// literally named "...CITY OFFICE LLC" is skipped (a rare missed lead, never a
+// false courthouse foreclosure).
+const GOV_OWNER =
+    "(COUNTY OF|CITY OF|TOWN OF| COUNTY$|STATE OF TEXAS| ISD| MUD |MUNICIPAL UTIL|SCHOOL DIST|HOUSING AUTHORITY|WATER CONTROL|DRAINAGE DIST)";
+
 // Direct match: one batched query pulls every parcel in the county sharing a
 // house number with any notice, then streets are compared in JS.
 async function directMatch(c, fips, notices) {
@@ -638,13 +743,17 @@ async function directMatch(c, fips, notices) {
         `SELECT id, situs_number, situs_street, situs_city, situs_zip, situs_address,
                 ST_X(ST_PointOnSurface(geom)) lon, ST_Y(ST_PointOnSurface(geom)) lat
          FROM parcels
-         WHERE county_fips=$1 AND regexp_replace(situs_number,'\\D','','g') = ANY($2::text[])`,
-        [fips, nums]
+         WHERE county_fips=$1
+           AND owner_name !~* $3
+           AND regexp_replace(COALESCE(situs_number, split_part(situs_address,' ',1)),'\\D','','g') = ANY($2::text[])`,
+        [fips, nums, GOV_OWNER]
     );
     const byNum = new Map();
     for (const r of rows) {
         // some counties only populate situs_address ("9019  WOODLEIGH DR,
-        // HOUSTON, TX 77083") -- derive the street from its first segment
+        // HOUSTON, TX 77083") -- derive number + street from it (Bowie ships
+        // NO situs_number/situs_street at all)
+        if (!r.situs_number && r.situs_address) r.situs_number = r.situs_address.split(/[\s,]/)[0];
         if (!r.situs_street && r.situs_address)
             r.situs_street = r.situs_address.split(",")[0].trim().replace(/^\d[\w/-]*\s+/, "");
         const k = (r.situs_number || "").replace(/\D/g, "");
@@ -706,9 +815,10 @@ async function legalMatch(c, fips, notices) {
                      FROM parcels
                      WHERE county_fips=$1 AND legal_description ILIKE $2
                        AND legal_description ~* $3 AND legal_description ~* $4
+                       AND owner_name !~* $5
                      ORDER BY id
                      LIMIT 6`,
-                    [fips, `%${anchor}%`, `\\m(?:BLOCK|BLK)\\s*0*${blkAlt}\\M`, `\\m(?:LOT|LT)S?\\s*(?:PT\\s*)?0*${lot}\\M`]
+                    [fips, `%${anchor}%`, `\\m(?:BLOCK|BLK)\\s*0*${blkAlt}\\M`, `\\m(?:LOT|LT)S?\\s*(?:PT\\s*)?0*${lot}\\M`, GOV_OWNER]
                 ));
             } catch {
                 continue; // hostile OCR chars in the anchor -> try the next word
@@ -777,11 +887,12 @@ async function geocodeMatch(c, fips, notices) {
                    ST_X(ST_PointOnSurface(geom)) plon, ST_Y(ST_PointOnSurface(geom)) plat
             FROM parcels
             WHERE county_fips=$1
+              AND owner_name !~* $5
               AND ST_DWithin(geom, ST_SetSRID(ST_MakePoint(g.lon,g.lat),4326), 0.0006)
             ORDER BY geom <-> ST_SetSRID(ST_MakePoint(g.lon,g.lat),4326)
             LIMIT 10
          ) p`,
-        [fips, pts.map((p) => p.i), pts.map((p) => p.lon), pts.map((p) => p.lat)]
+        [fips, pts.map((p) => p.i), pts.map((p) => p.lon), pts.map((p) => p.lat), GOV_OWNER]
     );
     const byI = new Map();
     for (const r of rows) {
@@ -866,6 +977,10 @@ async function loadSource(c, name, cfg, parseOnly) {
             [cfg.fips]
         );
         zipSet = new Set(z.rows.map((r) => r.situs_zip.slice(0, 5)));
+        // some counties ship (nearly) no situs zips (Ector 0, Bowie 14): an
+        // empty gate would reject EVERY zip-bearing address -> disable gating
+        // (which also disables the sweep pass; cue + legal still run)
+        if (zipSet.size < 5) zipSet = null;
         const ct = await c.query(
             `SELECT DISTINCT upper(situs_city) city FROM parcels WHERE county_fips=$1 AND situs_city IS NOT NULL`,
             [cfg.fips]
@@ -908,10 +1023,13 @@ async function loadSource(c, name, cfg, parseOnly) {
         let notices = [...merged.values()];
         // boilerplate filter: the sale VENUE ("1521 Eugene Heimann Circle...")
         // shows up on nearly every page; real property addresses on 1-3.
-        // Applies to sweep finds only + explicit per-county venue regex.
+        // Applies to sweep finds only + explicit per-county venue regex. The
+        // venue regex tests the full raw line (number+street+city) so it can
+        // pin to the venue's house number ("211 W Court St" is the Guadalupe
+        // Justice Center; "961 W Court St" is a real property).
         const before = notices.length;
         notices = notices.filter(
-            (n) => !(n.found === "sweep" && n.pages.size >= 6) && !(cfg.venue && n.street && cfg.venue.test(n.street))
+            (n) => !(n.found === "sweep" && n.pages.size >= 6) && !(cfg.venue && n.street && cfg.venue.test(n.raw))
         );
         const boiler = before - notices.length;
         console.log(
