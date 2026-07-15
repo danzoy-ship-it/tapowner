@@ -44,9 +44,14 @@ const SOURCES = {
     nueces:  { sub: "nueces",  fips: "48355" },
     cameron: { sub: "cameron", fips: "48061" },
     hidalgo: { sub: "hidalgo", fips: "48215" },
+    dallas:  { sub: "dallas",  fips: "48113" }, // CURRENT-months complement to dallas_cc (PDF feed ends ~May 2026)
     denton:  { sub: "denton",  fips: "48121" },
     tarrant: { sub: "tarrant", fips: "48439" },
 };
+
+// Government/institutional owners are not real seller leads -> drop them from
+// the parcel join. (Same guard the SIGNALS campaign uses elsewhere.)
+const GOV_OWNER_RE = "(COUNTY OF|CITY OF|TOWN OF| COUNTY$|STATE OF TEXAS| ISD| MUD |MUNICIPAL UTIL|SCHOOL DIST|HOUSING AUTHORITY)";
 
 // ---------------------------------------------------------------- Kofile fetch
 
@@ -111,8 +116,8 @@ class KofileSocket {
             });
         });
     }
-    // one search page; resolves data | null on timeout
-    fetchPage(query, timeoutMs = 25000) {
+    // one search page; resolves data | null on timeout (15s hard per-request cap)
+    fetchPage(query, timeoutMs = 15000) {
         return new Promise((resolve) => {
             if (!this.ws) return resolve(null);
             const cid = crypto.randomUUID();
@@ -131,16 +136,18 @@ class KofileSocket {
 }
 
 // Fetch one page with retries; reconnects a dead socket. Returns data | null.
-async function fetchPageRetry(state, sub, query, attempts = 6) {
+// Politeness (shared IP, sibling agents on other subdomains): ONE reused socket,
+// one in-flight request, exponential backoff 2s->4s->8s... capped at 30s.
+async function fetchPageRetry(state, sub, query, attempts = 5) {
     for (let a = 1; a <= attempts; a++) {
         if (!state.sock || !state.sock.ws) {
             const { host, ort, cookie } = await bootstrap(sub);
             state.sock = new KofileSocket(host, ort, cookie);
-            try { await state.sock.connect(); } catch { state.sock = null; await sleep(2000); continue; }
+            try { await state.sock.connect(); } catch { state.sock = null; await sleep(Math.min(2000 * 2 ** (a - 1), 30000)); continue; }
         }
         const data = await state.sock.fetchPage(query);
         if (data) return data;
-        await sleep(2000); // backend timed out this try -- pause, then retry same conn
+        await sleep(Math.min(2000 * 2 ** (a - 1), 30000)); // backend timed out -- exponential backoff, retry same conn
     }
     return null;
 }
@@ -279,6 +286,7 @@ async function joinParcel(c, fips, doc) {
                 `SELECT id, situs_address, ST_X(ST_Centroid(geom)) lon, ST_Y(ST_Centroid(geom)) lat
                  FROM parcels
                  WHERE county_fips=$1 AND situs_number=$2 AND upper(situs_address) LIKE '%'||$3||'%'
+                   AND (owner_name IS NULL OR owner_name !~* '${GOV_OWNER_RE}')
                  LIMIT 2`,
                 [fips, num, body]
             );
@@ -293,7 +301,8 @@ async function joinParcel(c, fips, doc) {
         if (g) {
             const r = await c.query(
                 `SELECT id FROM parcels
-                 WHERE county_fips=$1 AND ST_Contains(geom, ST_SetSRID(ST_MakePoint($2,$3),4326)) LIMIT 1`,
+                 WHERE county_fips=$1 AND ST_Contains(geom, ST_SetSRID(ST_MakePoint($2,$3),4326))
+                   AND (owner_name IS NULL OR owner_name !~* '${GOV_OWNER_RE}') LIMIT 1`,
                 [fips, g.lon, g.lat]
             );
             if (r.rows.length === 1)
@@ -311,6 +320,7 @@ async function joinParcel(c, fips, doc) {
         for (const w of pl.subWords) { params.push("%" + w + "%"); clauses.push(`legal_description ILIKE $${params.length}`); }
         params.push(`\\y(LOT|LT)\\s*${pl.lot}\\y`); clauses.push(`legal_description ~* $${params.length}`);
         if (pl.blk) { params.push(`\\y(BLOCK|BLK|BK)\\s*${pl.blk}\\y`); clauses.push(`legal_description ~* $${params.length}`); }
+        clauses.push(`(owner_name IS NULL OR owner_name !~* '${GOV_OWNER_RE}')`);
         const r = await c.query(
             `SELECT id, ST_X(ST_Centroid(geom)) lon, ST_Y(ST_Centroid(geom)) lat
              FROM parcels WHERE ${clauses.join(" AND ")} LIMIT 2`,
