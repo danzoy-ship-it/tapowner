@@ -28,8 +28,10 @@ export function deriveOwnerSignals(exemptions: unknown, lastSaleDate: unknown): 
         const t = d.getTime();
         if (Number.isFinite(t)) {
             const yrs = Math.floor((Date.now() - t) / YEAR_MS);
-            // Guard against bad/placeholder dates (future sales, 1900 fillers).
-            if (yrs >= 0 && yrs <= 150) tenure = yrs;
+            // Guard bad/placeholder dates: future sales (yrs<0) and the common
+            // "1900-01-01" filler (~126yrs, ~885 rows) both become null. 100yrs
+            // is well past any plausible real tenure while rejecting the fillers.
+            if (yrs >= 0 && yrs <= 100) tenure = yrs;
         }
     }
 
