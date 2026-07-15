@@ -279,3 +279,34 @@ Which CAMA/appraisal software each Texas county runs, its free bulk-roll URL whe
 | king | 48269 | 2,313 | Pritchard & Abbott | P&A-hard | - | kingcad.org |  |
 | loving | 48301 | 1,914 | Pritchard & Abbott | P&A-hard | - | lovingcad.org |  |
 | kenedy | 48261 | 538 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | kenedycad.org |  |
+
+---
+
+## WAVE-3 RESULTS + PIA TARGET LIST (2026-07-15, 3-agent sweep of the 73 PACS-portal counties)
+
+**Loaded this wave (11):** Titus, Lavaca (baths-only), Newton, Delta (baths-only),
+Mitchell, Angelina, Polk (18.1K beds), Coryell, Caldwell, Lamar, Gillespie — all
+free PACS certified rolls (`{cad}.org/wp-content/uploads/.../*Certified*.zip` or an
+open-records/data-portal page). Plus Washington/Gaines/Dimmit/Kimble earlier.
+
+**KEY CORRECTION — the "78 Pritchard & Abbott" count was wrong.** The rural-tail
+agent found **ZERO P&A** in 26 sampled small counties — every one is PACS /
+True Automation (tells: `esearch.{county}` per-parcel portal, `gis.bisclient.com`
+GIS viewer). Meaning: the holdouts are an **access gap, not a data gap** — the
+data exists in the same PACS system we already parse; a certified-roll records
+request (PIA) yields the loadable `IMPROVEMENT_DETAIL_ATTR` file. Genuine
+free-source dead-ends are far fewer than the map first estimated.
+
+**PIA TARGET LIST (PACS counties, data confirmed to exist, no free bulk posted —
+a $0–75 records request each unlocks beds/baths/pool/improvements):**
+Waller, Medina, Cherokee, Matagorda, Upshur, Jasper, Hill, Starr, Cass, Fayette,
+Colorado, Austin, Uvalde, Howard, Lampasas, Callahan, Comanche, Moore, Willacy,
+Hale, Falls, Jackson, Presidio, Hockley, Blanco, Lamb, Zapata, Camp, Kinney,
+Deaf Smith (note: advertises $75 data fee), Andrews, Edwards, Mason, Mills, Real,
+Concho, Somervell, Parmer, Schleicher, Castro, Dallam, Sutton, Brooks, Hartley,
+Shackelford, McMullen, Oldham, Kenedy, Calhoun — plus earlier Comal, Henderson,
+Parker, Smith. (~50 counties, almost all small/rural, low parcel weight.)
+
+**App-lane (True Prodigy, per-property API — data session should NOT harvest):**
+Travis, Tarrant (live), Denton, McLennan, Ellis (beds confirmed via API by the
+app session); Montgomery (baths-only, no beds in API); Johnson.
