@@ -7,8 +7,8 @@ Regenerate with `python data/build_coverage_log.py` after each mining batch (ref
 ## Scoreboard (253 counties)
 
 - ☑ **Mined (has improvements/feature tags): 74** / 253
-- Full attributes (improv+dims): 43  ·  Partial: 53  ·  Geometry-only (need mining): 157  ·  Missing from DB: 0
-- Seller-signals — sale date: 82 counties  ·  exemptions (homestead/over-65/DV tenure): 116 counties  ·  **any seller-signal: 140 counties**
+- Full attributes (improv+dims): 43  ·  Partial: 54  ·  Geometry-only (need mining): 156  ·  Missing from DB: 0
+- Seller-signals — sale date: 83 counties  ·  exemptions (homestead/over-65/DV tenure): 117 counties  ·  **any seller-signal: 141 counties**
 
 Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISSING. % = share of the county's parcels with that attribute.
 
@@ -62,7 +62,7 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Freestone | 48161 | 23,979 | · | · | · | · | · | 20 | GEOM-ONLY |
 | [ ] | Hudspeth | 48229 | 23,954 | 5 | · | · | 5 | 23 | 2 | GEOM-ONLY |
 | [ ] | Fayette | 48149 | 23,882 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Sabine | 48403 | 23,352 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Sabine | 48403 | 23,352 | · | · | · | · | 89 | 18 | PARTIAL |
 | [ ] | Colorado | 48089 | 22,756 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Calhoun | 48057 | 22,678 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Austin | 48015 | 22,581 | · | · | · | · | · | · | GEOM-ONLY |
@@ -276,7 +276,7 @@ Goal is 100% of NEEDED data on 100% of counties. Where an attribute isn't in any
 
 | County | Missing | Status of attempts | Path to 100% |
 |--------|---------|--------------------|--------------|
-| Tarrant (48439) | beds/baths counts | EXHAUSTED bulk: main-roll IMPROVEMENT_DETAIL_ATTR flags bedroom/bathroom attrs but stores NO count; PropertyData_R Num_Bedrooms column present but ZEROED; ResidentialCompAttributeData has no bed column. | Counts exist only in TAD True Prodigy per-property API (app-lane, already used by fill-on-blank). Bulk harvest is contract-barred — needs Frederick's decision to allow a rate-limited API pull, or a records request. |
+| Tarrant (48439) | beds/baths counts (segments ARE loaded: 692K) | CONFIRMED UNAVAILABLE in bulk (2026-07-15): full TP extract at tad.org/content/data-download IS free and loaded (692K improvements/tags), but ALL 4.7M _ATTR rows carry 'Bedrooms'/'Bathrooms' as flag-only labels with no number, AND PropertyData_R Num_Bedrooms/Num_Bathrooms are 100% blank. TAD policy withholds counts. | No bulk path exists — counts live only in the per-property TP API (off-limits). Effectively closed unless TAD changes policy. |
 | Collin (48085) | improvements (feature tags) | data.texas.gov feed is property-SUMMARY only (imprvclasscd/pool flag; no garage/shed segments). | Check collincad.org own data product for a segment/addl-improvement export (like Dallas RES_ADDL). |
 | Gregg (48183) | sale/exemptions | GCAD_Export.zip prop_id space != DB source_property_id (roll/geometry key mismatch). | Re-pull a Gregg roll whose geo_id matches, or add a geo_id crosswalk (like Tarrant). |
 | Hidalgo (48215) | improvement SEGMENTS / beds / pool-garage tags | PARTIAL: HCADShapefiles.zip data.mdb loaded (year built + main-area sqft + deed date + exemptions, ~324K parcels). True Prodigy killed the bulk roll; mdb has no segments/beds/pool. | $0 PIA to cs@hidalgoad.org for the True Prodigy 'Public Appraisal Export (Legacy 8.0.30)' — cite MCAD's public posting as precedent. |

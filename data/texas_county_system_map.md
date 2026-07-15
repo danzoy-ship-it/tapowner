@@ -641,3 +641,6 @@ The TP bulk certified-export inventory endpoint is `GET prod-container.trueprodi
 - **Hidalgo 48215** (slug `hidalgo`): report inventory = 136 files, ALL PDF, ZERO .zip. No certified export exists via TP. Segments/beds = records-request only; the shapefile mdb (year/sqft/deed/exempt, loaded) is the ceiling.
 - **Tarrant 48439**: full TP extract is FREE static at `tad.org/content/data-download/000_Tarrant_All_Taxing_Units.zip` (703MB, IMPROVEMENT_DETAIL 1.69GB + _ATTR 421MB) — and ALREADY LOADED (692K improvements/tags/sqft). BEDS CONFIRMED UNAVAILABLE: all 4.7M _ATTR rows have 'Bedrooms'/'Bathrooms' as flag-only labels (no count), and PropertyData_R Num_Bedrooms/Bathrooms are 100% blank. TAD withholds counts by policy — no bulk path, records-request won't help.
 TP-token crack (Cooke) remains valuable for TP counties that DO expose a .zip certified export; Hidalgo/Tarrant just don't.
+
+## 2026-07-15 — Sabine 48403 via SWData COLLECTORS export (scratchpad)
+SWData "export_collector" pipe-delimited roll (collector_* cols; collections roll, NO improvement detail but has collector_hscode + collector_exempt + collector_deeddate). NEW reusable `load_swdata_collectors.py` → sale 20,774, exempt 4,212 (join apn==collector_geoid). Applies to any SWData county posting a COLLECTORS export.
