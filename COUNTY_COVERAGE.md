@@ -8,13 +8,13 @@ Regenerate with `python data/build_coverage_log.py` after each mining batch (ref
 
 - ☑ **Mined (has improvements/feature tags): 49** / 253
 - Full attributes (improv+dims): 33  ·  Partial: 17  ·  Geometry-only (need mining): 203  ·  Missing from DB: 0
-- Seller-signals (sale date) loaded: 32 counties
+- Seller-signals (sale date) loaded: 33 counties
 
 Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISSING. % = share of the county's parcels with that attribute.
 
 | ☑ | County | FIPS | Parcels | sqft% | beds% | baths% | improv% | sale% | exempt% | Status |
 |---|--------|------|--------:|------:|------:|-------:|--------:|------:|--------:|--------|
-| [ ] | Collin | 48085 | 387,737 | 91 | 74 | 78 | · | · | · | PARTIAL |
+| [ ] | Collin | 48085 | 387,737 | 91 | 74 | 78 | · | 97 | 67 | PARTIAL |
 | [ ] | Denton | 48121 | 353,631 | 88 | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Hidalgo | 48215 | 328,322 | 80 | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Montgomery | 48339 | 320,915 | 76 | · | · | · | · | · | GEOM-ONLY |
