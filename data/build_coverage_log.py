@@ -116,18 +116,19 @@ GAPS = [
      "PropertyData_R Num_Bedrooms column present but ZEROED; ResidentialCompAttributeData has no bed column.",
      "Counts exist only in TAD True Prodigy per-property API (app-lane, already used by fill-on-blank). "
      "Bulk harvest is contract-barred — needs Frederick's decision to allow a rate-limited API pull, or a records request."),
-    ("Montgomery (48339)", "improvements/beds/baths/signals",
-     "No free flat bulk file (S3 SPA; /data & /reports embed interactive True Prodigy portal only).",
-     "app-lane (True Prodigy per-property) OR $0 electronic open-records request for the roll."),
     ("Collin (48085)", "improvements (feature tags)",
      "data.texas.gov feed is property-SUMMARY only (imprvclasscd/pool flag; no garage/shed segments).",
      "Check collincad.org own data product for a segment/addl-improvement export (like Dallas RES_ADDL)."),
     ("Gregg (48183)", "sale/exemptions",
      "GCAD_Export.zip prop_id space != DB source_property_id (roll/geometry key mismatch).",
      "Re-pull a Gregg roll whose geo_id matches, or add a geo_id crosswalk (like Tarrant)."),
-    ("Hidalgo (48215)", "improvements/beds/baths/signals",
-     "unclassified; only sqft loaded.",
-     "Probe hidalgoad.org for a data product / PACS roll."),
+    ("Hidalgo (48215)", "improvement SEGMENTS / beds / pool-garage tags",
+     "PARTIAL: HCADShapefiles.zip data.mdb loaded (year built + main-area sqft + deed date + exemptions, "
+     "~324K parcels). True Prodigy killed the bulk roll; mdb has no segments/beds/pool.",
+     "$0 PIA to cs@hidalgoad.org for the True Prodigy 'Public Appraisal Export (Legacy 8.0.30)' — cite MCAD's public posting as precedent."),
+    ("Hunt/Comal/Henderson/Webb/Harrison", "improvements/beds/baths",
+     "EXHAUSTED free bulk (wave-3): TP/BIS orgs expose value-only FeatureServers; Hunt's full data is SharePoint login-gated; no PACS export posted.",
+     "$0 open-records request to each district for the PACS appraisal export (imp_detail/attr/info)."),
     ("Lubbock (48303)", "improvement segments/beds/baths",
      "EXHAUSTED free bulk: Orion vendor, all 8 gis.lubbockcad.org services are annotation/parcel only "
      "(no segment table); site is PDF-only; the free monthly Property Data Export (Rec4 Improvement + "

@@ -6,30 +6,26 @@ Regenerate with `python data/build_coverage_log.py` after each mining batch (ref
 
 ## Scoreboard (253 counties)
 
-- ☑ **Mined (has improvements/feature tags): 64** / 253
-- Full attributes (improv+dims): 37  ·  Partial: 35  ·  Geometry-only (need mining): 181  ·  Missing from DB: 0
-- Seller-signals — sale date: 57 counties  ·  exemptions (homestead/over-65/DV tenure): 103 counties  ·  **any seller-signal: 114 counties**
+- ☑ **Mined (has improvements/feature tags): 68** / 253
+- Full attributes (improv+dims): 39  ·  Partial: 40  ·  Geometry-only (need mining): 174  ·  Missing from DB: 0
+- Seller-signals — sale date: 64 counties  ·  exemptions (homestead/over-65/DV tenure): 108 counties  ·  **any seller-signal: 121 counties**
 
 Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISSING. % = share of the county's parcels with that attribute.
 
 | ☑ | County | FIPS | Parcels | sqft% | beds% | baths% | improv% | sale% | exempt% | Status |
 |---|--------|------|--------:|------:|------:|-------:|--------:|------:|--------:|--------|
-| [ ] | Hidalgo | 48215 | 328,322 | 80 | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Montgomery | 48339 | 320,915 | 76 | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Hidalgo | 48215 | 328,322 | 81 | · | · | · | 93 | 47 | PARTIAL |
 | [ ] | Smith | 48423 | 140,245 | 55 | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Lubbock | 48303 | 135,112 | 78 | · | · | · | 95 | · | PARTIAL |
 | [ ] | Mclennan | 48309 | 115,362 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Henderson | 48213 | 106,708 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Comal | 48091 | 103,537 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Parker | 48367 | 100,548 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Ellis | 48139 | 98,803 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Parker | 48367 | 100,548 | · | · | · | · | 92 | · | PARTIAL |
 | [ ] | Webb | 48479 | 98,291 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Ector | 48135 | 75,891 | 77 | · | · | 20 | 68 | 42 | PARTIAL |
 | [ ] | Hunt | 48231 | 69,728 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Wichita | 48485 | 58,742 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Tomgreen | 48451 | 58,686 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Tomgreen | 48451 | 58,686 | · | · | · | · | 98 | · | PARTIAL |
 | [ ] | Bowie | 48037 | 53,212 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Sanpatricio | 48409 | 51,385 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Harrison | 48203 | 50,995 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Burnet | 48053 | 50,138 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Waller | 48473 | 48,136 | · | · | · | · | · | · | GEOM-ONLY |
@@ -212,6 +208,7 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [x] | Collin | 48085 | 387,737 | 91 | 74 | 78 | · | 97 | 67 | PARTIAL |
 | [x] | Fortbend | 48157 | 375,097 | 83 | 50 | 52 | 75 | · | · | FULL |
 | [x] | Denton | 48121 | 353,631 | 89 | 75 | 81 | 88 | 96 | 62 | FULL+SIGNALS |
+| [x] | Montgomery | 48339 | 320,915 | 77 | · | 67 | 74 | 91 | 54 | FULL+SIGNALS |
 | [x] | Williamson | 48491 | 282,983 | 82 | 24 | 78 | 87 | 82 | · | FULL+SIGNALS |
 | [x] | Brazoria | 48039 | 275,131 | 62 | · | · | 62 | 78 | 40 | PARTIAL |
 | [x] | Galveston | 48167 | 188,695 | 78 | 1 | 61 | 78 | 86 | 45 | FULL+SIGNALS |
@@ -222,6 +219,7 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [x] | Jefferson | 48245 | 122,202 | 63 | · | · | 71 | · | · | PARTIAL |
 | [x] | Hays | 48209 | 117,427 | 84 | 13 | · | 74 | · | · | PARTIAL |
 | [x] | Johnson | 48251 | 101,847 | 68 | · | · | 72 | · | · | PARTIAL |
+| [x] | Ellis | 48139 | 98,803 | 81 | · | · | 81 | 95 | 53 | PARTIAL |
 | [x] | Guadalupe | 48187 | 95,571 | 72 | 37 | 43 | 78 | 93 | 48 | FULL+SIGNALS |
 | [x] | Kaufman | 48257 | 94,650 | 71 | 4 | 7 | 78 | 91 | 48 | PARTIAL |
 | [x] | Grayson | 48181 | 89,348 | 59 | · | 7 | 68 | · | · | PARTIAL |
@@ -233,8 +231,10 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [x] | Bastrop | 48021 | 63,357 | 51 | · | · | 66 | 92 | 38 | PARTIAL |
 | [x] | Angelina | 48005 | 60,693 | 60 | · | · | 63 | 94 | 36 | PARTIAL |
 | [x] | Polk | 48373 | 60,178 | 35 | 30 | 34 | 44 | 94 | 19 | FULL+SIGNALS |
+| [x] | Wichita | 48485 | 58,742 | 80 | 68 | 68 | 80 | 95 | 44 | FULL+SIGNALS |
 | [x] | Potter | 48375 | 53,490 | 74 | 63 | 65 | 80 | 100 | 35 | FULL+SIGNALS |
 | [x] | Rockwall | 48397 | 52,739 | 84 | 49 | 66 | 87 | 97 | 63 | FULL+SIGNALS |
+| [x] | Sanpatricio | 48409 | 51,385 | 64 | · | · | 64 | 57 | 36 | PARTIAL |
 | [x] | Hood | 48221 | 51,275 | 60 | · | · | 65 | 93 | 39 | PARTIAL |
 | [x] | Orange | 48361 | 50,337 | 43 | · | · | 47 | · | · | PARTIAL |
 | [x] | Wise | 48497 | 48,705 | 54 | · | 38 | 67 | 49 | · | FULL+SIGNALS |
@@ -277,11 +277,12 @@ Goal is 100% of NEEDED data on 100% of counties. Where an attribute isn't in any
 | County | Missing | Status of attempts | Path to 100% |
 |--------|---------|--------------------|--------------|
 | Tarrant (48439) | beds/baths counts | EXHAUSTED bulk: main-roll IMPROVEMENT_DETAIL_ATTR flags bedroom/bathroom attrs but stores NO count; PropertyData_R Num_Bedrooms column present but ZEROED; ResidentialCompAttributeData has no bed column. | Counts exist only in TAD True Prodigy per-property API (app-lane, already used by fill-on-blank). Bulk harvest is contract-barred — needs Frederick's decision to allow a rate-limited API pull, or a records request. |
-| Montgomery (48339) | improvements/beds/baths/signals | No free flat bulk file (S3 SPA; /data & /reports embed interactive True Prodigy portal only). | app-lane (True Prodigy per-property) OR $0 electronic open-records request for the roll. |
 | Collin (48085) | improvements (feature tags) | data.texas.gov feed is property-SUMMARY only (imprvclasscd/pool flag; no garage/shed segments). | Check collincad.org own data product for a segment/addl-improvement export (like Dallas RES_ADDL). |
 | Gregg (48183) | sale/exemptions | GCAD_Export.zip prop_id space != DB source_property_id (roll/geometry key mismatch). | Re-pull a Gregg roll whose geo_id matches, or add a geo_id crosswalk (like Tarrant). |
-| Denton (48121) | improvements/beds/baths/signals | app-lane (True Prodigy); bulk not yet located. | Probe dentoncad.com for a bulk export; else app-lane live API. |
-| Hidalgo (48215) | improvements/beds/baths/signals | unclassified; only sqft loaded. | Probe hidalgoad.org for a data product / PACS roll. |
+| Hidalgo (48215) | improvement SEGMENTS / beds / pool-garage tags | PARTIAL: HCADShapefiles.zip data.mdb loaded (year built + main-area sqft + deed date + exemptions, ~324K parcels). True Prodigy killed the bulk roll; mdb has no segments/beds/pool. | $0 PIA to cs@hidalgoad.org for the True Prodigy 'Public Appraisal Export (Legacy 8.0.30)' — cite MCAD's public posting as precedent. |
+| Hunt/Comal/Henderson/Webb/Harrison | improvements/beds/baths | EXHAUSTED free bulk (wave-3): TP/BIS orgs expose value-only FeatureServers; Hunt's full data is SharePoint login-gated; no PACS export posted. | $0 open-records request to each district for the PACS appraisal export (imp_detail/attr/info). |
+| Lubbock (48303) | improvement segments/beds/baths | EXHAUSTED free bulk: Orion vendor, all 8 gis.lubbockcad.org services are annotation/parcel only (no segment table); site is PDF-only; the free monthly Property Data Export (Rec4 Improvement + Rec5 ImpSegment incl. Bedrooms) was discontinued ~2015 and is now sold via Orion. | $0 open-records/25.195 request naming LCAD's own 'Property Data Export (record types 1-6)'. |
+| Smith (48423) | improvements/beds/baths/signals | EXHAUSTED free bulk: GSA Corp vendor, smithcad.org static/PDF-only, mapsite 500s, ArcGIS Hub has no CAMA. | $0 open-records request for the GSA 'Certified Data Roll' export (same product Johnson CAD posts free). |
 
 **203 geometry-only counties** still need a full mining pass (mostly rural — the underserved market that is the whole point). Work them biggest-first from the ☐ rows above; each is a roll hunt (wp-json probe, PACS roll, CAD data product, or Socrata).
 

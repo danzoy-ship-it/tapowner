@@ -581,3 +581,18 @@ Targeted the 7 biggest counties that had sqft but ZERO improvement/feature data 
 - **Wave 2** (fable-5): Hidalgo 48215 + Montgomery 48339 — bulk PACS/open-dir/publink hunt.
 - **Wave 3** (fable-5): McLennan 48309, Henderson 48213, Comal 48091, Ellis 48139, Webb 48479, Hunt 48231, Wichita 48485, Bowie 48037, SanPatricio 48409, Harrison 48203.
 - **Wave 4** (fable-5): Parker 48367 + TomGreen 48451. FINGERPRINT (confirmed by Miner, handed to agent): SWData search portal (`southwestdatasolution.com/webindex.aspx?dbkey={PARKERCAD|TOMGREENCAD}`) with PDF-only webDownloads (no bulk); BIS ArcGIS GIS backend (`gis.bisclient.com/{county}cad`); gis.{county}cad.org NXDOMAIN; services6.arcgis.com/j94FvPaik4etwHFk org is a wrong/empty placeholder. Agent to find the real BIS FeatureServer via AGOL item discovery + utility.arcgis.com proxy w/ `Referer: https://gis.bisclient.com/`. If solved → `load_bis_gis.py <fips> <MapServer-url> [layer]`.
+
+## 2026-07-15 16:xx CT — crack fleet waves 2-3 harvested + baths correctness fix
+
+### SOLVED / loaded (full or partial)
+- **Montgomery 48339** — PACS on public Google Drive (`mcad-tx.org/appraisal-data-exports`, TP CMS; Drive id `1ruQPPbRszyEax5iX96oxI7zbIlEwgDEl`; download via `drive.usercontent.google.com/download?id=..&export=download&confirm=t`). `load_pacs_roll.py` → improv 239K, sqft 247K, sale 291K, exempt 174K, baths 215K (avg 3.94, cleaned). Beds absent in ATTR (name-only "Bedrooms", no count) = genuine gap.
+- **Hidalgo 48215** — PARTIAL. `hidalgoad.org/data-downloads` → HCADShapefiles.zip → `data.mdb` (394K rows). NEW `load_hcad_data_mdb.py` → sqft 266K, year 272K, sale 304K, exempt 155K. No segments/beds/pool (PIA gap).
+- **Wichita 48485** — PACS `wadtx.com/wp-content/uploads/2025/07/2025-REAL-CERTIFIED-ROLL.zip`. improv 47K, **beds 40K**, sqft 47K, sale 56K, exempt 26K, baths 40K (avg 1.65). FULL win.
+- **Ellis 48139** — PACS Google Drive (TP CMS builder.io space; Drive id `1Y-bAKgEZ9jRRBPMhgUMbiyjZPbi9OMtP`). improv 80K, sqft 80K, sale 93K, exempt 52K. Beds absent; baths were fixture-only → nulled.
+- **San Patricio 48409** — PACS `sanpatcad.org/wp-content/uploads/2025/08/2025-DATA-EXPORT-WITH-140K_60K.zip` (note sanpatcad, not sanpatriciocad). improv 33K, sqft 33K, sale 29K, exempt 18K. Beds absent.
+- **Parker 48367 + TomGreen 48451** — BIS FeatureServer (own AGOL orgs: `services.arcgis.com/79g1H99xInKSRRK3/ParkerCADWebService`, `services5.arcgis.com/3KYdtBnAMnav1mt9/TomGreenCADWebService`, layer 0, no Referer/token). `load_bis_gis.py` → deed-date SALE SIGNAL only (Parker 92,836; TomGreen 57,764); no sqft/year/exemptions in GIS (PIA for physical).
+
+### DATA-QUALITY FIX (new tool `fix_pacs_baths.py`)
+The generic PACS loader read the "Plumbing" ATTR value as baths, but districts encode it inconsistently: Denton = bare decimals (2.5 = 2 full+1 half); Montgomery = coded (2FB/1HB) MIXED with raw plumbing FIXTURE counts (8/10/13); Ellis = fixture counts only. Result: bogus 13-40 "bath" houses. `fix_pacs_baths.py` re-parses ATTR FB/HB-aware, rejects bare integers >8 (fixtures), takes MAX across a property's segments (not sum), overwrites. Applied: Montgomery (avg 3.94), Denton (avg 2.40). Ellis baths nulled (no usable data). Wichita/SanPat already clean. The main loader's bath parse still has this fragility → run fix_pacs_baths after any new PACS county and sanity-check avg/max.
+
+### Records-request only (wave-3 dead-ends): Hunt 48231 (SharePoint login-gated), Comal 48091 (value-only FeatureServer), Henderson 48213 (PDF-only), Webb 48479 (no data page), Harrison 48203 (GIS-only). McLennan 48309 = 2022 Wayback PACS but DEFLATE64 (needs 7-Zip extract) — deferred. Bowie 48037 = year-built-only ownership csv (Drive) — low-value partial, deferred.
