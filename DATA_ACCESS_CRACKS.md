@@ -13,13 +13,16 @@ Cracked by fable-5 reverse-engineering agents, 2026-07-16. Loaders live in `data
 > True Prodigy `/public/property/{pid}/deeds`, BIS FeatureServer `SaleDate/DeedDate/OName`.
 > No table overlap: Miner writes `parcels`, app writes `parcel_signals`.
 
-**Universal Texas fact (verified by 3 independent cracks):** appraisal districts
-record building **class + living-area sqft + year + improvement segments**
-(garage/pool/porch) — but **NOT bedroom/bathroom counts** except where a PACS
-`IMPROVEMENT_DETAIL_ATTR` file carries a "Number of Bedrooms" attribute (a minority
-of counties: Travis, Bexar, Dallas, Collin, Williamson…). Beds/baths for the rest
-are an MLS attribute, not a CAD one. (An active investigation is re-challenging this
-via HCAD fixtures.txt + deeper API endpoints — update here if it finds more.)
+**Beds/baths — CORRECTED (per-district config, present in MANY counties):** an
+earlier claim that "CADs don't record beds" was WRONG. Beds/baths ARE public for
+a large share of counties: (a) **PACS `IMPROVEMENT_DETAIL_ATTR`** "Number of
+Bedrooms"/"Plumbing" (~30 loaded); (b) **HCAD fixtures.txt** RMB/RMF/RMH (Harris);
+(c) **Dallas RES_DETAIL.CSV** NUM_BEDROOMS/NUM_FULL_BATHS; (d) **True Prodigy
+`/improvement/{impID}/features`** (Tarrant/Denton/Ellis/Hidalgo/McLennan/Cooke —
+"Bedrooms: N" — but per-IP rate-limited, so FILL-ON-BLANK, not bulk). GENUINE gaps
+(district doesn't collect): Montgomery, Fort Bend, Webb, Wharton, ValVerde,
+JimWells, Maverick, Limestone, all BIS/SWData/P&A, and bed-less PACS rolls
+(Grayson, Wise, Bee, Lavaca, Hockley, Angelina, Orange, Gillespie) → MLS/vendor.
 
 Texas is **non-disclosure** → sale PRICE is essentially never public (deed DATES yes).
 

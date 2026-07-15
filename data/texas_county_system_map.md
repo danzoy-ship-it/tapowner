@@ -512,8 +512,14 @@ OPERATIONAL: LIST is efficient (100/page); physical detail is 1 call/account. Jo
 - **True Prodigy React (Anderson andersoncad.net, Bowie bowieappraisal.com):** use the True Prodigy API recipe above.
 - SWData **Blazor** (Sabine sabinecad.southwestdatasolutions.com): SignalR, needs browser. Montague: portal unresolved.
 
-## ⚠️ DEFINITIVE FINDING: Texas rural CADs do NOT record beds/baths
-THREE independent fable-5 crackers (True Prodigy, BIS, SWData/whoownsit) all confirmed: Texas appraisal districts store building CLASS + living-area SQFT + year + improvement SEGMENTS (garage/pool/porch) — but **NOT bedroom or bathroom counts**. Beds/baths are an MLS attribute, not a CAD field. (True Prodigy exposes baths via Plumbing codes e.g. "2FB"; BIS/SWData have neither.) The PACS counties where we DID capture "Number of Bedrooms" from the ATTR file are the exception. => beds/baths for full statewide coverage must come from MLS/BatchData, a separate later layer — NOT the roll pass.
+## ✅ CORRECTED FINDING: beds/baths are a PER-DISTRICT config choice — present in MANY counties (bedroom-hunt fable crack, 2026-07-16)
+My earlier "CADs never record beds" claim was WRONG (over-generalized from the wrong endpoint). Beds/baths ARE publicly available for a large share of counties; it's a per-CAMA-config choice. Where they ARE:
+- **PACS certified-roll IMPROVEMENT_DETAIL_ATTR** (~30 loaded: Travis, Bexar, Dallas, Collin, Williamson, El Paso, Bell, Kaufman…): "Number of Bedrooms"/"Plumbing" attrs.
+- **HCAD fixtures.txt** (Harris, loaded): RMB=bedrooms, RMF=full bath, RMH=half bath.
+- **Dallas RES_DETAIL.CSV** (in dallas_dcad zip): NUM_BEDROOMS, NUM_FULL_BATHS — a BULK beds source (was loading RES_ADDL only; load RES_DETAIL for beds).
+- **True Prodigy `/public/propertyaccount/improvement/{pImprovementID}/features`** — carries bedrooms for Tarrant("Rooms: Bedrooms 3"), Denton("Bedrooms: 5"), Ellis("FOUR BEDROOM"), Hidalgo("Number of Bedrooms: 3.00"), McLennan("No of Bedrooms: 3 Bd"), Cooke("BEDROOMS: 4") — ~1.7M parcels. **BUT the TP detail API has a per-IP WAF rate limit (~150-200 rapid calls -> 403), so these are FILL-ON-BLANK (app-lane, api/src/cadattr/trueprodigy.ts already parses them), NOT bulk-harvestable.**
+Where beds are a GENUINE gap (district doesn't collect them — verified, not assumed): Montgomery, Fort Bend, Webb, Wharton, ValVerde, JimWells, Maverick, Limestone, Hunt(prob), all BIS(~45)/SWData/P&A counties, and PACS counties whose roll has no bed attr (Grayson, Wise, Bee, Lavaca, Hockley, Angelina, Orange, Gillespie…). Those need MLS/vendor. (Tarrant BULK zeroes Num_Bedrooms — beds there ONLY via the TP API fill-on-blank.)
+**APP-SESSION HANDOFF:** wire Hidalgo(48215)/McLennan(48309)/Cooke(48097) into the True Prodigy fill-on-blank lane (their beds are reachable; same TP client as Tarrant).
 
 ### Tyler crack (2nd pass, 2026-07-16)
 - **Brewster(48043) + Bosque(48035) "Property Record Search" = TaxNetUSA** (paid aggregator skin, 100-result cap, no free bulk) — DEAD END, same as whoownsit. Their real CAD portal is elsewhere / records-request.
