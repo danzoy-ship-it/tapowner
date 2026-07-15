@@ -576,3 +576,8 @@ Targeted the 7 biggest counties that had sqft but ZERO improvement/feature data 
 - **Smith 48423** — GSA Corp (same as Johnson, which posts free). Ask: the GSA Certified Data Roll export with improvement detail. Contact (903) 510-8600.
 
 ### Still open big gaps: Hidalgo 48215, Montgomery 48339 (both sqft-only; probe for a PACS roll / data product next). Tarrant beds (contract-barred), Collin feature-tags (has beds/pool via MDB; improvements text array empty — already mined), Gregg key-mismatch.
+
+## 2026-07-15 15:55 CT — crack fleet waves 2-4 dispatched (in flight)
+- **Wave 2** (fable-5): Hidalgo 48215 + Montgomery 48339 — bulk PACS/open-dir/publink hunt.
+- **Wave 3** (fable-5): McLennan 48309, Henderson 48213, Comal 48091, Ellis 48139, Webb 48479, Hunt 48231, Wichita 48485, Bowie 48037, SanPatricio 48409, Harrison 48203.
+- **Wave 4** (fable-5): Parker 48367 + TomGreen 48451. FINGERPRINT (confirmed by Miner, handed to agent): SWData search portal (`southwestdatasolution.com/webindex.aspx?dbkey={PARKERCAD|TOMGREENCAD}`) with PDF-only webDownloads (no bulk); BIS ArcGIS GIS backend (`gis.bisclient.com/{county}cad`); gis.{county}cad.org NXDOMAIN; services6.arcgis.com/j94FvPaik4etwHFk org is a wrong/empty placeholder. Agent to find the real BIS FeatureServer via AGOL item discovery + utility.arcgis.com proxy w/ `Referer: https://gis.bisclient.com/`. If solved → `load_bis_gis.py <fips> <MapServer-url> [layer]`.
