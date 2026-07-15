@@ -6,9 +6,9 @@ Regenerate with `python data/build_coverage_log.py` after each mining batch (ref
 
 ## Scoreboard (253 counties)
 
-- ☑ **Mined (has improvements/feature tags): 68** / 253
-- Full attributes (improv+dims): 39  ·  Partial: 40  ·  Geometry-only (need mining): 174  ·  Missing from DB: 0
-- Seller-signals — sale date: 64 counties  ·  exemptions (homestead/over-65/DV tenure): 108 counties  ·  **any seller-signal: 121 counties**
+- ☑ **Mined (has improvements/feature tags): 69** / 253
+- Full attributes (improv+dims): 40  ·  Partial: 40  ·  Geometry-only (need mining): 173  ·  Missing from DB: 0
+- Seller-signals — sale date: 65 counties  ·  exemptions (homestead/over-65/DV tenure): 109 counties  ·  **any seller-signal: 122 counties**
 
 Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISSING. % = share of the county's parcels with that attribute.
 
@@ -17,7 +17,6 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Hidalgo | 48215 | 328,322 | 81 | · | · | · | 93 | 47 | PARTIAL |
 | [ ] | Smith | 48423 | 140,245 | 55 | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Lubbock | 48303 | 135,112 | 78 | · | · | · | 95 | · | PARTIAL |
-| [ ] | Mclennan | 48309 | 115,362 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Henderson | 48213 | 106,708 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Comal | 48091 | 103,537 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Parker | 48367 | 100,548 | · | · | · | · | 92 | · | PARTIAL |
@@ -218,6 +217,7 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [x] | Nueces | 48355 | 157,198 | 71 | 6 | 1 | 79 | 90 | 46 | PARTIAL |
 | [x] | Jefferson | 48245 | 122,202 | 63 | · | · | 71 | · | · | PARTIAL |
 | [x] | Hays | 48209 | 117,427 | 84 | 13 | · | 74 | · | · | PARTIAL |
+| [x] | Mclennan | 48309 | 115,362 | 77 | · | 65 | 77 | 84 | 42 | FULL+SIGNALS |
 | [x] | Johnson | 48251 | 101,847 | 68 | · | · | 72 | · | · | PARTIAL |
 | [x] | Ellis | 48139 | 98,803 | 81 | · | · | 81 | 95 | 53 | PARTIAL |
 | [x] | Guadalupe | 48187 | 95,571 | 72 | 37 | 43 | 78 | 93 | 48 | FULL+SIGNALS |
