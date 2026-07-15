@@ -494,6 +494,109 @@ const SOURCES = {
             return out;
         },
     },
+    // Harris County clerk (cclerk.hctx.net, classic ASP.NET WebForms):
+    // FRCL_R.aspx is a GridView search by sale month -- rows carry NO address
+    // column (Doc ID / SaleDate / FileDate / Pgs only), but each Doc ID links
+    // ViewECdocs.aspx?ID=<token> which streams the per-notice PDF directly,
+    // no login/CAPTCHA/cookie. The PDFs are render-on-the-fly scans that
+    // pdftotext reads as EMPTY, yet they embed the recorder's own OCR text
+    // layer, which the pdf_ocr_text.py helper path picks up fast (~1s/doc).
+    // Dance (event validation forces the order): GET (cookies+viewstate) ->
+    // __doPostBack ddlYear (registers that year's month options) -> btnSearch
+    // per sale month -> walk the pager (Page$N postbacks, ~40 rows/page).
+    // One "packet" per notice PDF, like lubbock/williamson. Harris is the
+    // biggest TX county: expect 400+ docs per sale month (first full run is
+    // slow; PDF+text caching makes re-runs incremental).
+    harris_cc: {
+        fips: "48201",
+        // sale venue: Bayou City Event Center, Magnolia South Ballroom,
+        // 9401 Knight Rd, Houston (older notices: Family Law Center,
+        // 1115 Congress / 1001 Preston)
+        venue: /BAYOU\s*C\S{0,3}TY|9401\s*KN[Il1]GHT|MAGNOL\w*\s+SOUTH|1115\s+CONGRESS|1001\s+PRESTON/i,
+        discover: async () => {
+            const page = "https://www.cclerk.hctx.net/Applications/WebSearch/FRCL_R.aspx";
+            const P = "ctl00$ContentPlaceHolder1$";
+            let cookie = "";
+            const call = async (form) => {
+                const r = await fetch(page, {
+                    method: form ? "POST" : "GET",
+                    headers: {
+                        "User-Agent": UA,
+                        ...(cookie ? { Cookie: cookie } : {}),
+                        ...(form ? { "Content-Type": "application/x-www-form-urlencoded", Referer: page } : {}),
+                    },
+                    body: form ? new URLSearchParams(form).toString() : undefined,
+                    signal: AbortSignal.timeout(20000),
+                    redirect: "follow",
+                });
+                for (const sc of r.headers.getSetCookie?.() || []) {
+                    const kv = sc.split(";")[0], nm = kv.split("=")[0] + "=";
+                    cookie = [...cookie.split("; ").filter((x) => x && !x.startsWith(nm)), kv].join("; ");
+                }
+                if (!r.ok) throw new Error(`FRCL_R.aspx -> HTTP ${r.status}`);
+                return r.text();
+            };
+            const hidden = (html) => {
+                const h = {};
+                for (const m of html.matchAll(/<input type="hidden" name="([^"]+)"[^>]*value="([^"]*)"/g))
+                    h[m[1]] = m[2].replace(/&#(\d+);/g, (_, d) => String.fromCharCode(+d)).replace(/&quot;/g, '"').replace(/&amp;/g, "&");
+                return h;
+            };
+            const form = (html, extra) => ({
+                ...hidden(html),
+                __EVENTTARGET: "",
+                __EVENTARGUMENT: "",
+                __LASTFOCUS: "",
+                [P + "txtFileNo"]: "",
+                [P + "rbtlDate"]: "SaleDate",
+                ...extra,
+            });
+            // candidate sale months = the same window inWindow() enforces
+            const now = new Date(), months = [];
+            for (let d = -(+(process.env.FC_BACK || 0)); d <= 2; d++) {
+                const t = new Date(Date.UTC(now.getFullYear(), now.getMonth() + d, 1));
+                months.push({ year: t.getUTCFullYear(), month: t.getUTCMonth() + 1 });
+            }
+            const out = [], seen = new Set();
+            let html = await call();
+            let boundYear = null;
+            for (const { year, month } of months) {
+                if (year !== boundYear) {
+                    html = await call(form(html, { __EVENTTARGET: P + "ddlYear", [P + "ddlYear"]: String(year), [P + "ddlMonth"]: "Select -" }));
+                    boundYear = year;
+                }
+                if (!new RegExp(`<select name="ctl00\\$ContentPlaceHolder1\\$ddlMonth"[\\s\\S]*?value="${month}"`).test(html))
+                    continue; // month not offered for that year (no filings yet)
+                html = await call(form(html, { [P + "ddlYear"]: String(year), [P + "ddlMonth"]: String(month), [P + "btnSearch"]: "Search" }));
+                for (let pg = 1; pg < 100; pg++) {
+                    if (pg > 1) {
+                        if (!html.includes(`Page$${pg}`)) break;
+                        html = await call(form(html, {
+                            __EVENTTARGET: P + "GridView1",
+                            __EVENTARGUMENT: `Page$${pg}`,
+                            [P + "ddlYear"]: String(year),
+                            [P + "ddlMonth"]: String(month),
+                        }));
+                    }
+                    let got = 0;
+                    for (const m of html.matchAll(/ViewECdocs\.aspx\?ID=([^"]+)"[^>]*>(FRCL-\d{4}-\d+)</g)) {
+                        const name = `harris_${year}-${String(month).padStart(2, "0")}_${m[2]}.pdf`;
+                        if (seen.has(name)) continue;
+                        seen.add(name);
+                        out.push({
+                            url: "https://www.cclerk.hctx.net/Applications/WebSearch/ViewECdocs.aspx?ID=" + encodeURIComponent(m[1]),
+                            year,
+                            month,
+                            name,
+                        });
+                        got++;
+                    }
+                    if (!got) break; // "no records" month / stale pager
+                }
+            }
+            return out;
+        },
+    },
     // Smith County: NOT here -- smith-county.com/298/Foreclosures (CivicPlus)
     // publishes NO notice PDFs (re-verified 2026-07: prose + one dead
     // DocumentCenter link + no trustee-sale ArchiveCenter module); notices
@@ -675,6 +778,7 @@ function levenshtein(a, b) {
 const CUES = new RegExp(
     [
         String.raw`(?:more\s+)?c[o0][mnru]{1,5}[o0]?n?l?[vy]\s+k[nm][o0]?w[nml1i]{0,3}\s+as`,
+        String.raw`be[il1]ng\s+kn[o0]?[vw][nml1i]{0,3}\s+as`,
         String.raw`pr[o0]pert[vy]\s+address(?:\s*[/\\]\s*mailing\s+address)?`,
         String.raw`purported\s+(?:street\s+)?address`,
         String.raw`(?:currently|which)\s+has\s+the\s+address\s+of`,
@@ -961,11 +1065,20 @@ async function directMatch(c, fips, notices) {
 // Legal-description match for notices that carry no street address at all:
 // anchor word from the subdivision + block + lot against parcels.legal_description
 // (both Bell and Fort Bend store it as "SUBDIV ..., BLOCK n, LOT n").
-async function legalMatch(c, fips, notices) {
+async function legalMatch(c, fips, notices, deadline = Infinity) {
     // OCR confuses single-letter blocks with digits (Block S vs 5, O vs 0)
     const CONFUSE = { O: "0", I: "1", L: "1", Z: "2", S: "5", B: "8", G: "6" };
+    let deferred = 0;
     for (const n of notices) {
         if (n.parcel_id || !n.legal) continue;
+        // huge counties (Harris: 1.5M parcels, ~3s/probe, 200+ legal-only
+        // notices) can't finish this phase inside one machine-capped run:
+        // FC_LEGAL_MS budgets it, and the prior-match preload in loadSource
+        // makes successive runs pick up where the last one stopped.
+        if (Date.now() > deadline) {
+            deferred++;
+            continue;
+        }
         const { lot, blk, subdiv } = n.legal;
         let blkAlt = blk;
         if (CONFUSE[blk.toUpperCase()]) blkAlt = `(?:${blk}|${CONFUSE[blk.toUpperCase()]})`;
@@ -1009,6 +1122,7 @@ async function legalMatch(c, fips, notices) {
         n.lat = rows[0].lat;
         n.match = "legal";
     }
+    if (deferred) console.log(`    legalMatch: FC_LEGAL_MS budget hit -- ${deferred} legal-only notices deferred to a re-run`);
 }
 
 // Census batch geocoder (free, no key) for whatever direct match missed.
@@ -1210,9 +1324,28 @@ async function loadSource(c, name, cfg, parseOnly) {
             for (const n of notices.slice(0, 12)) console.log(`    [${n.found}] ${n.raw}`);
             continue;
         }
+        // preload matches persisted by a prior run (source_ref is stable), so
+        // interrupted big-county runs converge instead of re-matching from
+        // scratch -- parcel_signals READ only.
+        const { rows: prior } = await c.query(
+            `SELECT source_ref, parcel_id, lon, lat FROM parcel_signals
+             WHERE source=$1 AND signal_type='pre_foreclosure' AND parcel_id IS NOT NULL
+               AND source_ref = ANY($2::text[])`,
+            [name, notices.map((n) => `${monthKey}:${n.key}`)]
+        );
+        const priorByRef = new Map(prior.map((r) => [r.source_ref, r]));
+        for (const n of notices) {
+            const hit = priorByRef.get(`${monthKey}:${n.key}`);
+            if (hit && !n.parcel_id) {
+                n.parcel_id = hit.parcel_id;
+                n.lon = hit.lon;
+                n.lat = hit.lat;
+                n.match = "prior";
+            }
+        }
         await directMatch(c, cfg.fips, notices);
         await geocodeMatch(c, cfg.fips, notices);
-        await legalMatch(c, cfg.fips, notices);
+        await legalMatch(c, cfg.fips, notices, process.env.FC_LEGAL_MS ? Date.now() + +process.env.FC_LEGAL_MS : Infinity);
         // two OCR spellings of one street can land on the same parcel: keep one
         const seen = new Map();
         notices = notices.filter((n) => {
@@ -1225,8 +1358,9 @@ async function loadSource(c, name, cfg, parseOnly) {
         const direct = notices.filter((n) => n.match?.startsWith("direct")).length;
         const geo = notices.filter((n) => n.match?.startsWith("geocode")).length;
         const leg = notices.filter((n) => n.match === "legal").length;
+        const pri = notices.filter((n) => n.match === "prior").length;
         console.log(
-            `    matched ${direct + geo + leg}/${notices.length} (${direct} direct, ${geo} geocode, ${leg} legal) -> upserted ${notices.length} rows (${inserted} new)`
+            `    matched ${direct + geo + leg + pri}/${notices.length} (${direct} direct, ${geo} geocode, ${leg} legal${pri ? `, ${pri} prior-run` : ""}) -> upserted ${notices.length} rows (${inserted} new)`
         );
         for (const n of notices.filter((x) => x.parcel_id).slice(0, 5))
             console.log(`      ${n.raw}  ->  ${n.matched_situs} [${n.match}]`);
