@@ -111,11 +111,11 @@ out.append("**DECISION (Frederick, 2026-07-16):** do NOT mass-harvest per-proper
 out.append("| County | Missing | Status of attempts | Path to 100% |")
 out.append("|--------|---------|--------------------|--------------|")
 GAPS = [
-    ("Tarrant (48439)", "beds/baths counts",
-     "EXHAUSTED bulk: main-roll IMPROVEMENT_DETAIL_ATTR flags bedroom/bathroom attrs but stores NO count; "
-     "PropertyData_R Num_Bedrooms column present but ZEROED; ResidentialCompAttributeData has no bed column.",
-     "Counts exist only in TAD True Prodigy per-property API (app-lane, already used by fill-on-blank). "
-     "Bulk harvest is contract-barred — needs Frederick's decision to allow a rate-limited API pull, or a records request."),
+    ("Tarrant (48439)", "beds/baths counts (segments ARE loaded: 692K)",
+     "CONFIRMED UNAVAILABLE in bulk (2026-07-15): full TP extract at tad.org/content/data-download IS free "
+     "and loaded (692K improvements/tags), but ALL 4.7M _ATTR rows carry 'Bedrooms'/'Bathrooms' as flag-only "
+     "labels with no number, AND PropertyData_R Num_Bedrooms/Num_Bathrooms are 100% blank. TAD policy withholds counts.",
+     "No bulk path exists — counts live only in the per-property TP API (off-limits). Effectively closed unless TAD changes policy."),
     ("Collin (48085)", "improvements (feature tags)",
      "data.texas.gov feed is property-SUMMARY only (imprvclasscd/pool flag; no garage/shed segments).",
      "Check collincad.org own data product for a segment/addl-improvement export (like Dallas RES_ADDL)."),

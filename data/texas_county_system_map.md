@@ -635,3 +635,9 @@ BATH SCHEMA NOTE: McLennan ATTR uses NUMBERED attr names — `22 No of Full Bath
 - Upshur 48459 (sale 22K, year 15K), Atascosa 48013 (26K/21K), Walker 48471 (30K/15K), Cass 48067 (27K/16K), Kendall 48259 (27K/19K). ~132K sale + ~86K year.
 ### Records-request: Wharton 48481 (TP, certified roll = $40 CD by written request; GIS = paid texascountygisdata).
 ### No sale-price columns in any wave-7 county (Hill remains the lone sl_price source so far).
+
+## 2026-07-15 — TP-token crack investigation CLOSED (Hidalgo + Tarrant)
+The TP bulk certified-export inventory endpoint is `GET prod-container.trueprodigyapi.com/public/config/reports` (Bearer token; office from Origin); each row's `reportS3ID = {slug}/{GUID}.{ext}`, export rows end in .zip.
+- **Hidalgo 48215** (slug `hidalgo`): report inventory = 136 files, ALL PDF, ZERO .zip. No certified export exists via TP. Segments/beds = records-request only; the shapefile mdb (year/sqft/deed/exempt, loaded) is the ceiling.
+- **Tarrant 48439**: full TP extract is FREE static at `tad.org/content/data-download/000_Tarrant_All_Taxing_Units.zip` (703MB, IMPROVEMENT_DETAIL 1.69GB + _ATTR 421MB) — and ALREADY LOADED (692K improvements/tags/sqft). BEDS CONFIRMED UNAVAILABLE: all 4.7M _ATTR rows have 'Bedrooms'/'Bathrooms' as flag-only labels (no count), and PropertyData_R Num_Bedrooms/Bathrooms are 100% blank. TAD withholds counts by policy — no bulk path, records-request won't help.
+TP-token crack (Cooke) remains valuable for TP counties that DO expose a .zip certified export; Hidalgo/Tarrant just don't.
