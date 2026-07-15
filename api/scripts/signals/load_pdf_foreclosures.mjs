@@ -101,7 +101,85 @@ const SOURCES = {
             return out;
         },
     },
+    // Ellis County clerk (CivicPlus ArchiveCenter): one scanned packet per sale
+    // month at Archive.aspx?ADID=<id>, link text "Sale Date: July 7, 2026".
+    // Pure images, no text layer -> OCR. (Smith County looks similar but its
+    // /298/Foreclosures page publishes NO PDFs -- it points to Kofile
+    // PublicSearch, which is the parked platform in FORECLOSURE_SOURCES.md.)
+    ellis_cc: {
+        fips: "48139",
+        discover: async () => {
+            const html = await fetchText("https://co.ellis.tx.us/Archive.aspx?AMID=60");
+            const out = [];
+            for (const m of html.matchAll(/href="(Archive\.aspx\?ADID=(\d+))"[\s\S]{0,160}?Sale\s+Date:\s*([A-Za-z]+)\s+\d{1,2},\s*(\d{4})/gi)) {
+                const mon = MONTHS.indexOf(m[3].slice(0, 3).toUpperCase()) + 1;
+                if (!mon || !inWindow(+m[4], mon)) continue;
+                out.push({
+                    url: new URL(m[1], "https://co.ellis.tx.us/").href,
+                    year: +m[4],
+                    month: mon,
+                    name: `ellis_${m[4]}-${String(mon).padStart(2, "0")}_ADID${m[2]}.pdf`,
+                });
+            }
+            return out;
+        },
+    },
+    // Hays County clerk (CivicPlus DocumentCenter): several small scanned
+    // "Batch N" PDFs per sale month. Image-only -> OCR.
+    hays_cc: {
+        fips: "48209",
+        // sale venue: Hays County Government Center, 712 S Stagecoach Trail
+        venue: /STAGECOACH\s+TR|GOVERNMENT\s+CENTER/i,
+        discover: async () => {
+            const html = await fetchText("https://hayscountytx.gov/200/Foreclosures");
+            const out = [];
+            for (const m of html.matchAll(/href="(\/DocumentCenter\/View\/\d+\/([A-Za-z]+)-(\d{4})-Batch-(\d+)[^"]*)"/gi)) {
+                const mon = MONTHS.indexOf(m[2].slice(0, 3).toUpperCase()) + 1;
+                if (!mon || !inWindow(+m[3], mon)) continue;
+                out.push({
+                    url: new URL(m[1], "https://hayscountytx.gov/").href,
+                    year: +m[3],
+                    month: mon,
+                    name: `hays_${m[3]}-${String(mon).padStart(2, "0")}_b${m[4]}.pdf`,
+                });
+            }
+            return out;
+        },
+    },
+    // Kaufman County clerk (CivicPlus DocumentCenter): one big scanned packet
+    // per sale month ("7 July 2026"), filed under per-year child pages
+    // ("/658/Foreclosure-2026") linked from /383/Foreclosures. Image-only -> OCR.
+    kaufman_cc: {
+        fips: "48257",
+        discover: async () => {
+            const base = "https://www.kaufmancounty.net";
+            let html = await fetchText(`${base}/383/Foreclosures`);
+            const yr = new Date().getFullYear();
+            for (const y of new Set([...html.matchAll(/href="(\/\d+\/Foreclosure-(\d{4}))"/gi)].map((m) => m[1]))) {
+                if (Math.abs(+y.slice(-4) - yr) <= 1) html += await fetchText(base + y);
+            }
+            const out = [], seen = new Set();
+            for (const m of html.matchAll(/href="(\/DocumentCenter\/View\/\d+\/\d{1,2}-([A-Za-z]+)-(\d{4})[^"]*)"/gi)) {
+                const mon = MONTHS.indexOf(m[2].slice(0, 3).toUpperCase()) + 1;
+                if (!mon || !inWindow(+m[3], mon)) continue;
+                const name = `kaufman_${m[3]}-${String(mon).padStart(2, "0")}.pdf`;
+                if (seen.has(name)) continue;
+                seen.add(name);
+                out.push({ url: base + m[1], year: +m[3], month: mon, name });
+            }
+            return out;
+        },
+    },
 };
+
+// sale-month window for discovery on archive-style pages that list years of
+// history: current month .. 2 months out (packets are posted ~1 month ahead;
+// older months are stale signals and pure OCR cost). Override via FC_BACK env.
+function inWindow(y, m, back = +(process.env.FC_BACK || 0), fwd = 2) {
+    const now = new Date();
+    const d = (y - now.getFullYear()) * 12 + (m - (now.getMonth() + 1));
+    return d >= -back && d <= fwd;
+}
 
 // ------------------------------------------------------------- fetch/text --
 
