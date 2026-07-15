@@ -6,9 +6,9 @@ Regenerate with `python data/build_coverage_log.py` after each mining batch (ref
 
 ## Scoreboard (253 counties)
 
-- ☑ **Mined (has improvements/feature tags): 57** / 253
-- Full attributes (improv+dims): 35  ·  Partial: 31  ·  Geometry-only (need mining): 187  ·  Missing from DB: 0
-- Seller-signals (sale date) loaded: 50 counties
+- ☑ **Mined (has improvements/feature tags): 59** / 253
+- Full attributes (improv+dims): 35  ·  Partial: 33  ·  Geometry-only (need mining): 185  ·  Missing from DB: 0
+- Seller-signals (sale date) loaded: 53 counties
 
 Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISSING. % = share of the county's parcels with that attribute.
 
@@ -28,13 +28,11 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Ellis | 48139 | 98,803 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Webb | 48479 | 98,291 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Ector | 48135 | 75,891 | 66 | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Midland | 48329 | 75,645 | 71 | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Hunt | 48231 | 69,728 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Wichita | 48485 | 58,742 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Tomgreen | 48451 | 58,686 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Bowie | 48037 | 53,212 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Sanpatricio | 48409 | 51,385 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Hood | 48221 | 51,275 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Harrison | 48203 | 50,995 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Burnet | 48053 | 50,138 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Waller | 48473 | 48,136 | · | · | · | · | · | · | GEOM-ONLY |
@@ -131,10 +129,10 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Moore | 48341 | 12,256 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Callahan | 48059 | 12,064 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Wilbarger | 48487 | 11,894 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Jack | 48237 | 11,866 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Jack | 48237 | 11,866 | · | · | · | · | · | 18 | GEOM-ONLY |
 | [ ] | Morris | 48343 | 11,857 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Camp | 48063 | 11,652 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Sansaba | 48411 | 11,591 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Sansaba | 48411 | 11,591 | · | · | · | · | · | 12 | GEOM-ONLY |
 | [ ] | Lipscomb | 48295 | 11,030 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Kinney | 48271 | 11,010 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Deafsmith | 48117 | 10,901 | · | · | · | · | · | · | GEOM-ONLY |
@@ -144,18 +142,18 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Madison | 48313 | 10,307 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Edwards | 48137 | 9,948 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Zavala | 48507 | 9,744 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Dawson | 48115 | 9,676 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Archer | 48009 | 9,653 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Dawson | 48115 | 9,676 | · | · | · | · | · | 24 | GEOM-ONLY |
+| [ ] | Archer | 48009 | 9,653 | · | · | · | · | · | 28 | GEOM-ONLY |
 | [ ] | Motley | 48345 | 9,374 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Haskell | 48207 | 9,370 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Crockett | 48105 | 9,113 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Haskell | 48207 | 9,370 | · | · | · | · | · | 16 | GEOM-ONLY |
+| [ ] | Crockett | 48105 | 9,113 | · | · | · | · | · | 8 | GEOM-ONLY |
 | [ ] | Terry | 48445 | 9,113 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Mason | 48319 | 9,096 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Mills | 48333 | 9,025 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Real | 48385 | 8,272 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Coke | 48081 | 8,271 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Coke | 48081 | 8,271 | · | · | · | · | · | 11 | GEOM-ONLY |
 | [ ] | Concho | 48095 | 8,034 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Upton | 48461 | 7,846 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Upton | 48461 | 7,846 | · | · | · | · | · | 16 | GEOM-ONLY |
 | [ ] | Wheeler | 48483 | 7,676 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Lynn | 48305 | 7,324 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Martin | 48317 | 7,255 | · | · | · | · | · | · | GEOM-ONLY |
@@ -230,6 +228,7 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [x] | Kaufman | 48257 | 94,650 | 71 | 4 | 7 | 78 | 91 | 48 | PARTIAL |
 | [x] | Grayson | 48181 | 89,348 | 59 | · | 7 | 68 | · | · | PARTIAL |
 | [x] | Gregg | 48183 | 77,816 | 71 | 16 | 59 | 74 | · | · | FULL |
+| [x] | Midland | 48329 | 75,645 | 80 | · | · | 75 | 88 | 46 | PARTIAL |
 | [x] | Brazos | 48041 | 74,666 | 85 | 51 | 52 | 86 | · | · | FULL |
 | [x] | Taylor | 48441 | 70,598 | 73 | 29 | 63 | 74 | · | · | FULL |
 | [x] | Randall | 48381 | 64,824 | 81 | 75 | 76 | 85 | 100 | 53 | FULL+SIGNALS |
@@ -238,8 +237,9 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [x] | Polk | 48373 | 60,178 | 35 | 30 | 34 | 44 | 94 | 19 | FULL+SIGNALS |
 | [x] | Potter | 48375 | 53,490 | 74 | 63 | 65 | 80 | 100 | 35 | FULL+SIGNALS |
 | [x] | Rockwall | 48397 | 52,739 | 84 | 49 | 66 | 87 | 97 | 63 | FULL+SIGNALS |
+| [x] | Hood | 48221 | 51,275 | 60 | · | · | 65 | 93 | 39 | PARTIAL |
 | [x] | Orange | 48361 | 50,337 | 43 | · | · | 47 | · | · | PARTIAL |
-| [x] | Wise | 48497 | 48,705 | 54 | · | 38 | 67 | · | · | FULL |
+| [x] | Wise | 48497 | 48,705 | 54 | · | 38 | 67 | 49 | · | FULL+SIGNALS |
 | [x] | Victoria | 48469 | 45,104 | 76 | 58 | · | 76 | 86 | 42 | FULL+SIGNALS |
 | [x] | Wood | 48499 | 44,576 | 54 | · | · | 54 | 87 | 32 | PARTIAL |
 | [x] | Kerr | 48265 | 36,913 | 61 | 22 | 47 | 61 | 88 | · | FULL+SIGNALS |
