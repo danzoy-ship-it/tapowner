@@ -189,6 +189,15 @@ Template = the BCAD letter in chat/PROGRESS (swap county name; from info@tapowne
 
 ## 5. DECISION LOG (the WHY behind things — don't relitigate silently)
 
+- **Big-metro beds/baths are FREE — the CADs have them; we were reading the wrong door** (2026-07-14,
+  deep multi-agent crawl). Bexar/Travis/Tarrant all previously read "no beds," but the data existed:
+  Bexar in a regional ArcGIS republication (SARA `BCAD_Parcels_PROD`, 99% coverage), Travis in coded
+  `improvement_detail` rows (type 252/251), Tarrant in TAD's live **True Prodigy** API
+  (`Rooms: Bedrooms/Bathrooms`; auth needs the **RAW token, NOT `Bearer`**). **No vendor purchase
+  needed for the metros.** The reusable hunt method + per-software recipes + verified-county table
+  live in **`DATA_HUNTING_PLAYBOOK.md`** — READ IT before declaring any county "no data" or paying a
+  vendor. Next step is a full-Texas, system-by-system re-search + backfill (data-session campaign).
+
 - **Farm export pricing** (Frederick): 10¢/row at launch; evaluator mode = free 300/mo.
   Launch-day open choice: hard flip vs Closer-includes-allowance. Flip = config, no build.
 - **Phone-first contact flow** (Frederick): agents call first; emails secondary. ≤15 emails
