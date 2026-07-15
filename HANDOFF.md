@@ -8,6 +8,14 @@ or operational knowledge between sessions.
 `CURRENT_STATE.md` (ground truth snapshot) → this file (how to operate) → `PROGRESS.md`
 (skim the newest entries for recent nuance).
 
+**⚡ DATA ACCESS — both sessions:** `DATA_ACCESS_CRACKS.md` is the canonical reusable
+reference for HOW to pull Texas CAD data from each vendor system (True Prodigy / BIS /
+SWData / Harris-eSearch / PACS / Socrata / HCAD / Orion — endpoints, auth tokens, join
+keys, what each yields). Cracked by fable-5 agents 2026-07-16. The app/signals session may
+reuse the owner/deed/sale endpoints for enrichment (no table overlap: Miner writes `parcels`,
+app writes `parcel_signals`). Per-county verdicts: `data/texas_county_system_map.md`;
+254-county scoreboard: `COUNTY_COVERAGE.md`.
+
 ---
 
 ## 1. MISSION & COVENANTS (never drift)
