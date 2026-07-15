@@ -514,3 +514,8 @@ OPERATIONAL: LIST is efficient (100/page); physical detail is 1 call/account. Jo
 
 ## ⚠️ DEFINITIVE FINDING: Texas rural CADs do NOT record beds/baths
 THREE independent fable-5 crackers (True Prodigy, BIS, SWData/whoownsit) all confirmed: Texas appraisal districts store building CLASS + living-area SQFT + year + improvement SEGMENTS (garage/pool/porch) — but **NOT bedroom or bathroom counts**. Beds/baths are an MLS attribute, not a CAD field. (True Prodigy exposes baths via Plumbing codes e.g. "2FB"; BIS/SWData have neither.) The PACS counties where we DID capture "Number of Bedrooms" from the ATTR file are the exception. => beds/baths for full statewide coverage must come from MLS/BatchData, a separate later layer — NOT the roll pass.
+
+### Tyler crack (2nd pass, 2026-07-16)
+- **Brewster(48043) + Bosque(48035) "Property Record Search" = TaxNetUSA** (paid aggregator skin, 100-result cap, no free bulk) — DEAD END, same as whoownsit. Their real CAD portal is elsewhere / records-request.
+- Confirmed True Prodigy is the shared prize (Travis on travis.prodigycad.com is fully exposed; Tarrant migrating to it). Refinements folded into DATA_ACCESS_CRACKS.md: per-county config variance (some hide improvement detail), auth needs office context, PropID→account map for detail calls.
+- FBCAD/Hays are Orion (409 on True Prodigy) — handled separately via ResidentialSegments (load_fbcad_segments.py).
