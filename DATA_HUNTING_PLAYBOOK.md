@@ -123,6 +123,30 @@ no documented layout. **Treat as hard:** records request, or a licensed vendor. 
 
 ---
 
+## Capture the WHOLE improvement set, not just beds/baths (Reverse Prospecting gold)
+
+Beds/baths/pool are the start, not the finish. Reverse Prospecting gets sharper with every
+attribute a buyer might want: **casita / guest house / detached living, shed / workshop /
+outbuilding, boat dock / waterfront, garage (type & count), solar, basement, greenhouse, RV/parking,
+recreation court**, etc. All of it lives in the **same improvement/feature rows** you're already
+parsing for beds/baths — it's nearly free to grab in the same pass.
+
+Real improvement types seen live in the crawls:
+- **Bexar** `Imprv_Type` codes: `RSW` (pool), `SPA`, `DLA`/`DLA1` (detached living / casita).
+- **Travis / Tarrant** improvement types: `Pool-Swimming, Outbuilding 1–9, Storage Room, Studio,
+  Enclosed Room, Boat Dock, Recreation Court, Green House, Basement, Porch, Elevator, Garage`.
+
+**Do this:** while reading the improvement rows, capture the **full per-property improvement-type
+list** into a flexible **`improvements` JSONB column on `parcels`** (add the column). Keep the raw
+district descriptions for now — don't discard the long tail; we normalize to a common filter
+vocabulary (`pool, casita, shed/workshop, boat_dock, solar, garage, …`) as a follow-up. Keep
+dedicated booleans for the ones the app filters on first (`has_pool` exists; **casita** and
+**shed/workshop** are the next most valuable). The app-side Reverse Prospecting filters for these
+come later (app-session lane) once the data is populated — but capture it NOW, since re-parsing
+every county later is the expensive path.
+
+---
+
 ## Failure modes that hid the data last time (don't repeat these)
 
 | Trap | What happened | Fix |
