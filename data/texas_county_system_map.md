@@ -33,7 +33,7 @@ Which CAMA/appraisal software each Texas county runs, its free bulk-roll URL whe
 | dallas | 48113 | 694,160 | PACS/TrueAutomation | PACS-loadable | beds+baths+sqft | dallascad.org | NUM_BEDROOMS bulk export |
 | elpaso | 48141 | 407,130 | PACS (EPCAD) | PACS-loadable | beds+baths+sqft | epcad.org | EPCAD improvements dump |
 | collin | 48085 | 387,737 | PACS | PACS-loadable | beds+baths+sqft | collincad.org | Collin improvement export |
-| fortbend | 48157 | 375,097 | PACS (FBCAD) | PACS-loadable | sqft only | fbcad.org | FBCAD data export |
+| fortbend | 48157 | 375,097 | Tyler ORION (not PACS) | orion-thin | sqft only | fbcad.org | FBCAD publishes an Orion Certified Export (56MB, /wp-content/uploads/2025/07/…Orion-2025-Certified-Export-REDACTED.zip) BUT it has NO improvement/segment or beds/baths file and NO sale/deed date — only Property/Owner/Exemption/Entity. Exemptions are OwnerQuickRefID-keyed (2-hop join to parcels). Improvements would need FBCAD's separate Residential-Segments zip (only 2022 found). LOW yield — skip unless a segments file for 2024/25 surfaces. |
 | denton | 48121 | 353,631 | PACS/TrueAutomation | PACS-loadable | sqft only | dentoncad.com | DCAD certified export |
 | hidalgo | 48215 | 328,322 | unknown | unclassified | sqft only | hidalgoad.org |  |
 | montgomery | 48339 | 320,915 | PACS | PACS-loadable | sqft only | mcad-tx.org | MCAD certified export |
