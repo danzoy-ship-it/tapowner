@@ -525,3 +525,4 @@ Where beds are a GENUINE gap (district doesn't collect them — verified, not as
 - **Brewster(48043) + Bosque(48035) "Property Record Search" = TaxNetUSA** (paid aggregator skin, 100-result cap, no free bulk) — DEAD END, same as whoownsit. Their real CAD portal is elsewhere / records-request.
 - Confirmed True Prodigy is the shared prize (Travis on travis.prodigycad.com is fully exposed; Tarrant migrating to it). Refinements folded into DATA_ACCESS_CRACKS.md: per-county config variance (some hide improvement detail), auth needs office context, PropID→account map for detail calls.
 - FBCAD/Hays are Orion (409 on True Prodigy) — handled separately via ResidentialSegments (load_fbcad_segments.py).
+- **McCulloch(48307)** BIS: FeatureServer join 0% (prop_id format != DB source_property_id) — needs geo_id/apn join investigation.
