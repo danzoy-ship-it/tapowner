@@ -178,6 +178,11 @@ DECLINED per the standing legal-risk position (unlicensed-scraping signal; on th
 — revisit only after attorney clearance; the fill-on-blank+cache architecture is the pre-agreed
 plug-in point if ever cleared.
 
+**The signals tier:** the 15 "likely to sell" seller-signals (probate, divorce, foreclosure,
+exemption tells, neighbor-sold-high, WARN layoffs…) live in **`SIGNALS_ROADMAP.md`** — Frederick's
+consolidated list (2026-07-15) with per-signal source/lane/status, the hard outreach-ethics rule,
+and the execution order. Read it before any signals work; keep per-signal status THERE.
+
 **The deliverable both lanes serve — the 16 canonical filter tags** (spec: IMPROVEMENT_TAXONOMY.md,
 machine truth: data/improvement_crosswalk.json): `pool`, `spa`, `casita` (guest house/ADU),
 `shed_workshop`, `boat_dock`, `barn_stable`, `rv` (parking), `garage`, `carport`, `solar`,

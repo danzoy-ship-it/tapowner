@@ -438,6 +438,11 @@ and `HANDOFF.md`.
   data is cached ~90 days.
 - **Honest-at-scale**: farm/list outreach must never claim a specific committed buyer — use "may
   have a motivated, qualified buyer." Generic greeting to a list, no fabricated specifics.
+- **Seller-signals outreach rule** (`SIGNALS_ROADMAP.md`, Frederick 2026-07-15): when signals
+  ship (probate/divorce/foreclosure/etc.), the trigger can be a public record but outreach must
+  NEVER reveal the sensitive part — "I help homeowners in your neighborhood," never "I saw your
+  divorce filing." AI-draft prompts get a hard guard in the same build that first surfaces a
+  signal: signal types must never appear in or shape generated copy.
 - **Bulk phone export is legally sensitive** — the farm CSV currently includes traced phones/emails;
   this is on the attorney's list (vendor addendum + TCPA). Don't expand bulk-export of phone data
   without flagging it.
