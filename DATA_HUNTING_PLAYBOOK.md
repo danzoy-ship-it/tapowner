@@ -24,6 +24,27 @@ concluding any county "doesn't have" a field, and before ever paying a vendor.
 
 ---
 
+## The cross-check rule: the system is the common denominator
+
+If a field looks "missing" in a county, **check what software that county runs, then check whether
+ANY other county on the same system has that field.** If one does, the field is a **reading failure,
+not a data gap** — go back and apply that system's proven recipe (right file / layer / API / codes).
+**Do NOT accept "not available."**
+
+- **Two or more same-system counties both "missing" the same field is a red flag** that our recipe
+  for that system is incomplete. Push harder — don't conclude absence.
+- **Why:** a software system is consistent in what it CAN store. If True Prodigy exposes beds/baths
+  for Travis, it exposes them for Tarrant too — the only difference is the access door. (This exact
+  rule would have flagged the Tarrant near-miss instantly: Travis and Tarrant both run True Prodigy,
+  so "Tarrant has no beds" should have been suspect the moment Travis was cracked.)
+- **Mechanism:** the verified-county table below doubles as a *proven-fields-per-system* ledger. Any
+  county on a system that lacks a field that system is PROVEN to carry = a bug to fix, not a gap.
+- **Only** conclude a system genuinely doesn't expose a field after applying its FULL recipe (every
+  door — bulk coded rows, the current GIS/detail layer, AND the live API) across MULTIPLE counties
+  and still finding nothing — and even then, confirm against a property page a human can read.
+
+---
+
 ## Universal per-county checklist (run in this order)
 
 For each county, find which door the data is behind:
