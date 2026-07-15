@@ -181,9 +181,35 @@ Template = the BCAD letter in chat/PROGRESS (swap county name; from info@tapowne
   home county; verify on 2807 Stokely Hl (should show ~5bd/4ba/pool per Frederick).
 - **Guadalupe 2026 certified** posts free ~2026-07-22 at guadalupead.org/certified-appraisal-roll/
   (their email said so) — rerun the PACS loader for a refresh.
-- **Tarrant PIA + Travis legend** (drafts handed to Frederick 2026-07-14 — check if sent).
+- **Tarrant PIA** — **no longer needed for beds/baths** (SOLVED via True Prodigy fill-on-blank
+  2026-07-15, see the block below); only send it if we later want fields TP doesn't expose.
+  **Travis legend** (draft handed to Frederick 2026-07-14 — check if sent).
 - **Casita field**: DCAD RES_ADDL "ATTACHED QUARTERS" + BCAD equivalent → design ONE schema
   column when BCAD lands (Frederick cares about casitas).
+
+**TARRANT BEDS/BATHS — SOLVED app-side (fill-on-blank), needs ONE data step to go live:**
+Tarrant is loaded (757K parcels) with **0 beds/baths** — TAD wiped them from every bulk file
+(True Prodigy re-export 2026-06-06). They're FREE from TP's per-property API, so the app now
+fetches + caches them on first view of a null-beds Tarrant parcel and never re-charges the CAD
+(`api/src/cadattr/`, commit `a92e222`; typechecked; **NOT deployed**). It resolves each parcel by
+the numeric TP **pid**, read from **`parcels.apn`**.
+- **BLOCKER (data-session, ~2 lines in `load_tarrant_attributes.py`):** populate `parcels.apn` =
+  TAD **`Account_Num`** (col 2 of `PropertyData(Delimited)_R.txt`) for FIPS 48439, joined on
+  `GIS_Link == source_property_id`, where `apn IS NULL`. Then the fill activates automatically →
+  deploy api. Until then it self-guards (apn null ⇒ no-op), so it ships zero junk calls.
+- **Proven crosswalk (2026-07-15):** `GIS_Link 250-3-14 → Account_Num 16497 → TP pid 16497 →
+  account 708 → 3bd/2ba` (SMITH CONSUELA, 1716 N EDGEWOOD TERR) — same property in our DB, the
+  TAD file, and TP.
+- **geoID search is a DEAD END** — TP's geoID backend 500s ("Can't connect to MySQL …
+  trueprodigy-scaler"); ONLY the numeric pid search is reliable. That's why we need Account_Num,
+  not our hyphenated geoID (which is what `source_property_id` holds).
+- **Corrects the stale note** in `load_tarrant_attributes.py` ("Beds/baths … BLANK … PIA is the
+  only path"): the live API IS the path.
+- **Generalizes:** any future True-Prodigy-API-only county → load its `Account_Num`→`apn`, add its
+  `FIPS → office` to `FILL_SOURCES` in `api/src/cadattr/index.ts`. One recipe, every TP county.
+- **Live confirm still pending:** TP had a 504 outage during final testing 2026-07-15; after the
+  apn load + deploy, re-verify one Tarrant tap shows beds (fill is fire-and-forget: 1st tap kicks
+  it off, 2nd tap shows the beds).
 
 ---
 
