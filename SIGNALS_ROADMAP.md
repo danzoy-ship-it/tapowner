@@ -78,7 +78,36 @@ deed-capture pipeline).
   new door catalog. Phase it; don't start mid-Wave-3B.
 - **#3/#14 city portals + #15 WARN:** free, well-defined, small. WARN is one statewide source.
 
-## Storage sketch (Miner owns DDL, per bulk-DDL rules)
+## 🔔 DAILY FILING ALERTS — the add-on subscription (Frederick, 2026-07-16)
+
+The killer recurring-revenue play: turn signals from a static filter into a **proactive daily
+alert feed**. "The moment a home in your farm hits pre-foreclosure / enters probate, you're
+alerted first." This is what SmartZip/Offrs charge $300–1,000/mo for; we do it on free public
+data as an add-on on top of $19.99.
+
+**Architecture (app-session lane; Stripe-gated for the paid tier):**
+1. **Scheduled refresh per source** (cron): re-pull each public feed on its natural cadence —
+   court records (probate/divorce/evictions) flow DAILY; foreclosures batch MONTHLY (TX trustee
+   sales = 1st Tuesday, notices post ~21 days prior). Poll daily; new ones cluster accordingly.
+2. **Diff for NEW filings:** each `parcel_signals` row carries `first_seen`; a refresh inserts only
+   filings not seen before (and expires ones that dropped off the source, e.g. a cured foreclosure).
+3. **Alert match:** for each new filing, find agents whose saved farm/area contains it → notify
+   (push + in-app feed). Reuses the polygon/geo logic farm already has.
+4. **Subscription:** a "Signals / Alerts" add-on entitlement (config-gated like the tiers).
+   Recurring revenue, priced as an add-on. Post-Stripe.
+
+**The join is SPATIAL, not address-string:** foreclosure feeds (e.g. Bexar ArcGIS) carry point
+geometry — drop the point into parcel polygons (ST_Contains) rather than fight `ST`/`STREET`
+typos. Verified 2026-07-16: naive address match on Bexar foreclosures got only 7% (their data has
+`SAN ANTOINO` typos, suffix variance, + out-of-county rows like Boerne=Kendall) — the geometry
+join is the right path.
+
+**Statewide reality:** TX law requires every county clerk to post Notices of Trustee's Sale
+online → foreclosure is legally public in all 254 counties. Bexar source CRACKED + live:
+`maps.bexar.org/arcgis/rest/services/CC/ForeclosuresProd/MapServer` (layer 0 Mortgage 275, layer
+1 Tax 10; fields ADDRESS/DOC_NUMBER/YEAR/MONTH/TYPE/CITY/ZIP + geometry; monthly refresh).
+
+## Storage sketch (app-session owns `parcel_signals` DDL, per bulk-DDL rules)
 
 `parcel_signals(parcel_id, signal_type, event_date, source, meta jsonb, created_at)` + GIN/btree
 as needed; area-level signals (#15) keyed by geography, not parcel. Product surfaces them as
