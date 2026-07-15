@@ -367,3 +367,27 @@ Walker (notice PDFs), Jasper (FILE_INFO export lacks the improvement members).
   A certified-roll PIA yields both the beds AND the crosswalk.
 - **Johnson** — no TP portal (officelookup 409); PACS `.tab` external export → data
   lane, needs a `.tab` parser.
+
+## Standing capture directives (added 2026-07-15, from the app session)
+
+- **TENURE / last-sale (product: poor-man's SmartZip "likely-to-sell").**
+  `parcels.last_sale_date` and `last_sale_price` are **EMPTY statewide (0 of
+  14.3M, verified 2026-07-15)** — the schema columns exist but were never
+  populated (StratMap doesn't carry sale history). Standing ask: on every future
+  county pass, **opportunistically capture `last_sale_date` (+`last_sale_price`
+  where present)** into these existing columns, and note per-county availability
+  here. Likely sources by system: PACS certified rolls carry deed/sale date
+  fields (deed_dt / sale_dt in the SALES or CHG_OF_OWNER / DEED files); Collin's
+  data.texas.gov feed has `deedeffdate`/`deedfiledate` (NO price); TAD/BCAD/ProTax
+  exports — check for a sale-history segment. Tenure ("owned 15+ years") is the
+  high-value derived signal; even date-only (no price) unlocks it.
+- **Bare improvement CODES are NOT Bexar-only (label-ledger grep 2026-07-15).**
+  Bare `AG`/`GAR`/`CP`/`CPT` also appear in these small PACS counties: AG →
+  Lamar(48277) 7,847, Mitchell(48335) 570, Gaines(48165) 20; GAR → Andrews(48003)
+  817, Lamar 1; CP → Yoakum(48501) 36; CPT → Bee(48025) 1,364. All PACS/True-
+  Automation (same code family as Bexar), so meanings almost certainly match
+  (attached/detached garage, attached/detached carport). The Ellis `CP`="COVERED
+  PORCH" collision is a True-Prodigy fill-on-blank case that stores full
+  descriptions — it never emits the bare code `CP` into bulk labels, so a `^cp$`
+  crosswalk pattern won't hit it. Crosswalk v2 already applies `^gar$` globally
+  (Andrews/Lamar GAR already tagged garage_detached).
