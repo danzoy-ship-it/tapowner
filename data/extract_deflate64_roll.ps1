@@ -1,6 +1,6 @@
 # Extract PACS roll members from a DEFLATE64-compressed zip (compress_type 9),
 # which Python's zipfile, bsdtar/libarchive, and .NET Expand-Archive all REFUSE.
-# Windows Explorer's own zip handler DOES support deflate64 — reach it via the
+# Windows Explorer's own zip handler DOES support deflate64 - reach it via the
 # Shell.Application COM object (the "Explorer-COM recipe").
 #
 # Usage (from PowerShell):
@@ -11,7 +11,7 @@
 #
 # Gotchas baked in:
 #  - Shell hides the .TXT extension, so item names match WITHOUT it.
-#  - CopyHere is ASYNC — poll until sizes stabilize and no 0-byte files remain.
+#  - CopyHere is ASYNC - poll until sizes stabilize and no 0-byte files remain.
 #  - bsdtar will happily create full-size ZERO-FILLED files and exit 0; always
 #    verify non-null content after extracting (this script waits on real bytes).
 param(
@@ -31,7 +31,7 @@ foreach ($item in $zipNs.Items()) {
       $item.Name -like '*APPRAISAL_IMPROVEMENT_DETAIL_ATTR') { $targets += $item }
 }
 Write-Output ("matched {0}: {1}" -f $targets.Count, (($targets | ForEach-Object { $_.Name }) -join '; '))
-if ($targets.Count -eq 0) { Write-Output "NO MATCHES — check member names ($($zipNs.Items().Count) items)"; exit 1 }
+if ($targets.Count -eq 0) { Write-Output "NO MATCHES - check member names ($($zipNs.Items().Count) items)"; exit 1 }
 foreach ($t in $targets) { $destNs.CopyHere($t, 16 -bor 512 -bor 1024) }  # 16 yes-all, 512 no-dir-confirm, 1024 no-UI
 $deadline = (Get-Date).AddMinutes($TimeoutMin)
 do {
