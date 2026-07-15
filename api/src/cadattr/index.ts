@@ -19,9 +19,22 @@ interface FillSource {
     // in apn; Ellis's source_property_id IS the numeric pid.
     pidField: "apn" | "source_property_id";
 }
+// NOTE (2026-07-15): TP runs a SEPARATE backend per county office and they fail
+// independently (Tarrant healthy while Denton/Travis 504 the same minute). A
+// flaky window looks like "no data" -- that false verdict was made twice. The
+// cooldown+retry design rides through outages: a county fills whenever its
+// backend responds, so registering a verified-but-currently-flaky county is
+// zero-risk (COALESCE-only; implausible parses record nothing).
 const FILL_SOURCES: Record<string, FillSource> = {
     "48439": { system: "trueprodigy", office: "Tarrant", pidField: "apn" },
     "48139": { system: "trueprodigy", office: "Ellis", pidField: "source_property_id" },
+    // Denton: rooms live on the MA improvement as "Bedrooms: 4"/"Plumbing: 3"
+    // (data-session verified pid 747420); FIRST improvement often has empty
+    // features -- the client iterates all improvements already.
+    "48121": { system: "trueprodigy", office: "Denton", pidField: "source_property_id" },
+    // Travis: baths coded as detail rows ("BATHROOM" area=2.50); beds pending a
+    // healthy-window confirm (features endpoint was failing during probes).
+    "48453": { system: "trueprodigy", office: "Travis", pidField: "source_property_id" },
 };
 
 const trueProdigy = new TrueProdigyClient();

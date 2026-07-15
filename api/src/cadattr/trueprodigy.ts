@@ -156,6 +156,7 @@ export class TrueProdigyClient {
                     imprvDetailType?: string;
                     detailTypeDescription?: string;
                     actualYearBuilt?: string | number;
+                    area?: string | number;
                 }>;
             }>;
         };
@@ -163,6 +164,12 @@ export class TrueProdigyClient {
 
         let beds = 0;
         let bathTotal = 0; // full+half baths summed: "Bathrooms 2", "TWO 1/2 BATH" -> 2.5
+        // Fallback source: some offices (Travis) code rooms as improvement DETAIL
+        // rows ("BATHROOM" area=2.50 -- the count lives in `area`, the PACS 251/252
+        // pattern) rather than features. Used only when features yield nothing.
+        let detailBeds = 0;
+        let detailBaths = 0;
+        let detailHalfBaths = 0;
         let sqft: number | null = null;
         let year: number | null = null;
         const rawLabels = new Set<string>();
@@ -174,6 +181,13 @@ export class TrueProdigyClient {
                 const label = d.detailTypeDescription ?? d.imprvDetailType;
                 if (label) rawLabels.add(label);
                 if (year === null) year = toIntInRange(d.actualYearBuilt, 1800, 2100);
+                const desc = (d.detailTypeDescription ?? "").toLowerCase();
+                const area = typeof d.area === "number" ? d.area : parseFloat(String(d.area ?? ""));
+                if (Number.isFinite(area) && area > 0 && area <= 20) {
+                    if (desc.includes("bedroom")) detailBeds += area;
+                    else if (desc.includes("half bath")) detailHalfBaths += area;
+                    else if (desc.includes("bath")) detailBaths += area;
+                }
             }
 
             if (imp.pImprovementID === undefined) continue;
@@ -193,11 +207,26 @@ export class TrueProdigyClient {
                         // roomCount folds any "1/2" fraction into the bath total.
                         if (lf.includes("bedroom")) beds += roomCount(f, 20);
                         else if (lf.includes("bath")) bathTotal += roomCount(f, 20);
+                        else if (lf.includes("plumb")) {
+                            // Bare "Plumbing: 3" = baths (Denton, data-session
+                            // verified pid 747420 -> Bedrooms 4 / Plumbing 3).
+                            // Tight cap: bare plumbing values in some districts
+                            // are FIXTURE counts (median ~8) -- >6 means fixtures,
+                            // not baths, so record nothing rather than garbage.
+                            bathTotal += roomCount(f, 6);
+                        }
                     }
                 }
             } catch {
                 // one improvement's features failing shouldn't sink the whole fetch
             }
+        }
+
+        // Features win; detail-row counts (Travis "BATHROOM"=2.50 / "BEDROOM" rows)
+        // fill in ONLY when features yielded nothing, so the two sources never sum.
+        if (beds === 0 && detailBeds > 0) beds = detailBeds;
+        if (bathTotal === 0 && detailBaths + detailHalfBaths > 0) {
+            bathTotal = detailBaths + detailHalfBaths * 0.5;
         }
 
         const bedrooms = beds > 0 ? Math.round(beds) : null;
