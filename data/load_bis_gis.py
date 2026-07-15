@@ -30,7 +30,11 @@ PAGE = 1000
 
 
 def fetch(url):
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
+    # Referer is REQUIRED for the ArcGIS-Online-proxied BIS counties
+    # (utility.arcgis.com/usrsvcs/...): no Referer -> 403 GWM_0003; with it -> 200.
+    # Harmless for the direct-server counties (gis.{county}cad.org).
+    req = urllib.request.Request(url, headers={"User-Agent": UA,
+                                               "Referer": "https://gis.bisclient.com/"})
     for a in range(5):
         try:
             with urllib.request.urlopen(req, timeout=90) as r:
