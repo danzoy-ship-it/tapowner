@@ -559,3 +559,20 @@ Batch N: (10 loaded prior) + **Kenedy 48261 PACS** (185 improv / 10 beds / 249 s
 Winkler 48495, Swisher 48437, Parmer 48369 (BIS eSearch, bulk feature not populated — same /Forms/ExcelDownload path could get a roll any cycle); Somervell 48425 (TrueAutomation PropAccess only; main site parked/spammy); Crosby 48107 (whoownsit/TaxNetUSA — structural dead-end).
 
 ### All 254 counties now researched (batches A–N complete). Remaining physical-detail gaps = eSearch-only counties (value+exemptions, no sqft) + a handful of records-request/paid-only counties. Next: the aggressive fable-5 ultracode pass on unresolved physical-detail (beds/sqft) gaps + $0 records-requests.
+
+---
+
+## 2026-07-15 — big-county aggressive pass (fable-5 crack team, wave 1)
+
+Targeted the 7 biggest counties that had sqft but ZERO improvement/feature data (~1.5M parcels). Dispatched 2 fable-5 crack agents. Results:
+
+### SOLVED — loaded this pass
+- **Denton 48121** — open Apache directory `dentoncad.net/data/_uploaded/files/datafiles/{year}/{Certified|Preliminary}DataAllProperty/*.zip`. Standard PACS 8.0.30 (INFO 4.9GB zip64 / DETAIL 972MB / _ATTR 248MB, comp=8). `load_pacs_roll.py 48121` → **improv 311,756, beds 265,385, sqft 313,925, sale 337,838, exempt 220,220** (join apn==geo_id 99.8%). BIGGEST single-county beds win outside Harris/Dallas.
+- **Brazoria 48039** — pcloud publink (see DATA_ACCESS_CRACKS.md for the api.pcloud.com resolve dance; link is single-use). PACS 8.0.30. `load_pacs_roll.py 48039` → **improv 170,169, sqft 169,827, sale 215,924, exempt 109,304**. NOTE: Brazoria's ATTR has NO bedroom attribute (Plumbing/Foundation/Heating/etc only — agent's "Number of Bedrooms" sighting was actually Denton's); Plumbing values are fixture counts → bath-guard correctly dropped them. Beds = genuine bulk gap for Brazoria.
+- **Ector 48135** — GSA Corp certified-roll xlsx-in-zip (`ectorcad.org/home/downloads`, `/downloads/{car,par}/*.ZIP`). NEW loader `load_gsa_roll_xlsx.py` (reusable for any GSA county). ONE row/account = primary improvement → `improv 15,235 (feature types only; RESIDENCE skipped), sqft 58,488, sale 51,952, exempt 31,536` (join apn==GIS_IDENTIFICATION_NUM). No beds in export.
+
+### Records-request targets identified (defer; $0 25.195 request, cannot self-submit)
+- **Lubbock 48303** — Orion; free monthly Property Data Export (Rec4 Improvement + Rec5 ImpSegment incl. Bedrooms/Fireplace/HeatAC/Plumbing) was discontinued ~2015, now Orion-sold. Ask names that exact product. (Stale supplemental: City of Lubbock `pubgis.ci.lubbock.tx.us/.../ParcelViewer/MapServer/5` has a sparse 2009 POOL flag, joins via LCADID.)
+- **Smith 48423** — GSA Corp (same as Johnson, which posts free). Ask: the GSA Certified Data Roll export with improvement detail. Contact (903) 510-8600.
+
+### Still open big gaps: Hidalgo 48215, Montgomery 48339 (both sqft-only; probe for a PACS roll / data product next). Tarrant beds (contract-barred), Collin feature-tags (has beds/pool via MDB; improvements text array empty — already mined), Gregg key-mismatch.

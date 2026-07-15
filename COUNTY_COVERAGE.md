@@ -6,18 +6,16 @@ Regenerate with `python data/build_coverage_log.py` after each mining batch (ref
 
 ## Scoreboard (253 counties)
 
-- ☑ **Mined (has improvements/feature tags): 62** / 253
-- Full attributes (improv+dims): 36  ·  Partial: 34  ·  Geometry-only (need mining): 183  ·  Missing from DB: 0
-- Seller-signals — sale date: 55 counties  ·  exemptions (homestead/over-65/DV tenure): 100 counties  ·  **any seller-signal: 112 counties**
+- ☑ **Mined (has improvements/feature tags): 64** / 253
+- Full attributes (improv+dims): 37  ·  Partial: 35  ·  Geometry-only (need mining): 181  ·  Missing from DB: 0
+- Seller-signals — sale date: 57 counties  ·  exemptions (homestead/over-65/DV tenure): 103 counties  ·  **any seller-signal: 114 counties**
 
 Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISSING. % = share of the county's parcels with that attribute.
 
 | ☑ | County | FIPS | Parcels | sqft% | beds% | baths% | improv% | sale% | exempt% | Status |
 |---|--------|------|--------:|------:|------:|-------:|--------:|------:|--------:|--------|
-| [ ] | Denton | 48121 | 353,631 | 88 | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Hidalgo | 48215 | 328,322 | 80 | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Montgomery | 48339 | 320,915 | 76 | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Brazoria | 48039 | 275,131 | 45 | · | · | · | 78 | · | PARTIAL |
 | [ ] | Smith | 48423 | 140,245 | 55 | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Lubbock | 48303 | 135,112 | 78 | · | · | · | 95 | · | PARTIAL |
 | [ ] | Mclennan | 48309 | 115,362 | · | · | · | · | · | · | GEOM-ONLY |
@@ -26,7 +24,7 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Parker | 48367 | 100,548 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Ellis | 48139 | 98,803 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Webb | 48479 | 98,291 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Ector | 48135 | 75,891 | 66 | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Ector | 48135 | 75,891 | 77 | · | · | 20 | 68 | 42 | PARTIAL |
 | [ ] | Hunt | 48231 | 69,728 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Wichita | 48485 | 58,742 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Tomgreen | 48451 | 58,686 | · | · | · | · | · | · | GEOM-ONLY |
@@ -213,7 +211,9 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [x] | Elpaso | 48141 | 407,130 | 64 | 38 | 58 | 64 | · | · | FULL |
 | [x] | Collin | 48085 | 387,737 | 91 | 74 | 78 | · | 97 | 67 | PARTIAL |
 | [x] | Fortbend | 48157 | 375,097 | 83 | 50 | 52 | 75 | · | · | FULL |
+| [x] | Denton | 48121 | 353,631 | 89 | 75 | 81 | 88 | 96 | 62 | FULL+SIGNALS |
 | [x] | Williamson | 48491 | 282,983 | 82 | 24 | 78 | 87 | 82 | · | FULL+SIGNALS |
+| [x] | Brazoria | 48039 | 275,131 | 62 | · | · | 62 | 78 | 40 | PARTIAL |
 | [x] | Galveston | 48167 | 188,695 | 78 | 1 | 61 | 78 | 86 | 45 | FULL+SIGNALS |
 | [x] | Cameron | 48061 | 185,062 | 69 | 20 | 21 | 75 | 95 | 39 | FULL+SIGNALS |
 | [x] | Bell | 48027 | 167,412 | 73 | 11 | 34 | 78 | · | · | FULL |

@@ -125,12 +125,17 @@ GAPS = [
     ("Gregg (48183)", "sale/exemptions",
      "GCAD_Export.zip prop_id space != DB source_property_id (roll/geometry key mismatch).",
      "Re-pull a Gregg roll whose geo_id matches, or add a geo_id crosswalk (like Tarrant)."),
-    ("Denton (48121)", "improvements/beds/baths/signals",
-     "app-lane (True Prodigy); bulk not yet located.",
-     "Probe dentoncad.com for a bulk export; else app-lane live API."),
     ("Hidalgo (48215)", "improvements/beds/baths/signals",
      "unclassified; only sqft loaded.",
      "Probe hidalgoad.org for a data product / PACS roll."),
+    ("Lubbock (48303)", "improvement segments/beds/baths",
+     "EXHAUSTED free bulk: Orion vendor, all 8 gis.lubbockcad.org services are annotation/parcel only "
+     "(no segment table); site is PDF-only; the free monthly Property Data Export (Rec4 Improvement + "
+     "Rec5 ImpSegment incl. Bedrooms) was discontinued ~2015 and is now sold via Orion.",
+     "$0 open-records/25.195 request naming LCAD's own 'Property Data Export (record types 1-6)'."),
+    ("Smith (48423)", "improvements/beds/baths/signals",
+     "EXHAUSTED free bulk: GSA Corp vendor, smithcad.org static/PDF-only, mapsite 500s, ArcGIS Hub has no CAMA.",
+     "$0 open-records request for the GSA 'Certified Data Roll' export (same product Johnson CAD posts free)."),
 ]
 for county, missing, status, path_ in GAPS:
     out.append(f"| {county} | {missing} | {status} | {path_} |")

@@ -82,5 +82,15 @@ Hays-style: outer zip → inner IMPROVEMENT/SEGMENT/OWNER/SALES zips, each a quo
 - **TaxNetUSA "whoownsit.com" skin** — owner/address/legal only, 100-cap, $2.99/mo upsell. The county's REAL data is on one of the systems above (find its actual portal).
 - **PDF-only rolls** (Matagorda, Walker, Grimes-as-96MB-print), **GIS-shapefile-only** (Starr, Hill, Jasper, Fayette), **Pritchard&Abbott records-request**, **Wix/static** (Shelby).
 
+## PACS roll delivered via file-host / open web directory (2026-07-15 crack)
+
+Some big CADs run a modern SPA / True Prodigy public search but STILL publish the raw PACS Appraisal Export zip somewhere — you just have to find the host. Two verified patterns (both feed `load_pacs_roll.py` unchanged):
+
+- **Open Apache datafiles directory (Denton 48121):** `https://dentoncad.net/data/_uploaded/files/datafiles/` has directory-listing ON — folders `2019/`…`2026/` + `gis/`. The roll is at `.../datafiles/{YEAR}/{CertifiedDataAllProperty|PreliminaryDataAllProperty}/*.zip`. Verified 2026 prelim: `.../2026/PreliminaryDataAllProperty/2026%20Preliminary%20Data%20-%20All%20Properties.zip` (876MB → APPRAISAL_INFO 4.9GB zip64, IMPROVEMENT_DETAIL 972MB, _ATTR 248MB, all comp=8 deflate). The prodigycad.com front-end's `/data-downloads` accordion just links back to this open dir. **When a county is "Prodigy/SPA-only," probe for a sibling static host (`{cad}.net`, an `_uploaded/files/datafiles` tree, an S3 bucket) before giving up.**
+
+- **pCloud public-link folder (Brazoria 48039):** CAD posts the roll on a pcloud "publink." Resolve programmatically: `GET https://api.pcloud.com/showpublink?code={CODE}` → lists `{name, fileid, size}`; then `GET https://api.pcloud.com/getpublinkdownload?code={CODE}&fileid={FILEID}` → returns `hosts[0]` + `path` → download `https://{host}{path}`. **The direct link is single-use / expires — re-resolve getpublinkdownload right before each download (a stale path 500s).** Brazoria 2026 prelim code `XZozEI5Z1PGl0VyK0YktEOohtankuS3KPWYV` → `2026_BRAZORIA_COUNTY _PRELIM_ALL.zip` (172MB → INFO 2.4GB / DETAIL 484MB / _ATTR 101MB). Source page: `brazoriacad.org/public-gis-and-property-data-downloads/`. Also a direct ProTax zip `brazoriacad.org/wp-content/uploads/2026/06/ProTax_06082026.zip` (format unverified).
+
+**GSA Corp CADs (records-request lever):** Smith 48423 has NO free bulk online (exhaustively probed: smithcad.org static/PDF-only, smithcountymapsite.org 500, ArcGIS Hub has no CAMA fields). But Smith runs **GSA Corp** — the SAME vendor as Johnson CAD, which DOES publish free "Certified Data Roll" zips (repo has `data/load_johnson_attributes.py` for that exact format). So the $0 open-records ask is precise: "the same certified appraisal roll export with improvement detail that GSA produces for Johnson CAD." Same lever applies to any GSA-Corp county.
+
 ---
 *Maintained by the Miner session. When a fable-5 crack lands, add its recipe here + a loader in `data/`. Verdicts + per-county status live in `data/texas_county_system_map.md`; the 254-county scoreboard in `COUNTY_COVERAGE.md`.*
