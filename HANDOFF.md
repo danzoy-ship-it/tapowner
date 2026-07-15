@@ -161,6 +161,25 @@ touches api/src|mobile/|web/, never mass-harvests per-property APIs.
 billing/App Store, the fill-on-blank runtime + FILL_SOURCES registry, the Reverse Prospecting
 filter UI/API, and `data/improvement_crosswalk.json` (content). **Does NOT hunt counties.**
 
+**AMENDMENT (2026-07-16, Frederick's order — split the data work so the app session isn't idle
+waiting):** the two data domains are now cleanly split by SOURCE and by TABLE, so both sessions
+mine in parallel with zero collision:
+- **MINER → the APPRAISAL ROLL** (every county, one pass, goal = 100% of 16 markers on all 254):
+  beds/baths/sqft/year/stories/lot, improvement features, exemptions (HS/OV65…), sale dates +
+  **prices where present**. Writes the `parcels` table. This roll pass already delivers 3 of the
+  15 seller-signals for free everywhere (tenure, 65+ exemption, homestead) — they ARE roll fields.
+- **PRODUCT (app session) → the COURTHOUSE / COURT-RECORD SIGNALS:** the ~10 seller-signals that
+  are NOT in the appraisal roll — pre-foreclosure (Notice of Trustee's Sale), tax-delinquency,
+  evictions (JP courts), mechanic's liens, divorce + probate + partition (district/probate courts),
+  and the free single-source ones (WARN layoffs = TWC, permits + code-violations = city portals).
+  App session does the mining here AND the app surfacing. Writes a NEW **`parcel_signals`** table
+  (app-session owns this DDL + its bulk-DDL discipline), never the `parcels` table.
+- **No-collision rule:** Miner writes `parcels`; app session writes `parcel_signals`. Different
+  tables → no ACCESS-EXCLUSIVE contention (the incident vector). Neither writes the other's table.
+  Court-record data joins to parcels by owner-name + situs/mailing address (parcels stays read-only
+  to the app session's signal loads).
+- MLS-gated signals (expired/FSBO listings) stay parked on Frederick's legal/partnership decision.
+
 **The interfaces (the only cross-lane touchpoints):**
 1. **App-lane handoff (miner → product):** one line per county — FIPS | TP office | pid column |
    sample pid → expected beds/baths, verified in a healthy window (TP backends are per-office and
