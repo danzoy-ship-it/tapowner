@@ -85,6 +85,8 @@ export function PipelineDetailScreen() {
       await addSavedPropertyNote(token, savedPropertyId, noteText.trim());
       setNoteText('');
       load();
+      // reveal the just-added note at the bottom of the log
+      setTimeout(() => notesRef.current?.scrollToEnd({ animated: true }), 350);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add note');
     } finally {
@@ -112,124 +114,130 @@ export function PipelineDetailScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={90}
     >
-      <View style={styles.content}>
-        <Text style={styles.address}>{detail.situs_address ?? 'Address unavailable'}</Text>
-        {detail.owner_name && <Text style={styles.owner}>{detail.owner_name}</Text>}
-        {factsLine(detail) !== '' && <Text style={styles.facts}>{factsLine(detail)}</Text>}
-        {detail.mailing_address && (
-          <Text style={styles.mailing}>✉ Mails to: {detail.mailing_address}</Text>
-        )}
-
-        {((detail.phones?.length ?? 0) > 0 || (detail.emails?.length ?? 0) > 0) && (
+      {/* One scroller for the whole record: the notes list carries all the
+          header content, so any amount of contacts + notes scrolls and the
+          bottom is always reachable. The "add note" bar is pinned below it. */}
+      <FlatList
+        ref={notesRef}
+        style={styles.notesList}
+        contentContainerStyle={styles.content}
+        data={orderedNotes}
+        keyExtractor={(item) => String(item.id)}
+        keyboardShouldPersistTaps="handled"
+        ListHeaderComponent={
           <>
-            <Text style={styles.sectionLabel}>Contact</Text>
-            {(showAllPhones ? detail.phones : detail.phones?.slice(0, CONTACT_PREVIEW))?.map((p) => (
-              <View key={p.number} style={styles.contactRow}>
-                <Text style={styles.contactValue}>{p.number}</Text>
-                <View style={styles.contactMetaRow}>
-                  {p.type ? <Text style={styles.contactMeta}>{p.type}</Text> : null}
-                  {p.dnc && (
-                    <View style={styles.dncBadge}>
-                      <Text style={styles.dncBadgeText}>DNC</Text>
+            <Text style={styles.address}>{detail.situs_address ?? 'Address unavailable'}</Text>
+            {detail.owner_name && <Text style={styles.owner}>{detail.owner_name}</Text>}
+            {factsLine(detail) !== '' && <Text style={styles.facts}>{factsLine(detail)}</Text>}
+            {detail.mailing_address && (
+              <Text style={styles.mailing}>✉ Mails to: {detail.mailing_address}</Text>
+            )}
+
+            {((detail.phones?.length ?? 0) > 0 || (detail.emails?.length ?? 0) > 0) && (
+              <>
+                <Text style={styles.sectionLabel}>Contact</Text>
+                {(showAllPhones ? detail.phones : detail.phones?.slice(0, CONTACT_PREVIEW))?.map((p) => (
+                  <View key={p.number} style={styles.contactRow}>
+                    <Text style={styles.contactValue}>{p.number}</Text>
+                    <View style={styles.contactMetaRow}>
+                      {p.type ? <Text style={styles.contactMeta}>{p.type}</Text> : null}
+                      {p.dnc && (
+                        <View style={styles.dncBadge}>
+                          <Text style={styles.dncBadgeText}>DNC</Text>
+                        </View>
+                      )}
                     </View>
-                  )}
-                </View>
+                  </View>
+                ))}
+                {(detail.phones?.length ?? 0) > CONTACT_PREVIEW && (
+                  <TouchableOpacity onPress={() => setShowAllPhones(!showAllPhones)}>
+                    <Text style={styles.showMore}>
+                      {showAllPhones
+                        ? 'Show fewer numbers'
+                        : `Show ${(detail.phones?.length ?? 0) - CONTACT_PREVIEW} more number${
+                            (detail.phones?.length ?? 0) - CONTACT_PREVIEW === 1 ? '' : 's'
+                          }`}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                {(showAllEmails ? detail.emails : detail.emails?.slice(0, CONTACT_PREVIEW))?.map((e) => (
+                  <Text key={e} style={styles.contactEmail}>
+                    {e}
+                  </Text>
+                ))}
+                {(detail.emails?.length ?? 0) > CONTACT_PREVIEW && (
+                  <TouchableOpacity onPress={() => setShowAllEmails(!showAllEmails)}>
+                    <Text style={styles.showMore}>
+                      {showAllEmails
+                        ? 'Show fewer emails'
+                        : `Show ${(detail.emails?.length ?? 0) - CONTACT_PREVIEW} more email${
+                            (detail.emails?.length ?? 0) - CONTACT_PREVIEW === 1 ? '' : 's'
+                          }`}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </>
+            )}
+
+            <Text style={styles.sectionLabel}>Status</Text>
+            {readOnly ? (
+              <View style={[styles.chip, styles.chipSelected, styles.statusBadgeRO]}>
+                <Text style={styles.chipTextSelected}>
+                  {SAVED_PROPERTY_STATUSES.find((s) => s.id === detail.status)?.label ?? detail.status}
+                </Text>
               </View>
-            ))}
-            {(detail.phones?.length ?? 0) > CONTACT_PREVIEW && (
-              <TouchableOpacity onPress={() => setShowAllPhones(!showAllPhones)}>
-                <Text style={styles.showMore}>
-                  {showAllPhones
-                    ? 'Show fewer numbers'
-                    : `Show ${(detail.phones?.length ?? 0) - CONTACT_PREVIEW} more number${
-                        (detail.phones?.length ?? 0) - CONTACT_PREVIEW === 1 ? '' : 's'
-                      }`}
-                </Text>
-              </TouchableOpacity>
+            ) : (
+              <View style={styles.chipWrap}>
+                {SAVED_PROPERTY_STATUSES.map((s) => (
+                  <TouchableOpacity
+                    key={s.id}
+                    style={[styles.chip, detail.status === s.id && styles.chipSelected]}
+                    onPress={() => handleStatusChange(s.id)}
+                  >
+                    <Text style={[styles.chipText, detail.status === s.id && styles.chipTextSelected]}>
+                      {s.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             )}
-            {(showAllEmails ? detail.emails : detail.emails?.slice(0, CONTACT_PREVIEW))?.map((e) => (
-              <Text key={e} style={styles.contactEmail}>
-                {e}
-              </Text>
-            ))}
-            {(detail.emails?.length ?? 0) > CONTACT_PREVIEW && (
-              <TouchableOpacity onPress={() => setShowAllEmails(!showAllEmails)}>
-                <Text style={styles.showMore}>
-                  {showAllEmails
-                    ? 'Show fewer emails'
-                    : `Show ${(detail.emails?.length ?? 0) - CONTACT_PREVIEW} more email${
-                        (detail.emails?.length ?? 0) - CONTACT_PREVIEW === 1 ? '' : 's'
-                      }`}
-                </Text>
-              </TouchableOpacity>
-            )}
+
+            <Text style={styles.sectionLabel}>Notes — oldest first, latest at the bottom</Text>
           </>
-        )}
-
-        <Text style={styles.sectionLabel}>Status</Text>
-        {readOnly ? (
-          <View style={[styles.chip, styles.chipSelected, styles.statusBadgeRO]}>
-            <Text style={styles.chipTextSelected}>
-              {SAVED_PROPERTY_STATUSES.find((s) => s.id === detail.status)?.label ?? detail.status}
+        }
+        renderItem={({ item }) => (
+          <View style={styles.noteRow}>
+            <Text style={styles.noteDate}>
+              {new Date(item.created_at).toLocaleString([], {
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+              })}
             </Text>
-          </View>
-        ) : (
-          <View style={styles.chipWrap}>
-            {SAVED_PROPERTY_STATUSES.map((s) => (
-              <TouchableOpacity
-                key={s.id}
-                style={[styles.chip, detail.status === s.id && styles.chipSelected]}
-                onPress={() => handleStatusChange(s.id)}
-              >
-                <Text style={[styles.chipText, detail.status === s.id && styles.chipTextSelected]}>
-                  {s.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            <Text style={styles.noteBody}>{item.body}</Text>
           </View>
         )}
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>No history yet — add the first note below.</Text>
+        }
+      />
 
-        <Text style={styles.sectionLabel}>Notes — oldest first, latest at the bottom</Text>
-        <FlatList
-          ref={notesRef}
-          style={styles.notesList}
-          data={orderedNotes}
-          keyExtractor={(item) => String(item.id)}
-          onContentSizeChange={() => notesRef.current?.scrollToEnd({ animated: false })}
-          renderItem={({ item }) => (
-            <View style={styles.noteRow}>
-              <Text style={styles.noteDate}>
-                {new Date(item.created_at).toLocaleString([], {
-                  month: 'short',
-                  day: 'numeric',
-                  hour: 'numeric',
-                  minute: '2-digit',
-                })}
-              </Text>
-              <Text style={styles.noteBody}>{item.body}</Text>
-            </View>
-          )}
-          ListEmptyComponent={
-            <Text style={styles.emptyText}>No history yet — add the first note below.</Text>
-          }
-        />
+      {error && <Text style={styles.errorText}>{error}</Text>}
 
-        {error && <Text style={styles.errorText}>{error}</Text>}
-
-        {!readOnly && (
-          <View style={styles.noteInputRow}>
-            <TextInput
-              style={styles.noteInput}
-              placeholder="Add a note…"
-              value={noteText}
-              onChangeText={setNoteText}
-            />
-            <TouchableOpacity style={styles.addNoteButton} onPress={handleAddNote} disabled={saving}>
-              {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.addNoteButtonText}>Add</Text>}
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
+      {!readOnly && (
+        <View style={styles.noteInputRow}>
+          <TextInput
+            style={styles.noteInput}
+            placeholder="Add a note…"
+            value={noteText}
+            onChangeText={setNoteText}
+          />
+          <TouchableOpacity style={styles.addNoteButton} onPress={handleAddNote} disabled={saving}>
+            {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.addNoteButtonText}>Add</Text>}
+          </TouchableOpacity>
+        </View>
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -240,7 +248,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   content: {
-    flex: 1,
     padding: 20,
   },
   loadingContainer: {
@@ -376,13 +383,18 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#b91c1c',
     paddingVertical: 6,
+    paddingHorizontal: 20,
     fontSize: 13,
   },
   noteInputRow: {
     flexDirection: 'row',
     gap: 8,
-    paddingTop: 8,
-    paddingBottom: 8,
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#f3f4f6',
+    backgroundColor: '#fff',
   },
   noteInput: {
     flex: 1,
