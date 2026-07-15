@@ -1,0 +1,119 @@
+{
+  "_comment": "Single source of truth mapping raw CAD improvement/feature labels -> TapOwner canonical tags. Both the loaders (Python, at re-tag time) and the app (TS) read THIS file. Matching: lowercase the raw label, regex-search each `match` pattern (case-insensitive); the tag applies if any `match` hits AND no `exclude` hits. A property's improvement_tags = the union of tags across all its raw improvement labels. When the data session logs a new/unmapped label in data/improvement_labels_seen.md, add a pattern here (app session owns this file). See IMPROVEMENT_TAXONOMY.md for the full spec.",
+  "version": 1,
+  "updated": "2026-07-15",
+  "tags": {
+    "pool": {
+      "label": "Pool",
+      "definition": "In-ground or above-ground swimming pool.",
+      "source": "improvement",
+      "match": ["\\bpool\\b", "pool-swimming", "swimming pool", "swim pool", "^rsw", "pool res", "res pool", "gunite", "^604$", "^602$", "^609$"],
+      "exclude": ["pool heater", "pool equip", "pool enclosure only", "spa", "whirlpool", "hot tub"]
+    },
+    "spa": {
+      "label": "Spa / hot tub",
+      "definition": "In-ground spa or hot tub (portable units usually not recorded).",
+      "source": "improvement",
+      "match": ["\\bspa\\b", "hot tub", "whirlpool"],
+      "exclude": []
+    },
+    "casita": {
+      "label": "Guest house / casita",
+      "definition": "A second detached dwelling, guest quarters, in-law suite, or ADU.",
+      "source": "improvement",
+      "match": ["casita", "guest house", "guest quarters", "guest cottage", "guest apt", "detached living", "second dwelling", "2nd dwelling", "second living", "in-law", "in law", "mother-in-law", "granny", "\\badu\\b", "accessory dwelling", "^dla", "detached studio", "quarters"],
+      "exclude": ["servant"]
+    },
+    "shed_workshop": {
+      "label": "Shed / workshop",
+      "definition": "Detached shed, workshop, shop, or utility outbuilding.",
+      "source": "improvement",
+      "match": ["outbuilding", "storage building", "\\bshed\\b", "workshop", "\\bshop\\b", "metal building", "pole barn", "utility building", "tool shed", "morton building"],
+      "exclude": ["storage room", "workshop area", "pro shop"]
+    },
+    "boat_dock": {
+      "label": "Boat dock",
+      "definition": "Private boat dock, boathouse, boat slip, or boat lift (also implies waterfront).",
+      "source": "improvement",
+      "match": ["boat dock", "boathouse", "boat house", "boat slip", "\\bdock\\b", "boat lift", "boat facility"],
+      "exclude": ["loading dock"]
+    },
+    "barn_stable": {
+      "label": "Barn / stable",
+      "definition": "Barn, stable, or horse/equestrian facility.",
+      "source": "improvement",
+      "match": ["\\bbarn\\b", "stable", "\\bhorse", "equestrian", "corral", "loafing shed", "stall barn"],
+      "exclude": []
+    },
+    "rv": {
+      "label": "RV parking",
+      "definition": "RV pad, cover, port, or hookup.",
+      "source": "improvement",
+      "match": ["\\brv\\b", "recreational vehicle", "rv pad", "rv cover", "rv parking", "rv port", "rv garage", "motorhome"],
+      "exclude": []
+    },
+    "garage": {
+      "label": "Garage",
+      "definition": "Enclosed garage (attached or detached). Space count comes from the improvement units/count where available.",
+      "source": "improvement",
+      "match": ["\\bgarage\\b", "^resg$", "att gar", "det gar", "attached garage", "detached garage"],
+      "exclude": ["carport", "garage apartment", "garage apt"]
+    },
+    "carport": {
+      "label": "Carport",
+      "definition": "Covered, non-enclosed parking structure.",
+      "source": "improvement",
+      "match": ["carport", "car port", "^resc", "covered parking"],
+      "exclude": []
+    },
+    "solar": {
+      "label": "Solar",
+      "definition": "Rooftop solar / photovoltaic panels.",
+      "source": "improvement",
+      "match": ["solar panel", "solar system", "photovoltaic", "\\bpv system\\b", "\\bsolar\\b"],
+      "exclude": ["solar screen", "solar shade", "solar cover"]
+    },
+    "basement": {
+      "label": "Basement",
+      "definition": "Below-grade finished or unfinished space (rare in TX).",
+      "source": "improvement",
+      "match": ["basement", "\\bcellar\\b", "below grade", "below-grade"],
+      "exclude": []
+    },
+    "fireplace": {
+      "label": "Fireplace",
+      "definition": "One or more fireplaces.",
+      "source": "improvement",
+      "match": ["fireplace", "\\bfp\\b", "wood stove", "wood-burning", "wood burning", "^522$", "^521$"],
+      "exclude": ["fireplace insert kit"]
+    },
+    "sport_court": {
+      "label": "Tennis / sport court",
+      "definition": "Private tennis, pickleball, basketball, or other sport/recreation court.",
+      "source": "improvement",
+      "match": ["tennis", "sport court", "basketball court", "recreation court", "sport ct", "pickleball", "racquetball", "athletic court"],
+      "exclude": []
+    },
+    "waterfront": {
+      "label": "Waterfront",
+      "definition": "Parcel abuts water. Best derived from parcel geometry or a land 'waterfront' influence code; a boat_dock also implies it.",
+      "source": "derived",
+      "match": ["waterfront", "water front", "lakefront", "lake front", "riverfront", "river front", "canal front", "bay front", "gulf front"],
+      "exclude": []
+    },
+    "corner_lot": {
+      "label": "Corner lot",
+      "definition": "Parcel on a corner. Best derived from parcel geometry or a land 'corner' influence code.",
+      "source": "derived",
+      "match": ["corner lot", "corner influence", "^corner$"],
+      "exclude": []
+    },
+    "single_story": {
+      "label": "Single-story",
+      "definition": "One-story dwelling. DERIVED from the parcels.stories field (== 1), NOT an improvement label.",
+      "source": "derived_field",
+      "match": [],
+      "exclude": []
+    }
+  }
+}
