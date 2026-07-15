@@ -7,8 +7,8 @@ Regenerate with `python data/build_coverage_log.py` after each mining batch (ref
 ## Scoreboard (253 counties)
 
 - ☑ **Mined (has improvements/feature tags): 57** / 253
-- Full attributes (improv+dims): 35  ·  Partial: 23  ·  Geometry-only (need mining): 195  ·  Missing from DB: 0
-- Seller-signals (sale date) loaded: 40 counties
+- Full attributes (improv+dims): 35  ·  Partial: 31  ·  Geometry-only (need mining): 187  ·  Missing from DB: 0
+- Seller-signals (sale date) loaded: 50 counties
 
 Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISSING. % = share of the county's parcels with that attribute.
 
@@ -18,9 +18,9 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Denton | 48121 | 353,631 | 88 | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Hidalgo | 48215 | 328,322 | 80 | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Montgomery | 48339 | 320,915 | 76 | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Brazoria | 48039 | 275,131 | 45 | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Brazoria | 48039 | 275,131 | 45 | · | · | · | 78 | · | PARTIAL |
 | [ ] | Smith | 48423 | 140,245 | 55 | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Lubbock | 48303 | 135,112 | 78 | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Lubbock | 48303 | 135,112 | 78 | · | · | · | 95 | · | PARTIAL |
 | [ ] | Mclennan | 48309 | 115,362 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Henderson | 48213 | 106,708 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Comal | 48091 | 103,537 | · | · | · | · | · | · | GEOM-ONLY |
@@ -41,7 +41,7 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Nacogdoches | 48347 | 48,003 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Cherokee | 48073 | 46,761 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Navarro | 48349 | 46,167 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Medina | 48325 | 44,330 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Medina | 48325 | 44,330 | · | · | · | · | 88 | · | PARTIAL |
 | [ ] | Vanzandt | 48467 | 43,963 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Anderson | 48001 | 43,894 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Hardin | 48199 | 41,635 | · | · | · | · | · | · | GEOM-ONLY |
@@ -57,7 +57,7 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Walker | 48471 | 35,582 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Cass | 48067 | 34,816 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Cooke | 48097 | 33,170 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Tyler | 48457 | 33,043 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Tyler | 48457 | 33,043 | · | · | · | · | 84 | · | PARTIAL |
 | [ ] | Wharton | 48481 | 31,888 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Valverde | 48465 | 31,635 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Brown | 48049 | 31,411 | · | · | · | · | · | · | GEOM-ONLY |
@@ -82,9 +82,9 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Calhoun | 48057 | 22,678 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Austin | 48015 | 22,581 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Limestone | 48293 | 21,727 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Uvalde | 48463 | 21,722 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Uvalde | 48463 | 21,722 | · | · | · | · | 94 | · | PARTIAL |
 | [ ] | Eastland | 48133 | 21,448 | · | · | · | · | · | 22 | GEOM-ONLY |
-| [ ] | Shelby | 48419 | 21,378 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Shelby | 48419 | 21,378 | · | · | · | · | 82 | · | PARTIAL |
 | [ ] | Dewitt | 48123 | 20,802 | · | · | · | · | · | 20 | GEOM-ONLY |
 | [ ] | Howard | 48227 | 20,654 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Gonzales | 48177 | 20,420 | · | · | · | · | · | 18 | GEOM-ONLY |
@@ -99,7 +99,7 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Presidio | 48377 | 18,436 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Robertson | 48395 | 16,935 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Liveoak | 48297 | 16,839 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Lampasas | 48281 | 16,541 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Lampasas | 48281 | 16,541 | · | · | · | · | 20 | · | GEOM-ONLY |
 | [ ] | Franklin | 48159 | 16,540 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Young | 48503 | 16,353 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Gray | 48179 | 16,251 | · | · | · | · | · | · | GEOM-ONLY |
@@ -107,7 +107,7 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Ward | 48475 | 15,174 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Runnels | 48399 | 15,008 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Reeves | 48389 | 14,975 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Kleberg | 48273 | 14,909 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Kleberg | 48273 | 14,909 | · | · | · | · | 82 | · | PARTIAL |
 | [ ] | Duval | 48131 | 14,772 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Pecos | 48371 | 14,720 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Karnes | 48255 | 14,436 | · | · | · | · | · | · | GEOM-ONLY |
@@ -163,7 +163,7 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Jeffdavis | 48243 | 7,175 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Hardeman | 48197 | 6,958 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Crane | 48103 | 6,913 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Somervell | 48425 | 6,823 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Somervell | 48425 | 6,823 | · | · | · | · | 95 | · | PARTIAL |
 | [ ] | Fisher | 48151 | 6,817 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Carson | 48065 | 6,710 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Crosby | 48107 | 6,670 | · | · | · | · | · | · | GEOM-ONLY |
@@ -222,7 +222,7 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [x] | Cameron | 48061 | 185,062 | 69 | 20 | 21 | 75 | 95 | 39 | FULL+SIGNALS |
 | [x] | Bell | 48027 | 167,412 | 73 | 11 | 34 | 78 | · | · | FULL |
 | [x] | Liberty | 48291 | 162,275 | 24 | 3 | · | 34 | · | · | PARTIAL |
-| [x] | Nueces | 48355 | 157,198 | 71 | 6 | 1 | 79 | 88 | 46 | PARTIAL |
+| [x] | Nueces | 48355 | 157,198 | 71 | 6 | 1 | 79 | 90 | 46 | PARTIAL |
 | [x] | Jefferson | 48245 | 122,202 | 63 | · | · | 71 | · | · | PARTIAL |
 | [x] | Hays | 48209 | 117,427 | 84 | 13 | · | 74 | · | · | PARTIAL |
 | [x] | Johnson | 48251 | 101,847 | 68 | · | · | 72 | · | · | PARTIAL |
@@ -235,14 +235,14 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [x] | Randall | 48381 | 64,824 | 81 | 75 | 76 | 85 | 100 | 53 | FULL+SIGNALS |
 | [x] | Bastrop | 48021 | 63,357 | 51 | · | · | 66 | 92 | 38 | PARTIAL |
 | [x] | Angelina | 48005 | 60,693 | 60 | · | · | 63 | 94 | 36 | PARTIAL |
-| [x] | Polk | 48373 | 60,178 | 35 | 30 | 34 | 44 | 79 | 19 | FULL+SIGNALS |
+| [x] | Polk | 48373 | 60,178 | 35 | 30 | 34 | 44 | 94 | 19 | FULL+SIGNALS |
 | [x] | Potter | 48375 | 53,490 | 74 | 63 | 65 | 80 | 100 | 35 | FULL+SIGNALS |
 | [x] | Rockwall | 48397 | 52,739 | 84 | 49 | 66 | 87 | 97 | 63 | FULL+SIGNALS |
 | [x] | Orange | 48361 | 50,337 | 43 | · | · | 47 | · | · | PARTIAL |
 | [x] | Wise | 48497 | 48,705 | 54 | · | 38 | 67 | · | · | FULL |
 | [x] | Victoria | 48469 | 45,104 | 76 | 58 | · | 76 | 86 | 42 | FULL+SIGNALS |
 | [x] | Wood | 48499 | 44,576 | 54 | · | · | 54 | 87 | 32 | PARTIAL |
-| [x] | Kerr | 48265 | 36,913 | 61 | 22 | 47 | 61 | · | · | FULL |
+| [x] | Kerr | 48265 | 36,913 | 61 | 22 | 47 | 61 | 88 | · | FULL+SIGNALS |
 | [x] | Sanjacinto | 48407 | 36,346 | 44 | 4 | · | 44 | 83 | 22 | PARTIAL |
 | [x] | Lamar | 48277 | 36,246 | 52 | 6 | 49 | 65 | 81 | 33 | FULL+SIGNALS |
 | [x] | Bandera | 48019 | 33,261 | 44 | · | · | 44 | 74 | 19 | PARTIAL |
@@ -254,7 +254,7 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [x] | Trinity | 48455 | 25,952 | 30 | 1 | 7 | 31 | 55 | 14 | PARTIAL |
 | [x] | Bee | 48025 | 23,864 | 38 | · | 21 | 57 | · | · | FULL |
 | [x] | Washington | 48477 | 23,475 | 65 | 36 | 38 | 74 | 17 | 41 | FULL |
-| [x] | Newton | 48351 | 23,278 | 41 | 29 | 30 | 42 | 62 | 19 | FULL+SIGNALS |
+| [x] | Newton | 48351 | 23,278 | 41 | 29 | 30 | 42 | 64 | 19 | FULL+SIGNALS |
 | [x] | Milam | 48331 | 20,992 | 61 | 3 | 3 | 61 | 83 | 31 | PARTIAL |
 | [x] | Titus | 48449 | 20,833 | 53 | 1 | 1 | 65 | 82 | 33 | PARTIAL |
 | [x] | Lavaca | 48285 | 19,767 | 52 | · | 46 | 65 | 90 | 28 | FULL+SIGNALS |
@@ -266,7 +266,7 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [x] | Kimble | 48267 | 9,556 | 32 | · | · | 41 | 89 | 15 | PARTIAL |
 | [x] | Mitchell | 48335 | 8,743 | 39 | 2 | 2 | 50 | 83 | 21 | PARTIAL |
 | [x] | Yoakum | 48501 | 7,291 | 38 | · | 11 | 49 | 59 | 22 | PARTIAL |
-| [x] | Delta | 48119 | 6,461 | 41 | · | 27 | 49 | 86 | 22 | FULL+SIGNALS |
+| [x] | Delta | 48119 | 6,461 | 41 | · | 27 | 49 | 87 | 22 | FULL+SIGNALS |
 
 ## Known bulk-data gaps / blockers (exhausted attempts → circle back later)
 
