@@ -117,6 +117,33 @@ the parcel tie, and the crack is far less useful. The Fable-5 Kofile agent is co
 this. Revised outlook: NOT a multi-week fragmented slog IF the index has addresses — potentially
 ~80 counties via two platform cracks + a few metro one-offs.
 
+## 🗄️ KOFILE — CRACKED, PARKED (Frederick 2026-07-16: "get back to it later"). Don't re-derive.
+A Fable-5 agent FULLY reverse-engineered Kofile/GovOS PublicSearch. The hard part is DONE and
+saved here + in `api/scripts/signals/load_kofile_foreclosures.mjs` (parameterized for all 6 counties;
+join half validated, fetch blocked by rate-limiting). To resume later, just run the loader from a
+FRESH IP with a polite single-connection + backoff — no re-cracking needed.
+- **Access = YES**, free, no login, no CAPTCHA. It is NOT GraphQL / not `api.publicsearch.us`.
+- **Transport = WebSocket** `wss://<county>.tx.publicsearch.us/ws` (redux-actions-over-socket).
+- **Token:** `GET https://<county>.tx.publicsearch.us/` → SPA embeds `window.__ort="<uuid>"` (also
+  httponly `authToken` cookie). That's the only credential.
+- **Search frame:** `{type:"@kofile/FETCH_DOCUMENTS/v6", payload:{query:{department:"FC",
+  searchType:"advancedSearch", recordedDateRange:"YYYY-MM-DD,YYYY-MM-DD", limit:"50", offset:"0"},
+  workspaceID:"<rand>"}, authToken:<ort>, correlationId:<uuid>, sync:true}` → reply
+  `@kofile/FETCH_DOCUMENTS_FULFILLED/v6`. **`FC` = the Foreclosures department** (every trustee-sale
+  notice, no keyword guessing). Confirmed on Nueces/Cameron/Hidalgo → all 6 counties, swap subdomain.
+- **Free fields per notice:** docNumber (dedup), recordedDate, `instrumentDate` (= SALE date,
+  first-Tuesdays), docTypeCode "FCN", `propAddress.address1` (a LEGAL DESCRIPTION — DO NOT join on
+  it, 0/19 matched our roll), and **`ocrText` (full notice body — the STREET address lives here,
+  "...commonly known as 7914 LABRADOR DR...")**. Image PDF is paywalled but we don't need it.
+- **Join that WORKS:** regex the street address out of `ocrText` → exact `parcels.situs_address`
+  match (validated 75% / 6-of-6 on real addresses). Census-geocode fallback is imprecise. Expected
+  overall tie ≈ 50-75% (some notices are legal-desc-only / N/A) — vs Bexar's 97%.
+- **The ONLY blocker:** the Kofile backend timed out ~40 min straight after ~30 reverse-eng
+  connections (its own website timed out too) = IP rate-limit / degradation window, NOT a code
+  problem. Resume from a clean IP, one reused connection, PING keepalive, backoff.
+- **Prize:** ~46 counties incl. Dallas/Tarrant/Collin/Denton/Hidalgo/Nueces/Williamson/Montgomery/
+  Bell/Smith. Parked behind the reliable PDF path for now.
+
 ## Signal status
 - ✅ **pre_foreclosure** — Bexar live (mortgage+tax). Surfaced in API (`/parcels/at.event_signals`,
   `/parcels/within.signal_types`). App UI (badge + "foreclosures in my farm" filter) = next build.
