@@ -131,6 +131,16 @@ export async function parcelsRoutes(app: FastifyInstance) {
             parcel.homestead = signals.homestead;
             delete parcel.exemptions;
 
+            // Court-record signals (pre-foreclosure, etc.) tied to this parcel
+            // (parcel_signals, indexed on parcel_id). Public-record events shown
+            // to the agent; the outreach-ethics rule keeps them OUT of AI copy.
+            const { rows: sigRows } = await pool.query(
+                `SELECT signal_type, subtype, event_date FROM parcel_signals
+                 WHERE parcel_id = $1 ORDER BY event_date DESC NULLS LAST LIMIT 10`,
+                [parcel.id]
+            );
+            parcel.event_signals = sigRows;
+
             // Felt-gap instrumentation (property-data API decision, 2026-07-14):
             // record what each opened card was missing so the real
             // user-experienced blank rate is measurable, not estimated. The
@@ -238,11 +248,16 @@ export async function parcelsRoutes(app: FastifyInstance) {
                         p.stories, p.year_built, p.has_pool,
                         p.has_casita, p.has_shed, p.improvements, p.improvement_tags,
                         p.last_sale_date, p.exemptions,
+                        sig.types AS signal_types,
                         tr.payload AS trace_payload
                  FROM parcels p
                  CROSS JOIN poly
                  LEFT JOIN user_traces ut ON ut.user_id = $2 AND ut.parcel_id = p.id
                  LEFT JOIN trace_results tr ON tr.id = ut.trace_result_id
+                 LEFT JOIN LATERAL (
+                     SELECT array_agg(DISTINCT signal_type) AS types
+                     FROM parcel_signals ps WHERE ps.parcel_id = p.id
+                 ) sig ON true
                  WHERE p.geom && poly.g
                    AND ST_Within(ST_PointOnSurface(p.geom), poly.g)
                    AND p.is_protected = false
@@ -289,6 +304,7 @@ export async function parcelsRoutes(app: FastifyInstance) {
                             shed: r.has_shed,
                         }),
                         ...deriveOwnerSignals(r.exemptions, r.last_sale_date),
+                        signal_types: (r.signal_types ?? []).filter(Boolean),
                         phones: payload ? (payload.phones ?? []).map((x) => x.number).filter(Boolean) : [],
                         emails: payload ? (payload.emails ?? []).map((x) => x.email).filter(Boolean) : [],
                     };
