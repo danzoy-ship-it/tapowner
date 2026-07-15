@@ -8,6 +8,7 @@ import { isPlaceholderOwner } from "../lib/owners.js";
 import { getLatestSubscription, isSubscriptionUsable } from "../lib/entitlements.js";
 import { getProductConfig } from "../lib/config.js";
 import { logEvent } from "../lib/events.js";
+import { deriveTags, tagLabel } from "../lib/improvementTags.js";
 import { fillPid, fillParcelAttrsInBackground } from "../cadattr/index.js";
 
 // Farm mode caps: a neighborhood farm is a few hundred homes. The result cap
@@ -188,6 +189,7 @@ export async function parcelsRoutes(app: FastifyInstance) {
                         p.is_absentee,
                         p.living_area_sqft, p.bedrooms, p.baths_full, p.baths_half,
                         p.stories, p.year_built, p.has_pool,
+                        p.has_garage, p.has_casita, p.has_shed, p.improvements,
                         tr.payload AS trace_payload
                  FROM parcels p
                  CROSS JOIN poly
@@ -231,6 +233,14 @@ export async function parcelsRoutes(app: FastifyInstance) {
                         stories: r.stories,
                         year_built: r.year_built,
                         has_pool: r.has_pool,
+                        // Canonical feature tags (Reverse Prospecting filters) --
+                        // crosswalked from raw improvement labels + loader booleans.
+                        features: deriveTags(r.improvements, {
+                            pool: r.has_pool,
+                            garage: r.has_garage,
+                            casita: r.has_casita,
+                            shed: r.has_shed,
+                        }),
                         phones: payload ? (payload.phones ?? []).map((x) => x.number).filter(Boolean) : [],
                         emails: payload ? (payload.emails ?? []).map((x) => x.email).filter(Boolean) : [],
                     };
@@ -247,7 +257,7 @@ export async function parcelsRoutes(app: FastifyInstance) {
                     "Owner", "Property Address", "City", "ZIP",
                     "Mailing Address", "Mailing City", "Mailing State", "Mailing ZIP", "Absentee",
                     "Sqft", "Beds", "Baths Full", "Baths Half", "Stories", "Year Built", "Pool",
-                    "Phones", "Emails",
+                    "Features", "Phones", "Emails",
                 ];
                 const lines = [header.map(csvCell).join(",")];
                 for (const p of parcels) {
@@ -269,6 +279,7 @@ export async function parcelsRoutes(app: FastifyInstance) {
                             p.stories ?? "",
                             p.year_built ?? "",
                             p.has_pool === true ? "Yes" : p.has_pool === false ? "No" : "",
+                            p.features.map(tagLabel).join("; "),
                             p.phones.join("; "),
                             p.emails.join("; "),
                         ]

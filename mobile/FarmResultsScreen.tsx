@@ -41,7 +41,7 @@ function buildCsv(parcels: FarmParcel[], traced: Record<number, Contact>): strin
     'Owner', 'Property Address', 'City', 'ZIP',
     'Mailing Address', 'Mailing City', 'Mailing State', 'Mailing ZIP', 'Absentee',
     'Sqft', 'Beds', 'Baths Full', 'Baths Half', 'Stories', 'Year Built', 'Pool',
-    'Phones', 'Emails',
+    'Features', 'Phones', 'Emails',
   ];
   const lines = [header.map(csvCell).join(',')];
   for (const p of parcels) {
@@ -64,6 +64,7 @@ function buildCsv(parcels: FarmParcel[], traced: Record<number, Contact>): strin
         p.stories ?? '',
         p.year_built ?? '',
         p.has_pool === true ? 'Yes' : p.has_pool === false ? 'No' : '',
+        (p.features ?? []).map(tagLabel).join('; '),
         c.phones.join('; '),
         c.emails.join('; '),
       ]
@@ -82,11 +83,41 @@ function rowFacts(p: FarmParcel): string {
   const stories = p.stories ? parseFloat(p.stories) : NaN;
   if (Number.isFinite(stories) && stories > 0) parts.push(`${stories} sty`);
   if (p.has_pool) parts.push('Pool');
+  // County-recorded features beyond pool (casita, shed, fireplace, …), capped
+  // so a feature-rich home doesn't crowd the row.
+  const extras = (p.features ?? []).filter((t) => t !== 'pool' && t !== 'single_story');
+  for (const t of extras.slice(0, 3)) parts.push(tagLabel(t));
+  if (extras.length > 3) parts.push(`+${extras.length - 3}`);
   return parts.join(' · ');
 }
 
 const BED_OPTIONS = [0, 2, 3, 4, 5, 6] as const;
 const BATH_OPTIONS = [0, 2, 3, 4, 5, 6] as const;
+
+// Display labels for the canonical feature tags the server derives from county
+// improvement records (IMPROVEMENT_TAXONOMY.md). `pool` and `single_story` are
+// deliberately absent — they have their own dedicated chips below. Unknown tags
+// (a future crosswalk addition) fall back to the raw tag text.
+const TAG_LABELS: Record<string, string> = {
+  casita: 'Casita / guest house',
+  shed_workshop: 'Shed / workshop',
+  garage: 'Garage',
+  carport: 'Carport',
+  spa: 'Spa / hot tub',
+  fireplace: 'Fireplace',
+  solar: 'Solar',
+  rv: 'RV parking',
+  basement: 'Basement',
+  boat_dock: 'Boat dock',
+  barn_stable: 'Barn / stable',
+  sport_court: 'Sport court',
+  waterfront: 'Waterfront',
+  corner_lot: 'Corner lot',
+};
+
+function tagLabel(tag: string): string {
+  return TAG_LABELS[tag] ?? tag.replace(/_/g, ' ');
+}
 
 // Farm results, two-stage: (1) Unlock contacts for the filtered list, then
 // (2) Actions — the SAME verbs as the individual contact screen, pluralized
@@ -104,6 +135,8 @@ export function FarmResultsScreen() {
   const [minBaths, setMinBaths] = useState(0);
   const [poolOnly, setPoolOnly] = useState(false);
   const [singleStory, setSingleStory] = useState(false);
+  // Selected canonical feature tags (AND semantics: a home must have them all).
+  const [featureTags, setFeatureTags] = useState<Set<string>>(new Set());
   const [traced, setTraced] = useState<Record<number, Contact>>({});
   // Homes the vendor returned no verified contact for (session-scoped). They
   // count as "worked", not "locked", so unlock-all can't loop on them forever.
@@ -112,7 +145,22 @@ export function FarmResultsScreen() {
   const [busy, setBusy] = useState<string | null>(null);
 
   const minSqft = parseInt(minSqftText, 10) || 0;
-  const filtersActive = minSqft > 0 || minBeds > 0 || minBaths > 0 || poolOnly || singleStory;
+  const filtersActive =
+    minSqft > 0 || minBeds > 0 || minBaths > 0 || poolOnly || singleStory || featureTags.size > 0;
+
+  // Feature chips only exist where the data does: count each tag across THIS
+  // area's homes and offer only tags with at least one match (an unmined county
+  // shows no dead chips). Sorted by how common the feature is here.
+  const availableTags = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const p of result.parcels) {
+      for (const t of p.features ?? []) {
+        if (t === 'pool' || t === 'single_story') continue; // dedicated chips
+        counts.set(t, (counts.get(t) ?? 0) + 1);
+      }
+    }
+    return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+  }, [result.parcels]);
 
   const filtered = useMemo(() => {
     if (!filtersActive) return result.parcels;
@@ -128,9 +176,13 @@ export function FarmResultsScreen() {
         const stories = p.stories ? parseFloat(p.stories) : NaN;
         if (stories !== 1) return false;
       }
+      if (featureTags.size > 0) {
+        const f = p.features ?? [];
+        for (const t of featureTags) if (!f.includes(t)) return false;
+      }
       return true;
     });
-  }, [result.parcels, filtersActive, minSqft, minBeds, minBaths, poolOnly, singleStory]);
+  }, [result.parcels, filtersActive, minSqft, minBeds, minBaths, poolOnly, singleStory, featureTags]);
 
   const criteria: FarmCriteria = {
     ...(minSqft > 0 ? { min_sqft: minSqft } : {}),
@@ -151,6 +203,16 @@ export function FarmResultsScreen() {
     setMinBaths(0);
     setPoolOnly(false);
     setSingleStory(false);
+    setFeatureTags(new Set());
+  }
+
+  function toggleFeatureTag(tag: string) {
+    setFeatureTags((prev) => {
+      const next = new Set(prev);
+      if (next.has(tag)) next.delete(tag);
+      else next.add(tag);
+      return next;
+    });
   }
 
   // ---------- Stage 1: unlock ----------
@@ -503,6 +565,22 @@ export function FarmResultsScreen() {
                   Single story
                 </Text>
               </TouchableOpacity>
+              {/* County-recorded features present in THIS area (count = homes
+                  that have it). Selecting several = homes with all of them. */}
+              {availableTags.map(([tag, count]) => {
+                const on = featureTags.has(tag);
+                return (
+                  <TouchableOpacity
+                    key={tag}
+                    style={[styles.chip, on && styles.chipSelected]}
+                    onPress={() => toggleFeatureTag(tag)}
+                  >
+                    <Text style={[styles.chipText, on && styles.chipTextSelected]}>
+                      {tagLabel(tag)} ({count})
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
               {filtersActive && (
                 <TouchableOpacity style={styles.clearButton} onPress={clearFilters}>
                   <Text style={styles.clearButtonText}>Clear</Text>

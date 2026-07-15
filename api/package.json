@@ -11,7 +11,8 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "sync:crosswalk": "node scripts/sync-crosswalk.mjs"
   },
   "dependencies": {
     "@fastify/cors": "^11.3.0",

@@ -359,6 +359,10 @@ export interface FarmParcel {
   stories: string | null;
   year_built: number | null;
   has_pool: boolean | null;
+  // Canonical feature tags (pool, casita, shed_workshop, …) derived server-side
+  // from county improvement records via the crosswalk. Optional so results
+  // shaped by an older API stay valid.
+  features?: string[];
   // Contacts the user already owns (traced) for this parcel.
   phones: string[];
   emails: string[];
