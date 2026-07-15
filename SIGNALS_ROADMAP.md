@@ -85,10 +85,23 @@ as needed; area-level signals (#15) keyed by geography, not parcel. Product surf
 Reverse Prospecting filters/badges + (later) farm alerts. AI-draft guard ships in the same
 build as the first surfaced signal.
 
+## STATUS (2026-07-16, app session overnight)
+
+- ✅ **SHIPPED — tenure filter + senior-owner (#10 current-state):** the data session captured
+  1.49M `last_sale_date` + 571K `exemptions` (HS 564K / OV65 216K). App now derives `tenure_years`,
+  `senior_owner`, `homestead` (`api/src/lib/ownerSignals.ts`); Reverse Prospecting has "Owned
+  10/15/20+ yrs" + "Owner 65+" filter chips; card + farm rows show them; CSV gains the columns;
+  1900-placeholder dates rejected (100yr cap). Coverage grows by county (Galveston/Nueces/Cameron/
+  Guadalupe/Randall have both today). Draft letters deliberately EXCLUDE these per the ethics rule.
+- ⏳ **BLOCKED — #13 neighbor-sold-high:** needs sale PRICE; 0 captured (only date). Data session is
+  capturing price where present on future passes; unblocks when price coverage exists.
+- ⏳ **#9 homestead-DROPPED:** needs a second exemptions snapshot to diff — starts working after the
+  next quarterly recapture. Current-state "owner-occupied (HS)" already surfaces.
+
 ## Execution order (Frederick's value-per-effort × our dependency reality)
 
-1. **Now (rides existing pipelines):** last-sale capture → tenure filter + #13; exemptions
-   capture columns (#9/#10 seed); owner-portfolio index (already queued).
+1. **Now (rides existing pipelines):** ✅ tenure filter + senior-owner DONE; last-sale/exemption
+   capture ongoing (data session); #13 waits on price; owner-portfolio index shipped.
 2. **Next small wins:** #15 WARN (one source), #3/#14 city portals for the metros.
 3. **The campaign:** court-record counties (#1,5,6,7,8 then #2,4), clerk-portal playbook style.
 4. **Frederick decisions pending:** #11/#12 route (attorney vs MLS partnership vs skip).
