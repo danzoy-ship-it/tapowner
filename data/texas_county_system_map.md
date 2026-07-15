@@ -538,3 +538,24 @@ Archer(48009) 2,690 HS, Haskell(48207) 1,479, Crockett(48105) 693, Upton(48461) 
 ### Batches G+H (2026-07-16): 10 more Harris/BIS-eSearch homestead counties loaded
 Karnes(48255) 2,389, Franklin(48159) 3,073, Ward(48475) 2,286, LiveOak(48297) 2,697, Culberson(48109) 429, Clay(48077) 3,167, Nolan(48353) 3,247, Frio(48163) 2,398, SanAugustine(48405) 1,210, Refugio(48391) 2,602 — all via /Forms/ExcelDownload CSV. **MAP CORRECTION:** Clay/Nolan/Frio/SanAugustine/Refugio were tagged P&A-hard but P&A migrated them to BIS-hosted sites with the free eSearch CSV. Scurry(48415) has a richer REAL-ROLL.zip (9.5MB, likely sqft) — TODO load. BIS-eSearch-only (records-request): presidio/young/gray/lee/duval/blanco/pecos + willacy/lamb/zapata/rains(Blazor). SWData: runnels(WebForms), hamilton/stephens(Blazor), floyd. TrueProdigy: reeves, lasalle. Dead-end whoownsit: robertson, redriver, coleman.
 - Scurry(48415): full PACS roll (scurrytex.com/.../2025-07-29_CERTIFIED-REAL-ROLL.zip) — improv 7,806, beds 3,031, sqft 7,804, sale 11,107, exempt 3,702. Loaded via load_pacs_roll.py (apn==geo_id).
+
+---
+
+## Session close 2026-07-15 — batches K/L/M/N applied (tiny-county wave)
+
+**Coverage now: 253 counties present; 61 mined ≥25% improvements; 100 counties with exemption-signal (homestead/over-65/DV); 55 with sale-date signal.** (Exemption-signal counties nearly doubled this wave via Harris/BIS eSearch certified-roll CSVs.)
+
+### Loaded this wave (Harris/BIS eSearch certified-roll CSV → exemptions)
+Batch K: Martin 48317, Wheeler 48483, Fisher 48151, Lynn 48305, Hardeman 48197, JeffDavis 48243, Crane 48103, Carson 48065.
+Batch L: Hall 48191, Childress 48075, Hansford 48195, Ochiltree 48357, Collingsworth 48087.
+Batch M: Menard 48327, Foard 48155, Stonewall 48433, Dickens 48125, Hemphill 48211, Reagan 48383, JimHogg 48247, Cottle 48101.
+Batch N: (10 loaded prior) + **Kenedy 48261 PACS** (185 improv / 10 beds / 249 sale / 43 exempt — one of the few tiny counties posting a real PACS roll).
+
+### Hard cases logged (defer to aggressive/fable-5 ultracode pass)
+- **Shackelford 48417** — CAD posts only a *formatted printed report* ("2023 Certified Roll.txt": page headers, entity subtotals, human-readable columns), NOT a machine fixed-width export. Separate APPRAISAL_IMPROVEMENT_DETAIL_ATTR/INFO zips the batch-M agent saw are no longer posted (checked /reports /resources /forms). Needs a report-layout parser. Tiny (~1.5k parcels), low priority.
+- **Garza 48169** — only free bulk is a **2019** P&A "DW" export zip (`garzacad.org/wp-content/uploads/2023/06/2019-Certified-Roll-excel.zip`): 5 CSVs A085dw{acc,sal,lnd,jur,imp}.csv + Layout_DW*.xls. dwimp HAS area/sqft (col[8]) + class code (col[6]); dwsal has sale date (col[5], YYYYMMDD); dwjur has entity/exemption rows; join is by an **internal account-sequence integer** (dwimp[3]→dwacc seq), needs the layout xls to map. This DW/"TexasCountyGISData" format recurs across BIS counties → worth a one-time `load_dw_export.py` in the fable pass (leverage), but most BIS counties already came via Harris-eSearch, so low marginal value today. Newer Garza years are paid-only.
+
+### Structural dead-ends (no free bulk; re-check periodically or records-request)
+Winkler 48495, Swisher 48437, Parmer 48369 (BIS eSearch, bulk feature not populated — same /Forms/ExcelDownload path could get a roll any cycle); Somervell 48425 (TrueAutomation PropAccess only; main site parked/spammy); Crosby 48107 (whoownsit/TaxNetUSA — structural dead-end).
+
+### All 254 counties now researched (batches A–N complete). Remaining physical-detail gaps = eSearch-only counties (value+exemptions, no sqft) + a handful of records-request/paid-only counties. Next: the aggressive fable-5 ultracode pass on unresolved physical-detail (beds/sqft) gaps + $0 records-requests.

@@ -59,7 +59,7 @@ def main():
 
     conn = psycopg2.connect(os.environ["DATABASE_URL"], keepalives=1, keepalives_idle=30,
                             keepalives_interval=10, keepalives_count=10, connect_timeout=20)
-    cur = conn.cursor(); cur.execute("SET lock_timeout='3s'")
+    cur = conn.cursor(); cur.execute("SET lock_timeout='12s'")
     cur.execute("CREATE TEMP TABLE rd (acct TEXT PRIMARY KEY, beds INT, bf INT, bh INT, yr INT, st INT)")
     buf = io.StringIO()
     for acct, (beds, bf, bh, yr, st) in rows.items():

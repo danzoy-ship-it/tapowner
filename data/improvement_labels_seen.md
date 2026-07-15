@@ -5392,3 +5392,111 @@ Append-only log so the app session can extend the canonical crosswalk.
 | PACS | fips 48501 | `SIGN` | 1 |
 | PACS | fips 48501 | `BLDG` | 1 |
 | PACS | fips 48501 | `OUTDOOR KITCHEN` | 1 |
+| PACS | fips 48167 | `OPEN PORCH` | 180401 |
+| PACS | fips 48167 | `MAIN AREA` | 144770 |
+| PACS | fips 48167 | `GARAGE` | 78194 |
+| PACS | fips 48167 | `WOOD DECK` | 39525 |
+| PACS | fips 48167 | `MAIN AREA 2ND FLOOR` | 36699 |
+| PACS | fips 48167 | `DET. GARAGE` | 24369 |
+| PACS | fips 48167 | `CONCRETE` | 21093 |
+| PACS | fips 48167 | `STORAGE` | 20180 |
+| PACS | fips 48167 | `METAL OR FRAME UTILITY BL` | 16594 |
+| PACS | fips 48167 | `MAIN AREA ADDITION` | 16218 |
+| PACS | fips 48167 | `POOL` | 11444 |
+| PACS | fips 48167 | `CARPORT/SLAB` | 11106 |
+| PACS | fips 48167 | `SPA` | 9081 |
+| PACS | fips 48167 | `BREEZEWAY` | 8976 |
+| PACS | fips 48167 | `METAL CARPORT` | 8926 |
+| PACS | fips 48167 | `MAIN AREA 1.5 FLOOR` | 5840 |
+| PACS | fips 48167 | `METAL OR FRAME BOAT HOUSE` | 5523 |
+| PACS | fips 48167 | `ENCLOSED PORCH` | 5431 |
+| PACS | fips 48167 | `HOIST/EV 1500` | 4505 |
+| PACS | fips 48167 | `SCREEN PORCH` | 4226 |
+| PACS | fips 48167 | `LARGE POOL` | 3847 |
+| PACS | fips 48167 | `WOOD CARPORT/NO SLAB` | 3500 |
+| PACS | fips 48167 | `CANOPY` | 2958 |
+| PACS | fips 48167 | `BARN` | 2046 |
+| PACS | fips 48167 | `OUT BUILDINGS` | 1918 |
+| PACS | fips 48167 | `MISCELLANEOUS` | 1889 |
+| PACS | fips 48167 | `LIGHT BOAT DOCK-RESIDENTI` | 1624 |
+| PACS | fips 48167 | `ELEV` | 1598 |
+| PACS | fips 48167 | `ASPHALT PAVING` | 1202 |
+| PACS | fips 48167 | `OUTDOOR KITCHEN` | 1148 |
+| PACS | fips 48167 | `ELEVATOR/DUMB WAITER` | 1075 |
+| PACS | fips 48167 | `MAIN AREA DOWN` | 1059 |
+| PACS | fips 48167 | `PERGOLA` | 666 |
+| PACS | fips 48167 | `CARPORT` | 623 |
+| PACS | fips 48167 | `PALAPA` | 596 |
+| PACS | fips 48167 | `MAIN AREA 3RD FLOOR` | 557 |
+| PACS | fips 48167 | `BOAT SLIP` | 547 |
+| PACS | fips 48167 | `GAZEBO` | 477 |
+| PACS | fips 48167 | `MAIN AREA 2.5 FLOOR` | 436 |
+| PACS | fips 48167 | `FINISHED ROOM OVER GARAGE` | 359 |
+| PACS | fips 48167 | `HOIST` | 320 |
+| PACS | fips 48167 | `EXTRA LARGE POOL (RESIDEN` | 284 |
+| PACS | fips 48167 | `HOT TUB/JACUZZI` | 240 |
+| PACS | fips 48167 | `COMMERCIAL POOL` | 215 |
+| PACS | fips 48167 | `GREENHOUSE` | 209 |
+| PACS | fips 48167 | `MASONARY UTILITY BLDG` | 155 |
+| PACS | fips 48167 | `MAIN AREA 4TH FLOOR` | 128 |
+| PACS | fips 48167 | `PATIO` | 126 |
+| PACS | fips 48167 | `PIER` | 87 |
+| PACS | fips 48167 | `MAIN AREA 5TH FLOOR` | 72 |
+| PACS | fips 48167 | `TENNIS COURT/SPECIAL PRIC` | 69 |
+| PACS | fips 48167 | `SALVAGE` | 67 |
+| PACS | fips 48167 | `OFFICE` | 67 |
+| PACS | fips 48167 | `MEDIUM BOAT DOCK` | 57 |
+| PACS | fips 48167 | `SHED` | 52 |
+| PACS | fips 48167 | `MAIN AREA 6TH FLOOR` | 47 |
+| PACS | fips 48167 | `HEAVY BOAT DOCK` | 34 |
+| PACS | fips 48167 | `MAIN AREA 7TH FLOOR` | 29 |
+| PACS | fips 48167 | `MAIN AREA 8TH FLOOR` | 24 |
+| PACS | fips 48167 | `POOL HOUSE` | 18 |
+| PACS | fips 48167 | `DET GARAGE (16.00)` | 16 |
+| PACS | fips 48167 | `MAIN AREA 9TH FLOOR` | 15 |
+| PACS | fips 48167 | `BANK CANOPY/COMMERCIAL` | 14 |
+| PACS | fips 48167 | `MAIN AREA 1OTH FLOOR` | 13 |
+| PACS | fips 48167 | `DOG KENNEL` | 13 |
+| PACS | fips 48167 | `MAIN AREA 11TH FLOOR` | 12 |
+| PACS | fips 48167 | `CONCRETE TENNIS CT/16,600` | 12 |
+| PACS | fips 48167 | `BATHHOUSE` | 10 |
+| PACS | fips 48167 | `METAL STG` | 8 |
+| PACS | fips 48167 | `PATIO COVER` | 7 |
+| PACS | fips 48167 | `EV` | 6 |
+| PACS | fips 48167 | `BOAT HOUSE` | 6 |
+| PACS | fips 48167 | `METAL SHD` | 6 |
+| PACS | fips 48167 | `BULKHEAD` | 6 |
+| PACS | fips 48167 | `MAIN AREA 12TH FLOOR` | 5 |
+| PACS | fips 48167 | `TENNIS COU` | 5 |
+| PACS | fips 48167 | `DECK` | 5 |
+| PACS | fips 48167 | `ASPHALT TENNIS CT/13,300` | 4 |
+| PACS | fips 48167 | `BOAT HOIST` | 4 |
+| PACS | fips 48167 | `QUONSET HUT (8.30)` | 3 |
+| PACS | fips 48167 | `WATER TANK` | 3 |
+| PACS | fips 48167 | `SHOP` | 3 |
+| PACS | fips 48167 | `COM ELE` | 2 |
+| PACS | fips 48167 | `MAIN AREA 13TH FLOOR` | 2 |
+| PACS | fips 48167 | `MAIN AREA 14TH FLOOR` | 2 |
+| PACS | fips 48167 | `MAIN AREA 15TH FLOOR` | 2 |
+| PACS | fips 48167 | `L` | 2 |
+| PACS | fips 48167 | `FINISHED MTL SHED (10.20)` | 2 |
+| PACS | fips 48167 | `ATT GARAGE (10.40)` | 2 |
+| PACS | fips 48167 | `CABIN` | 2 |
+| PACS | fips 48167 | `COVERED PATIO` | 2 |
+| PACS | fips 48167 | `LAUNDRY` | 1 |
+| PACS | fips 48167 | `FIREPLACE/COMMERCIAL` | 1 |
+| PACS | fips 48167 | `MAIN AREA 16TH FLOOR` | 1 |
+| PACS | fips 48167 | `MAIN AREA 17TH FLOOR` | 1 |
+| PACS | fips 48167 | `MAIN AREA 18TH FLOOR` | 1 |
+| PACS | fips 48167 | `MAIN AREA 19TH FLOOR` | 1 |
+| PACS | fips 48167 | `MAIN AREA 20TH FLOOR` | 1 |
+| PACS | fips 48167 | `PL` | 1 |
+| PACS | fips 48167 | `ALUMINUM SHED (7.15)` | 1 |
+| PACS | fips 48167 | `ALL TYPES` | 1 |
+| PACS | fips 48167 | `WOOD SHED (5.80)` | 1 |
+| PACS | fips 48167 | `FRAME/CONC BLK (18.80)` | 1 |
+| PACS | fips 48167 | `TMT PLNT` | 1 |
+| PACS | fips 48167 | `JACUZZI` | 1 |
+| PACS | fips 48167 | `RETAIL` | 1 |
+| PACS | fips 48167 | `C` | 1 |
+| PACS | fips 48167 | `BK HS` | 1 |

@@ -62,6 +62,8 @@ n_geom = sum(1 for r in rows if r[4] == "GEOM-ONLY")
 n_missing = sum(1 for r in rows if r[4] == "MISSING")
 n_mined = sum(1 for r in rows if r[5])
 n_signals = sum(1 for r in rows if r[3] and r[3].get("sale", 0) > 0)
+n_exempt = sum(1 for r in rows if r[3] and r[3].get("exempt", 0) > 0)
+n_any_signal = sum(1 for r in rows if r[3] and (r[3].get("sale", 0) > 0 or r[3].get("exempt", 0) > 0))
 
 out = []
 out.append("# Texas County Coverage — the check-off log\n")
@@ -74,7 +76,9 @@ out.append(f"## Scoreboard ({len(rows)} counties)\n")
 out.append(f"- ☑ **Mined (has improvements/feature tags): {n_mined}** / {len(rows)}")
 out.append(f"- Full attributes (improv+dims): {n_full}  ·  Partial: {n_partial}  "
            f"·  Geometry-only (need mining): {n_geom}  ·  Missing from DB: {n_missing}")
-out.append(f"- Seller-signals (sale date) loaded: {n_signals} counties\n")
+out.append(f"- Seller-signals — sale date: {n_signals} counties  ·  "
+           f"exemptions (homestead/over-65/DV tenure): {n_exempt} counties  ·  "
+           f"**any seller-signal: {n_any_signal} counties**\n")
 out.append("Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISSING. "
            "% = share of the county's parcels with that attribute.\n")
 out.append("| ☑ | County | FIPS | Parcels | sqft% | beds% | baths% | improv% | sale% | exempt% | Status |")
@@ -135,4 +139,5 @@ path = os.path.join(HERE, "..", "COUNTY_COVERAGE.md")
 open(path, "w", encoding="utf-8").write("\n".join(out) + "\n")
 print(f"wrote {os.path.abspath(path)}")
 print(f"mined {n_mined}/{len(rows)} | full {n_full} | partial {n_partial} | "
-      f"geom-only {n_geom} | missing {n_missing} | signals {n_signals}")
+      f"geom-only {n_geom} | missing {n_missing} | sale-signal {n_signals} | "
+      f"exempt-signal {n_exempt} | any-signal {n_any_signal}")

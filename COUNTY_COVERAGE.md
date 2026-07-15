@@ -6,9 +6,9 @@ Regenerate with `python data/build_coverage_log.py` after each mining batch (ref
 
 ## Scoreboard (253 counties)
 
-- ☑ **Mined (has improvements/feature tags): 59** / 253
-- Full attributes (improv+dims): 35  ·  Partial: 33  ·  Geometry-only (need mining): 185  ·  Missing from DB: 0
-- Seller-signals (sale date) loaded: 53 counties
+- ☑ **Mined (has improvements/feature tags): 61** / 253
+- Full attributes (improv+dims): 36  ·  Partial: 34  ·  Geometry-only (need mining): 183  ·  Missing from DB: 0
+- Seller-signals — sale date: 55 counties  ·  exemptions (homestead/over-65/DV tenure): 100 counties  ·  **any seller-signal: 112 counties**
 
 Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISSING. % = share of the county's parcels with that attribute.
 
@@ -113,7 +113,6 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Hamilton | 48193 | 14,253 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Willacy | 48489 | 13,989 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Lamb | 48279 | 13,871 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Scurry | 48415 | 13,849 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Redriver | 48387 | 13,728 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Clay | 48077 | 13,501 | · | · | · | · | · | 23 | GEOM-ONLY |
 | [ ] | Culberson | 48109 | 13,327 | · | · | · | · | · | 3 | GEOM-ONLY |
@@ -154,60 +153,59 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Coke | 48081 | 8,271 | · | · | · | · | · | 11 | GEOM-ONLY |
 | [ ] | Concho | 48095 | 8,034 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Upton | 48461 | 7,846 | · | · | · | · | · | 16 | GEOM-ONLY |
-| [ ] | Wheeler | 48483 | 7,676 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Lynn | 48305 | 7,324 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Martin | 48317 | 7,255 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Wheeler | 48483 | 7,676 | · | · | · | · | · | 15 | GEOM-ONLY |
+| [ ] | Lynn | 48305 | 7,324 | · | · | · | · | · | 22 | GEOM-ONLY |
+| [ ] | Martin | 48317 | 7,255 | · | · | · | · | · | 15 | GEOM-ONLY |
 | [ ] | Winkler | 48495 | 7,234 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Jeffdavis | 48243 | 7,175 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Hardeman | 48197 | 6,958 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Crane | 48103 | 6,913 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Jeffdavis | 48243 | 7,175 | · | · | · | · | · | 6 | GEOM-ONLY |
+| [ ] | Hardeman | 48197 | 6,958 | · | · | · | · | · | 13 | GEOM-ONLY |
+| [ ] | Crane | 48103 | 6,913 | · | · | · | · | · | 14 | GEOM-ONLY |
 | [ ] | Somervell | 48425 | 6,823 | · | · | · | · | 95 | · | PARTIAL |
-| [ ] | Fisher | 48151 | 6,817 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Carson | 48065 | 6,710 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Fisher | 48151 | 6,817 | · | · | · | · | · | 15 | GEOM-ONLY |
+| [ ] | Carson | 48065 | 6,710 | · | · | · | · | · | 25 | GEOM-ONLY |
 | [ ] | Crosby | 48107 | 6,670 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Swisher | 48437 | 6,657 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Parmer | 48369 | 6,606 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Garza | 48169 | 6,583 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Schleicher | 48413 | 6,559 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Ochiltree | 48357 | 6,521 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Ochiltree | 48357 | 6,521 | · | · | · | · | · | 28 | GEOM-ONLY |
 | [ ] | Castro | 48069 | 6,466 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Knox | 48275 | 6,408 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Baylor | 48023 | 6,349 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Hall | 48191 | 6,347 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Hall | 48191 | 6,347 | · | · | · | · | · | 12 | GEOM-ONLY |
 | [ ] | Dallam | 48111 | 6,271 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Bailey | 48017 | 6,044 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Childress | 48075 | 6,030 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Childress | 48075 | 6,030 | · | · | · | · | · | 22 | GEOM-ONLY |
 | [ ] | Sutton | 48435 | 5,905 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Hansford | 48195 | 5,867 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Hansford | 48195 | 5,867 | · | · | · | · | · | 21 | GEOM-ONLY |
 | [ ] | Brooks | 48047 | 5,739 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Cochran | 48079 | 5,735 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Collingsworth | 48087 | 5,735 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Menard | 48327 | 5,708 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Collingsworth | 48087 | 5,735 | · | · | · | · | · | 11 | GEOM-ONLY |
+| [ ] | Menard | 48327 | 5,708 | · | · | · | · | · | 10 | GEOM-ONLY |
 | [ ] | Hartley | 48205 | 5,645 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Terrell | 48443 | 5,562 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Shackelford | 48417 | 5,542 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Foard | 48155 | 5,393 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Stonewall | 48433 | 5,203 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Dickens | 48125 | 4,744 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Hemphill | 48211 | 4,685 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Foard | 48155 | 5,393 | · | · | · | · | · | 6 | GEOM-ONLY |
+| [ ] | Stonewall | 48433 | 5,203 | · | · | · | · | · | 9 | GEOM-ONLY |
+| [ ] | Dickens | 48125 | 4,744 | · | · | · | · | · | 10 | GEOM-ONLY |
+| [ ] | Hemphill | 48211 | 4,685 | · | · | · | · | · | 17 | GEOM-ONLY |
 | [ ] | Throckmorton | 48447 | 4,664 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Reagan | 48383 | 4,606 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Jimhogg | 48247 | 4,441 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Cottle | 48101 | 4,373 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Reagan | 48383 | 4,606 | · | · | · | · | · | 22 | GEOM-ONLY |
+| [ ] | Jimhogg | 48247 | 4,441 | · | · | · | · | · | 23 | GEOM-ONLY |
+| [ ] | Cottle | 48101 | 4,373 | · | · | · | · | · | 8 | GEOM-ONLY |
 | [ ] | Mcmullen | 48311 | 4,188 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Oldham | 48359 | 4,162 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Briscoe | 48045 | 4,091 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Armstrong | 48011 | 4,058 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Borden | 48033 | 3,752 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Irion | 48235 | 3,615 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Kent | 48263 | 3,598 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Sherman | 48421 | 3,531 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Glasscock | 48173 | 2,988 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Briscoe | 48045 | 4,091 | · | · | · | · | · | 8 | GEOM-ONLY |
+| [ ] | Armstrong | 48011 | 4,058 | · | · | · | · | · | 15 | GEOM-ONLY |
+| [ ] | Borden | 48033 | 3,752 | · | · | · | · | · | 2 | GEOM-ONLY |
+| [ ] | Irion | 48235 | 3,615 | · | · | · | · | · | 12 | GEOM-ONLY |
+| [ ] | Kent | 48263 | 3,598 | · | · | · | · | · | 5 | GEOM-ONLY |
+| [ ] | Sherman | 48421 | 3,531 | · | · | · | · | · | 16 | GEOM-ONLY |
+| [ ] | Glasscock | 48173 | 2,988 | · | · | · | · | · | 6 | GEOM-ONLY |
 | [ ] | Roberts | 48393 | 2,574 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Sterling | 48431 | 2,364 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | King | 48269 | 2,313 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Loving | 48301 | 1,914 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Kenedy | 48261 | 538 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Sterling | 48431 | 2,364 | · | · | · | · | · | 13 | GEOM-ONLY |
+| [ ] | King | 48269 | 2,313 | · | · | · | · | · | 1 | GEOM-ONLY |
+| [ ] | Loving | 48301 | 1,914 | · | · | · | · | · | 1 | GEOM-ONLY |
 | [x] | Harris | 48201 | 1,523,641 | 82 | 82 | 82 | 41 | · | · | FULL |
 | [x] | Travis | 48453 | 828,773 | 41 | 12 | 37 | 41 | · | · | FULL |
 | [x] | Tarrant | 48439 | 757,161 | 91 | · | · | 91 | 98 | 55 | PARTIAL |
@@ -262,11 +260,13 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [x] | Hockley | 48219 | 17,242 | 46 | · | 32 | 60 | 64 | 28 | FULL+SIGNALS |
 | [x] | Gaines | 48165 | 16,576 | 38 | · | 34 | 58 | 89 | 24 | FULL+SIGNALS |
 | [x] | Dimmit | 48127 | 15,542 | 23 | 2 | 13 | 26 | 55 | 10 | PARTIAL |
+| [x] | Scurry | 48415 | 13,849 | 56 | 22 | 29 | 56 | 80 | 27 | FULL+SIGNALS |
 | [x] | Andrews | 48003 | 10,522 | 55 | 3 | 50 | 69 | 81 | 37 | FULL+SIGNALS |
 | [x] | Kimble | 48267 | 9,556 | 32 | · | · | 41 | 89 | 15 | PARTIAL |
 | [x] | Mitchell | 48335 | 8,743 | 39 | 2 | 2 | 50 | 83 | 21 | PARTIAL |
 | [x] | Yoakum | 48501 | 7,291 | 38 | · | 11 | 49 | 59 | 22 | PARTIAL |
 | [x] | Delta | 48119 | 6,461 | 41 | · | 27 | 49 | 87 | 22 | FULL+SIGNALS |
+| [x] | Kenedy | 48261 | 538 | 34 | 2 | 14 | 34 | 46 | 8 | PARTIAL |
 
 ## Known bulk-data gaps / blockers (exhausted attempts → circle back later)
 
