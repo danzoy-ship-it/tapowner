@@ -308,5 +308,17 @@ Shackelford, McMullen, Oldham, Kenedy, Calhoun — plus earlier Comal, Henderson
 Parker, Smith. (~50 counties, almost all small/rural, low parcel weight.)
 
 **App-lane (True Prodigy, per-property API — data session should NOT harvest):**
-Travis, Tarrant (live), Denton, McLennan, Ellis (beds confirmed via API by the
-app session); Montgomery (baths-only, no beds in API); Johnson.
+- **Tarrant** (live), **Ellis** (live, done — beds as WORD features "FOUR BEDROOM").
+- **Denton** (48121, 353K) — **beds ARE in the API** (data-session re-verified: pid
+  747420 → `[MA] Bedrooms: 4`, `[MA] Plumbing: 3`). App-lane, app session to wire
+  fill-on-blank; source_property_id resolves as the TP pid. NB for the app: the
+  FIRST improvement on a Denton account often returns empty features — iterate
+  ALL improvements; the `MA` (main-area) one carries the rooms.
+- **Travis** — API has baths (251) but NO bedrooms; beds only in the removed bulk → PIA.
+- **Montgomery** — API returns empty features (no rooms); its bulk (20GB Drive
+  protaxExport) is bedless like Travis → beds via PIA / MCAD certified export TBD.
+- **McLennan** (48309) — RECORDS-REQUEST: TP report categories all 204 (no bulk),
+  and our stored ids don't resolve as TP pids (no geoID→pid crosswalk available).
+  A certified-roll PIA yields both the beds AND the crosswalk.
+- **Johnson** — no TP portal (officelookup 409); PACS `.tab` external export → data
+  lane, needs a `.tab` parser.
