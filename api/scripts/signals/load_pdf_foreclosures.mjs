@@ -124,6 +124,48 @@ const SOURCES = {
             return out;
         },
     },
+    // Wise County clerk (CivicPlus Archive.aspx): ONE packet per sale month at
+    // Archive.aspx?ADID=<id>, anchor text "<Month> <Year> Foreclosure Notice(s)
+    // (PDF)". Image-only -> OCR. Venue (courthouse, gov-owned) dropped by GOV_OWNER.
+    wise_cc: {
+        fips: "48497",
+        discover: async () => {
+            const html = await fetchText("https://www.co.wise.tx.us/Archive.aspx?AMID=36");
+            const out = [];
+            for (const m of html.matchAll(/href="(Archive\.aspx\?ADID=(\d+))"[\s\S]{0,140}?<span>\s*([A-Za-z]+)\s+(\d{4})\s+Foreclosure/gi)) {
+                const mon = MONTHS.indexOf(m[3].slice(0, 3).toUpperCase()) + 1;
+                if (!mon || !inWindow(+m[4], mon)) continue;
+                out.push({
+                    url: new URL(m[1], "https://www.co.wise.tx.us/").href,
+                    year: +m[4],
+                    month: mon,
+                    name: `wise_${m[4]}-${String(mon).padStart(2, "0")}_ADID${m[2]}.pdf`,
+                });
+            }
+            return out;
+        },
+    },
+    // Andrews County clerk (CivicPlus DocumentCenter): the /186/ page lists the
+    // last ~90 days as per-notice PDFs /DocumentCenter/View/<id>/<Month>-<Year>-<N>pdf
+    // ("August-2026-7pdf"). Text/OCR. Rural, low volume; many PDFs per month.
+    andrews_cc: {
+        fips: "48003",
+        discover: async () => {
+            const html = await fetchText("https://www.co.andrews.tx.us/186/Notice-of-Trustee-Sales");
+            const out = [];
+            for (const m of html.matchAll(/href="(\/DocumentCenter\/View\/(\d+)\/([A-Za-z]+)-(\d{4})-\d+pdf)"/gi)) {
+                const mon = MONTHS.indexOf(m[3].slice(0, 3).toUpperCase()) + 1;
+                if (!mon || !inWindow(+m[4], mon)) continue;
+                out.push({
+                    url: new URL(m[1], "https://www.co.andrews.tx.us/").href,
+                    year: +m[4],
+                    month: mon,
+                    name: `andrews_${m[4]}-${String(mon).padStart(2, "0")}_${m[2]}.pdf`,
+                });
+            }
+            return out;
+        },
+    },
     // Hays County clerk (CivicPlus DocumentCenter): several small scanned
     // "Batch N" PDFs per sale month. Image-only -> OCR.
     hays_cc: {
