@@ -526,3 +526,8 @@ Where beds are a GENUINE gap (district doesn't collect them — verified, not as
 - Confirmed True Prodigy is the shared prize (Travis on travis.prodigycad.com is fully exposed; Tarrant migrating to it). Refinements folded into DATA_ACCESS_CRACKS.md: per-county config variance (some hide improvement detail), auth needs office context, PropID→account map for detail calls.
 - FBCAD/Hays are Orion (409 on True Prodigy) — handled separately via ResidentialSegments (load_fbcad_segments.py).
 - **McCulloch(48307)** BIS: FeatureServer join 0% (prop_id format != DB source_property_id) — needs geo_id/apn join investigation.
+
+### Batch I (2026-07-16): Jack+SanSaba loaded (Harris-eSearch homestead); Midland+Hood loaded (P&A export_web)
+- Jack(48237) 2,083 HS, SanSaba(48411) 1,420 HS via load_harris_esearch_csv.py. Callahan(48059)=PDF-only zip (dead-end). Goliad(48175)=PDFs.
+- Dead-end BIS-eSearch search-only (no FeatureServer on portal, no bulk): moore(48341), camp(48063), kinney(48271), deafsmith(48117), madison(48313), edwards(48137). Tyler+TaxNetUSA: wilbarger(48487), morris(48343).
+- Browser/API-needed (cracked vendors, curl-gated): lipscomb(48295, SWData WebForms 403), lasalle(48283, True Prodigy), zavala(48507, PACS PropAccess).
