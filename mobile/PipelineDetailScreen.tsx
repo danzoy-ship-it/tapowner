@@ -37,6 +37,10 @@ function factsLine(d: SavedPropertyDetail): string {
   return parts.join(' · ');
 }
 
+// Show the best few contacts by default (phones come reachable-first from the
+// trace); a dozen numbers/emails on one owner is common, so collapse the rest.
+const CONTACT_PREVIEW = 3;
+
 export function PipelineDetailScreen() {
   const route = useRoute<RouteProp<RootStackParamList, 'PipelineDetail'>>();
   const { savedPropertyId } = route.params;
@@ -46,6 +50,8 @@ export function PipelineDetailScreen() {
   const [noteText, setNoteText] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showAllPhones, setShowAllPhones] = useState(false);
+  const [showAllEmails, setShowAllEmails] = useState(false);
   const notesRef = useRef<FlatList<SavedPropertyNote>>(null);
 
   const load = useCallback(() => {
@@ -117,7 +123,7 @@ export function PipelineDetailScreen() {
         {((detail.phones?.length ?? 0) > 0 || (detail.emails?.length ?? 0) > 0) && (
           <>
             <Text style={styles.sectionLabel}>Contact</Text>
-            {detail.phones?.map((p) => (
+            {(showAllPhones ? detail.phones : detail.phones?.slice(0, CONTACT_PREVIEW))?.map((p) => (
               <View key={p.number} style={styles.contactRow}>
                 <Text style={styles.contactValue}>{p.number}</Text>
                 <View style={styles.contactMetaRow}>
@@ -130,11 +136,33 @@ export function PipelineDetailScreen() {
                 </View>
               </View>
             ))}
-            {detail.emails?.map((e) => (
+            {(detail.phones?.length ?? 0) > CONTACT_PREVIEW && (
+              <TouchableOpacity onPress={() => setShowAllPhones(!showAllPhones)}>
+                <Text style={styles.showMore}>
+                  {showAllPhones
+                    ? 'Show fewer numbers'
+                    : `Show ${(detail.phones?.length ?? 0) - CONTACT_PREVIEW} more number${
+                        (detail.phones?.length ?? 0) - CONTACT_PREVIEW === 1 ? '' : 's'
+                      }`}
+                </Text>
+              </TouchableOpacity>
+            )}
+            {(showAllEmails ? detail.emails : detail.emails?.slice(0, CONTACT_PREVIEW))?.map((e) => (
               <Text key={e} style={styles.contactEmail}>
                 {e}
               </Text>
             ))}
+            {(detail.emails?.length ?? 0) > CONTACT_PREVIEW && (
+              <TouchableOpacity onPress={() => setShowAllEmails(!showAllEmails)}>
+                <Text style={styles.showMore}>
+                  {showAllEmails
+                    ? 'Show fewer emails'
+                    : `Show ${(detail.emails?.length ?? 0) - CONTACT_PREVIEW} more email${
+                        (detail.emails?.length ?? 0) - CONTACT_PREVIEW === 1 ? '' : 's'
+                      }`}
+                </Text>
+              </TouchableOpacity>
+            )}
           </>
         )}
 
@@ -280,6 +308,12 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#f3f4f6',
+  },
+  showMore: {
+    color: '#2563eb',
+    fontWeight: '600',
+    fontSize: 13,
+    paddingVertical: 8,
   },
   sectionLabel: {
     marginTop: 16,

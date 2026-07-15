@@ -405,7 +405,7 @@ export function FarmResultsScreen() {
           noMatch > 0
             ? `${n} home${plural} · ${withContacts.length} unlocked · ${noMatch} no contact found`
             : `${n} home${plural} · all unlocked`,
-        message: `${phones} with phones · ${withEmails.length} with emails.${noMatch > 0 ? ` No verified contact for ${noMatch} — you were not charged.` : ''}`,
+        message: `${phones} with phones · ${withEmails.length} with emails.${noMatch > 0 ? ` No verified contact for ${noMatch}, so you weren't charged for those.` : ''}`,
         options,
         cancelButtonIndex: options.length - 1,
       },
