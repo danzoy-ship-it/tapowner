@@ -305,7 +305,7 @@ export async function parcelsRoutes(app: FastifyInstance) {
                     "Owner", "Property Address", "City", "ZIP",
                     "Mailing Address", "Mailing City", "Mailing State", "Mailing ZIP", "Absentee",
                     "Sqft", "Beds", "Baths Full", "Baths Half", "Stories", "Year Built", "Pool",
-                    "Features", "Years Owned", "Senior 65+", "Homestead", "Phones", "Emails",
+                    "Features", "Years Owned", "65+ Exemption", "Homestead", "Phones", "Emails",
                 ];
                 const lines = [header.map(csvCell).join(",")];
                 for (const p of parcels) {

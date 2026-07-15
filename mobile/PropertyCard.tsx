@@ -106,7 +106,7 @@ export function PropertyCard({
       )}
       {detail.senior_owner && (
         <View style={[styles.badge, styles.badgeSenior]}>
-          <Text style={styles.badgeText}>Owner 65+</Text>
+          <Text style={styles.badgeText}>65+ exemption</Text>
         </View>
       )}
       {(detail.tenure_years ?? 0) >= 15 && (

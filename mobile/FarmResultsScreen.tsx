@@ -91,7 +91,7 @@ function rowFacts(p: FarmParcel): string {
   if (extras.length > 3) parts.push(`+${extras.length - 3}`);
   // "Likely to sell" signals — long tenure and senior owner both suggest a move.
   if ((p.tenure_years ?? 0) >= 10) parts.push(`Owned ${p.tenure_years}y`);
-  if (p.senior_owner) parts.push('65+');
+  if (p.senior_owner) parts.push('65+ exempt');
   return parts.join(' · ');
 }
 
@@ -600,14 +600,15 @@ export function FarmResultsScreen() {
                 onPress={() => setSeniorOnly(!seniorOnly)}
               >
                 <Text style={[styles.chipText, seniorOnly && styles.chipTextSelected]}>
-                  Owner 65+
+                  65+ exemption
                 </Text>
               </TouchableOpacity>
             </View>
           </View>
           <Text style={styles.filterHint}>
-            Homes missing a value are excluded while that filter is on. "Owned" &
-            "65+" need county sale-date / exemption data (growing by county).
+            Homes missing a value are excluded while that filter is on. "Owned"
+            (years since last sale) & "65+ exemption" (an over-65 tax exemption on
+            file — public record, not the owner's age) grow as counties load.
           </Text>
           <TouchableOpacity
             style={styles.applyButton}
