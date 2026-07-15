@@ -131,7 +131,10 @@ export function FarmResultsScreen() {
     const counts = new Map<string, number>();
     for (const p of result.parcels) {
       for (const t of p.features ?? []) {
-        if (t === 'pool' || t === 'single_story') continue; // dedicated chips
+        // pool/single_story have dedicated chips; generic garage is not a
+        // filter (Frederick: attached garages are near-universal -- only
+        // garage_detached discriminates).
+        if (t === 'pool' || t === 'single_story' || t === 'garage') continue;
         counts.set(t, (counts.get(t) ?? 0) + 1);
       }
     }

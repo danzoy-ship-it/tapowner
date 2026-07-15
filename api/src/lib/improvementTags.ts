@@ -91,20 +91,20 @@ export function tagLabel(tag: string): string {
 /**
  * A parcel's canonical feature tags: union of the loader-set boolean columns
  * and every crosswalk tag whose `match` hits (and no `exclude` hits) any raw
- * improvement label. boat_dock implies waterfront (taxonomy rule).
+ * improvement label. boat_dock implies waterfront (taxonomy rule). Generic
+ * "garage" is deliberately NOT a tag (see below) -- has_garage stays a plain
+ * column fact for the card.
  */
 export function deriveTags(
     rawImprovements: unknown,
     flags: {
         pool?: boolean | null;
-        garage?: boolean | null;
         casita?: boolean | null;
         shed?: boolean | null;
     }
 ): string[] {
     const tags = new Set<string>();
     if (flags.pool === true) tags.add("pool");
-    if (flags.garage === true) tags.add("garage");
     if (flags.casita === true) tags.add("casita");
     if (flags.shed === true) tags.add("shed_workshop");
 
@@ -119,6 +119,12 @@ export function deriveTags(
             }
         }
     }
+
+    // Frederick's UX call (2026-07-15): attached garages are near-universal, so a
+    // generic "garage" chip filters nothing -- only DETACHED garage is a feature.
+    // The card's Garage row reads the has_garage column directly; the tag set
+    // carries garage_detached only (from GAR/DG-style labels).
+    tags.delete("garage");
 
     if (tags.has("boat_dock")) tags.add("waterfront");
     return [...tags];

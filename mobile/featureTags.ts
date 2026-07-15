@@ -5,6 +5,7 @@
 export const TAG_LABELS: Record<string, string> = {
   pool: 'Pool',
   garage: 'Garage',
+  garage_detached: 'Detached garage',
   single_story: 'Single story',
   casita: 'Casita / guest house',
   shed_workshop: 'Shed / workshop',

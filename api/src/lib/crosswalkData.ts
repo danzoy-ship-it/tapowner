@@ -3,7 +3,7 @@
 // Regenerate after any crosswalk edit:  cd api && npm run sync:crosswalk
 export const CROSSWALK = {
   "_comment": "Single source of truth mapping raw CAD improvement/feature labels -> TapOwner canonical tags. Both the loaders (Python, at re-tag time) and the app (TS) read THIS file. Matching: lowercase the raw label, regex-search each `match` pattern (case-insensitive); the tag applies if any `match` hits AND no `exclude` hits. A property's improvement_tags = the union of tags across all its raw improvement labels. When the data session logs a new/unmapped label in data/improvement_labels_seen.md, add a pattern here (app session owns this file). See IMPROVEMENT_TAXONOMY.md for the full spec.",
-  "version": 1,
+  "version": 2,
   "updated": "2026-07-15",
   "tags": {
     "pool": {
@@ -143,7 +143,7 @@ export const CROSSWALK = {
     },
     "garage": {
       "label": "Garage",
-      "definition": "Enclosed garage (attached or detached). Space count comes from the improvement units/count where available.",
+      "definition": "Enclosed garage (attached or detached). Space count comes from the improvement units/count where available. NOT surfaced as a filter chip (Frederick 2026-07-15: attached garages are near-universal, so 'any garage' filters nothing) — the card's Garage row reads the has_garage column instead.",
       "source": "improvement",
       "match": [
         "\\bgarage\\b",
@@ -158,6 +158,20 @@ export const CROSSWALK = {
         "garage apartment",
         "garage apt"
       ]
+    },
+    "garage_detached": {
+      "label": "Detached garage",
+      "definition": "Stand-alone garage building (not attached to the dwelling). The discriminating garage filter — attached garages are near-universal. Bexar codes: GAR/DG = detached (ground-truthed on 2803 Stokely Hl), AG = attached (excluded). Official BCAD legend confirmation pending from the data session.",
+      "source": "improvement",
+      "match": [
+        "^gar$",
+        "^dg$",
+        "det gar",
+        "detached garage",
+        "garage det",
+        "det garage"
+      ],
+      "exclude": []
     },
     "carport": {
       "label": "Carport",

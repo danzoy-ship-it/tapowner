@@ -89,7 +89,6 @@ export async function parcelsRoutes(app: FastifyInstance) {
             // derivation the farm endpoint uses). Raw labels stay server-side.
             parcel.features = deriveTags(parcel.improvements, {
                 pool: parcel.has_pool,
-                garage: parcel.has_garage,
                 casita: parcel.has_casita,
                 shed: parcel.has_shed,
             });
@@ -202,7 +201,7 @@ export async function parcelsRoutes(app: FastifyInstance) {
                         p.is_absentee,
                         p.living_area_sqft, p.bedrooms, p.baths_full, p.baths_half,
                         p.stories, p.year_built, p.has_pool,
-                        p.has_garage, p.has_casita, p.has_shed, p.improvements,
+                        p.has_casita, p.has_shed, p.improvements,
                         tr.payload AS trace_payload
                  FROM parcels p
                  CROSS JOIN poly
@@ -250,7 +249,6 @@ export async function parcelsRoutes(app: FastifyInstance) {
                         // crosswalked from raw improvement labels + loader booleans.
                         features: deriveTags(r.improvements, {
                             pool: r.has_pool,
-                            garage: r.has_garage,
                             casita: r.has_casita,
                             shed: r.has_shed,
                         }),
