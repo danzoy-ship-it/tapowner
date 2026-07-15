@@ -75,7 +75,10 @@ def parse_beds(value):
     return n if 1 <= n <= 20 else None
 
 
-BATHISH_RE = re.compile(r"^\s*\d+(?:\.\d+)?\s*$")
+# Accept a bare number, or a "B"-prefixed bath code (Gaines "B2"/"B2.5" = 2 /
+# 2 full+1 half). Still rejects junk like "S1-MUNICIP", "2 CAR", "METAL",
+# "UTILITY" (letter-prefix that isn't a lone B, or trailing non-numeric).
+BATHISH_RE = re.compile(r"^\s*B?\d+(?:\.\d+)?\s*$", re.I)
 
 
 def parse_baths(value):
