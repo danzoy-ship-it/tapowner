@@ -385,11 +385,17 @@ Walker (notice PDFs), Jasper (FILE_INFO export lacks the improvement members).
   **Per-county availability (join% / deed-date / exemptions):** Kaufman 93% /
   86.4K / 45.6K, Angelina 56.8K / 21.8K, Bastrop 58.5K / 24.4K, Caldwell 23.0K /
   8.6K, Coleman(48093), Coryell 27.4K / 14.1K, Delta 5.5K / 1.4K … (batch
-  ongoing). **Position-drift aborts (need county-specific offsets, NOT loaded):**
-  Cameron(48061) — deed_dt parses 0% (exemptions fine); Gregg(48183) — roll/key
-  mismatch (GCAD_Export prop_id space ≠ DB source_property_id). Future non-PACS
-  systems: Collin's data.texas.gov feed has `deedeffdate`/`deedfiledate` (no
-  price); TAD/BCAD/ProTax sale-history segments TBD.
+  ongoing; 27 counties total, 1.08M sale dates / 480K exemptions). **Was a
+  data-truth, not a drift:** Cameron(48061) & Rockwall(48397) aborted at deed_dt
+  0% — their date is dashed (MM-DD-YYYY); made parse_deed_dt separator-tolerant →
+  BOTH recovered (Cameron 175K sale/71K exempt, Rockwall 51K/33K). **Deflate64
+  rolls SOLVED** via `extract_deflate64_roll.ps1` (Explorer-COM → ZIP_STORED
+  repack → normal loaders): Andrews(48003) 8.5K sale/3.9K exempt + 7.2K improv,
+  Yoakum(48501) 4.3K sale/1.6K exempt + 3.6K improv. Still unloaded: Gregg(48183)
+  — roll/key mismatch (GCAD_Export prop_id space ≠ DB source_property_id; needs a
+  different roll or a geo_id crosswalk). Future non-PACS systems: Collin's
+  data.texas.gov feed has `deedeffdate`/`deedfiledate` (no price); TAD/BCAD/ProTax
+  sale-history segments TBD.
 - **Bare improvement CODES are NOT Bexar-only (label-ledger grep 2026-07-15).**
   Bare `AG`/`GAR`/`CP`/`CPT` also appear in these small PACS counties: AG →
   Lamar(48277) 7,847, Mitchell(48335) 570, Gaines(48165) 20; GAR → Andrews(48003)
