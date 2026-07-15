@@ -47,10 +47,13 @@ for fips, name in by_fips.items():
         status = "PARTIAL"
     else:
         status = "GEOM-ONLY"
-    # "mined" = has the core product data (improvements/feature tags). Rural
-    # counties with no free improvement source get checked off separately once
-    # confirmed exhausted (tracked in texas_county_system_map.md verdicts).
-    mined = has_improv
+    # "mined" = has marker-grade physical detail. That's EITHER improvement
+    # segment tags (improvements array) OR bed/bath counts — a county loaded from
+    # structured columns (e.g. Collin's MDB: beds/baths/pool, no improvements
+    # text array) is fully mined for the 16 markers even with improv%==0. sqft
+    # alone (StratMap dimensions, no features) does NOT count as mined.
+    has_counts = p["beds"] >= 15 or p["baths"] >= 15
+    mined = has_improv or has_counts
     rows.append((name, fips, tot, m, status, mined))
 
 # order: unmined biggest-first (the work queue), then mined biggest-first

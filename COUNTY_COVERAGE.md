@@ -6,7 +6,7 @@ Regenerate with `python data/build_coverage_log.py` after each mining batch (ref
 
 ## Scoreboard (253 counties)
 
-- ☑ **Mined (has improvements/feature tags): 61** / 253
+- ☑ **Mined (has improvements/feature tags): 62** / 253
 - Full attributes (improv+dims): 36  ·  Partial: 34  ·  Geometry-only (need mining): 183  ·  Missing from DB: 0
 - Seller-signals — sale date: 55 counties  ·  exemptions (homestead/over-65/DV tenure): 100 counties  ·  **any seller-signal: 112 counties**
 
@@ -14,7 +14,6 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 
 | ☑ | County | FIPS | Parcels | sqft% | beds% | baths% | improv% | sale% | exempt% | Status |
 |---|--------|------|--------:|------:|------:|-------:|--------:|------:|--------:|--------|
-| [ ] | Collin | 48085 | 387,737 | 91 | 74 | 78 | · | 97 | 67 | PARTIAL |
 | [ ] | Denton | 48121 | 353,631 | 88 | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Hidalgo | 48215 | 328,322 | 80 | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Montgomery | 48339 | 320,915 | 76 | · | · | · | · | · | GEOM-ONLY |
@@ -212,6 +211,7 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [x] | Bexar | 48029 | 709,541 | 87 | 83 | 83 | 88 | · | · | FULL |
 | [x] | Dallas | 48113 | 694,160 | 85 | 83 | 85 | 77 | · | · | FULL |
 | [x] | Elpaso | 48141 | 407,130 | 64 | 38 | 58 | 64 | · | · | FULL |
+| [x] | Collin | 48085 | 387,737 | 91 | 74 | 78 | · | 97 | 67 | PARTIAL |
 | [x] | Fortbend | 48157 | 375,097 | 83 | 50 | 52 | 75 | · | · | FULL |
 | [x] | Williamson | 48491 | 282,983 | 82 | 24 | 78 | 87 | 82 | · | FULL+SIGNALS |
 | [x] | Galveston | 48167 | 188,695 | 78 | 1 | 61 | 78 | 86 | 45 | FULL+SIGNALS |
