@@ -472,3 +472,29 @@ Bandera(48019).
 - iswdata/SouthwestData: Erath(48143), Llano(48299), PaloPinto(48363), Fannin(48147), TomGreen(48451).
 - Tyler SPA: Brewster(48043), Bosque(48035). Wix: Shelby(48419). GIS-shapefile-only: Fayette(48149), Starr, Hill, Jasper.
 **Domain corrections:** Trinity=trinitycad.net, Erath=erathcad.com, Limestone=limestonecad.com, burnet=burnet-cad.org, nacogdoches=nacocad.org.
+
+---
+
+## ✅ CRACKED: True Prodigy API (fable-5 crack-team, 2026-07-16) — the whole family is now accessible
+**One shared OPEN API for every True Prodigy county** (Montgomery, Denton, Hidalgo, McLennan, Ellis, Webb, Hunt, Cooke, Wharton, ValVerde, JimWells, Burleson, Maverick, Limestone, + any {county}.prodigycad.com). No login/CAPTCHA — anonymous self-service token BY DESIGN.
+Host: `https://prod-container.trueprodigyapi.com`
+Recipe (per county):
+```
+office = GET  /trueprodigy/officelookup/{county}.prodigycad.com   -> results.office (county name)
+token  = POST /trueprodigy/cadpublic/auth/token  body {"office": office}  -> user.token
+         # GOTCHAS: must be POST w/ office in body (GET gives wrong-office token -> misleading MySQL error);
+         #          send as raw  Authorization: <jwt>  header, NOT "Bearer"; token ~5min lifetime.
+year   = GET  /public/config/defaultyear  (Authorization: token) -> results.year
+# LIST (many per call, values only): POST /public/property/searchfulltext?page=P&pageSize=100
+#   body {"pYear":{"operator":"=","value":year},"fullTextSearch":{"operator":"match","value":TERM>=3chars}}
+#   -> rows w/ pAccountID(key), pid, geoID, situs, land/imprv/market values. (No empty-all query; enumerate terms, dedup pAccountID.)
+# DETAIL per pAccountID (the physical data):
+impr = GET /public/propertyaccount/{acct}/improvement  -> livingArea(sqft), grossBuildingArea, actualYearBuilt,
+        details[] segments: detailTypeDescription (Main Area/Attached Garage/Pool/Porch…), area, actualYearBuilt
+feat = GET /public/propertyaccount/improvement/{pImprovementID}/features -> Plumbing "2FB"=2 full baths, Fireplace, etc.
+land = GET /public/propertyaccount/{acct}/land  -> sizeSqft (LOT), sizeAcres
+deeds= GET /public/property/{pid}/deeds  -> sale/deed history (dates; TX non-disclosure so no price)
+```
+FIELDS: sqft ✅, year ✅, features/improvements ✅ (pool/garage/porch/fireplace), baths ✅ (derive from Plumbing codes), lot ✅, sale dates ✅.
+**BEDROOMS: genuinely NOT a True Prodigy CAD field** — verified across Montgomery+Denton. TX CADs price by sqft/class/segment and don't record bedroom counts (it's an MLS attribute). NOT hidden — just not collected. (The PACS counties that HAD "Number of Bedrooms" in the ATTR file are the exception, not the rule.)
+OPERATIONAL: LIST is efficient (100/page); physical detail is 1 call/account. Join on geoID or pAccountID. Enumerate a full county by iterating >=3-char terms (geoID prefixes / street tokens / owner-name prefixes) + dedup, or use the grid "Export as Excel". Respectful rate; rural counties ~hours, metros ~a day.
