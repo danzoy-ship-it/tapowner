@@ -406,3 +406,51 @@ Walker (notice PDFs), Jasper (FILE_INFO export lacks the improvement members).
   descriptions — it never emits the bare code `CP` into bulk labels, so a `^cp$`
   crosswalk pattern won't hit it. Crosswalk v2 already applies `^gar$` globally
   (Andrews/Lamar GAR already tagged garage_detached).
+
+---
+
+## 254-COUNTY COVERAGE CAMPAIGN — impasse log & format-family roadmap (2026-07-16)
+
+Goal: 100% of the 16 markers + base facts (beds/baths/sqft/year/stories/lot) +
+exemptions + sale dates on ALL 254 counties. Sale PRICE: **not available
+statewide — Texas is non-disclosure** (PACS layout has deed fields but no price;
+WCAD/P&A sale files carry deed date + grantor but no consideration; the
+"$10 & other" placeholder is the legal fiction). Neighbor-sold-high signal =
+MLS/broker data, deferred to the court-records-era campaign (app-session lane).
+
+**Generalized loader built:** `load_pacs_roll.py <fips> <roll.zip>` — one pass,
+all fields, AUTO-DETECTS the join key (tests source_property_id/apn × prop_id/geo_id,
+requires >=30% or aborts — the Fort Bend "high-rate != correct" guard). Handles
+any True Automation PACS Legacy roll. Loaded this session: San Jacinto(48407),
+Bandera(48019).
+
+**FORMAT FAMILIES still to crack (each unlocks many counties — build one parser, load the family):**
+- **Pritchard & Abbott** (`export_web{bld,prop,sale,hist,tax}.txt`, CSV, per-file
+  `_matrix` layout): Midland(48329, roll cached), Parker(48367), Hood(48221),
+  TomGreen(48451), Tom Green, + ~12 more P&A counties. webbld=improvements/sqft/
+  year/STORIES; websale=sale date (no price); webtax/webprop=exemptions. HIGH VALUE.
+- **ProTax** (Brazoria 48039): `ProTax_ImprovementFeaturesExport_*.zip` (260MB) has
+  a dedicated improvement-features export. Delimited. brazoriacad.org WP media.
+- **True Automation "Property Data Export" CSV** (Hays 48209, winner): separate
+  IMPROVEMENT/LAND/OWNER/SALES/SEGMENT CSVs. hayscad.com WP media,
+  `2025-PROPERTY-DATA-EXPORT-FILES-AS-OF-6-29-2026.zip`. OWNER=exemptions, SALES=dates.
+- **True Prodigy React SPA** (Hidalgo 48215, McLennan 48309, Ellis 48139, Webb 48479,
+  Hunt 48231, Montgomery 48339, Denton 48121): `prod-container.trueprodigyapi.com`,
+  Auth0, per-search CSV only — NO bulk file. Needs browser session OR $0 electronic
+  open-records request. app-lane for beds (fill-on-blank). DECISION PENDING (Frederick):
+  allow rate-limited API pull vs records-request vs fill-on-blank only.
+
+**DEAD-ENDS logged (no free bulk improvement data — circle back via $0 records request):**
+- BIS Consulting / whoownsit.com search-only (no bulk export): Anderson(48001),
+  Hardin(48199), Atascosa(48013), Lubbock(48303), Comal(48091).
+- ISW Data Client azure portals (search-only): Llano(48299), PaloPinto(48363,
+  palopintocad.org is a parked domain).
+- GIS/shapefile-only (geometry+owner, no building features): Starr(48427),
+  Hill(48217), Jasper(48241, only stale 2020 improvement file).
+- PDF-only rolls: Matagorda(48321), Walker(48471).
+- Records-request / login / WAF-blocked: Chambers(48071, P&A+TrueRoll),
+  Rusk(48401, Harris Govern), Smith(48423), Henderson(48213), Parker(48367,
+  Cloudflare 403 to curl — but it's P&A, use the roll), Ector(48135, JS challenge).
+
+## Court-records leads (for the APP SESSION's parcel_signals lane — Miner drops URLs here, does NOT chase)
+- (none yet — will note any county-clerk foreclosure/probate/tax-delinquency feeds tripped over during roll hunting)
