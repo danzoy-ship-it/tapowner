@@ -37,7 +37,7 @@ Which CAMA/appraisal software each Texas county runs, its free bulk-roll URL whe
 | denton | 48121 | 353,631 | PACS/TrueAutomation | PACS-loadable | sqft only | dentoncad.com | DCAD certified export |
 | hidalgo | 48215 | 328,322 | unknown | unclassified | sqft only | hidalgoad.org |  |
 | montgomery | 48339 | 320,915 | PACS | PACS-loadable | sqft only | mcad-tx.org | MCAD certified export |
-| williamson | 48491 | 282,983 | PACS (WCAD) | PACS-loadable | beds+baths+sqft | wcad.org | WCAD property data export |
+| williamson | 48491 | 282,983 | PACS (WCAD) | PACS-loadable ✅SOCRATA | beds+baths+sqft+improv+sale | wcad.org | **data.wcad.org SOCRATA API** (quickrefid=source_property_id): Segment 4kxj-e8c3→improvements, PropChar cvyp-ab5t→deeddate/sqft/garage; loaded 246,937 improv + 231,644 sale via load_wcad_socrata.py |
 | brazoria | 48039 | 275,131 | PACS (BCAD ProTax) | PACS-loadable | sqft only | brazoriacad.org | ProTax_ImprovementExport.txt |
 | galveston | 48167 | 188,695 | PACS/TrueAutomation | PACS-portal(no bulk found) | baths+sqft | galvestoncad.org |  |
 | cameron | 48061 | 185,062 | unknown | unclassified | beds+baths+sqft | cameroncad.com |  |
