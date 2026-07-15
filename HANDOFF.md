@@ -183,6 +183,10 @@ exemption tells, neighbor-sold-high, WARN layoffs…) live in **`SIGNALS_ROADMAP
 consolidated list (2026-07-15) with per-signal source/lane/status, the hard outreach-ethics rule,
 and the execution order. Read it before any signals work; keep per-signal status THERE.
 
+**The direct-mail revenue feature:** `MAIL_STRATEGY.md` (2026-07-16) — turn Reverse Prospecting's
+output into money via addressed mail (Phase 1) + the EDDM saturation route-overlay moat (Phase 2,
+24.7¢/piece, no list) that undercuts competitors ~40%. HARD-GATED on Stripe going live. Product-lane.
+
 **The deliverable both lanes serve — the 16 canonical filter tags** (spec: IMPROVEMENT_TAXONOMY.md,
 machine truth: data/improvement_crosswalk.json): `pool`, `spa`, `casita` (guest house/ADU),
 `shed_workshop`, `boat_dock`, `barn_stable`, `rv` (parking), `garage`, `carport`, `solar`,
