@@ -1,18 +1,26 @@
-"""Populate Tarrant building attributes on parcels from TAD's public export.
+"""Populate Tarrant building attributes AND assessed values from TAD's export.
 
 Source: https://www.tad.org/content/data-download/PropertyData(Delimited)_R.ZIP
-(residential, pipe-delimited, free instant download; browser UA required).
+(residential) and ..._C.ZIP (commercial) — pipe-delimited, header row, free
+instant download (browser UA required). Accepts the .zip or the extracted .txt.
 Join: parcels.source_property_id == GIS_Link (subdivision-block-lot, e.g.
-"14437-29-32" -- exact format match verified against live rows, county_fips
-48439). GIS_Link repeats across condo/sub-unit rows; largest dwelling wins,
-pool OR'd.
+"14437-29-32", county_fips 48439). GIS_Link repeats across condo/sub-unit
+rows; the largest-Living_Area row wins wholesale, pool OR'd.
 
-Fills living_area_sqft (Living_Area), has_pool (Swimming_Pool_Ind Y/N -- both
-directions), and backfills year_built where null. Beds/baths/garage are empty
-in TAD's current legacy reformat (True Prodigy transition) -- skipped.
+Fills living_area_sqft (Living_Area), has_pool (Swimming_Pool_Ind Y/N, both
+directions), year_built (backfill), and — the 2026-07-14 hunt findings —
+assessed_land_value / assessed_improvement_value / assessed_total_value
+(Land_Value/Improvement_Value/Total_Value; populated on ~663K of 669K rows)
+plus lot_size_sqft (Land_SqFt, fallback Land_Acres*43560). Values/lot take
+precedence over existing DB values because StratMap's Tarrant extract shipped
+literal zeros (forensics 2026-07-14: 809/757,171 nonzero MKT_VALUE at source).
+
+Beds/baths, garage, heat/air are BLANK in every current TAD file (True Prodigy
+re-export 2026-06-06 wiped them, verified across the 2021-2025 archives too) —
+PIA request is the only path for those.
 
 Usage:
-    DATABASE_URL=... python load_tarrant_attributes.py path/to/Tarrant_R.zip [--dry-run]
+    DATABASE_URL=... python load_tarrant_attributes.py <R.zip|R.txt> [more files...] [--dry-run]
 """
 
 import io
@@ -34,27 +42,27 @@ def to_int(value, lo, hi):
     return n if lo <= n <= hi else None
 
 
-def main() -> None:
-    args = [a for a in sys.argv[1:] if a != "--dry-run"]
-    dry_run = "--dry-run" in sys.argv
-    if not args:
-        print("usage: load_tarrant_attributes.py path/to/Tarrant_R.zip [--dry-run]")
-        sys.exit(1)
+def open_text(path: str):
+    if path.lower().endswith(".zip"):
+        zf = zipfile.ZipFile(path)
+        member = next(n for n in zf.namelist() if n.lower().endswith(".txt"))
+        return io.TextIOWrapper(zf.open(member), encoding="latin-1", errors="replace")
+    return open(path, encoding="latin-1", errors="replace")
 
-    zf = zipfile.ZipFile(args[0])
-    member = next(n for n in zf.namelist() if n.lower().endswith(".txt"))
+
+def parse_file(path: str, keys: dict, dry_run: bool) -> None:
     started = time.time()
-
-    # gis_link -> [living, yr, pool]
-    keys = {}
-    with zf.open(member) as raw:
-        text = io.TextIOWrapper(raw, encoding="latin-1", errors="replace")
+    with open_text(path) as text:
         header = [h.strip() for h in text.readline().rstrip("\r\n").split("|")]
         idx = {h: i for i, h in enumerate(header)}
-        gi, li, yi, pi = idx["GIS_Link"], idx["Living_Area"], idx["Year_Built"], idx["Swimming_Pool_Ind"]
+        gi = idx["GIS_Link"]
+        li, yi, pi = idx["Living_Area"], idx["Year_Built"], idx["Swimming_Pool_Ind"]
+        lvi, ivi, tvi = idx["Land_Value"], idx["Improvement_Value"], idx["Total_Value"]
+        lsi, lai = idx["Land_SqFt"], idx["Land_Acres"]
+        maxi = max(gi, li, yi, pi, lvi, ivi, tvi, lsi, lai)
         for n, line in enumerate(text):
             parts = line.rstrip("\r\n").split("|")
-            if len(parts) <= max(gi, li, yi, pi):
+            if len(parts) <= maxi:
                 continue
             key = parts[gi].strip()
             if not key:
@@ -62,30 +70,66 @@ def main() -> None:
             living = to_int(parts[li], 1, 2_000_000)
             yr = to_int(parts[yi], 1800, 2027)
             pool = parts[pi].strip().upper() == "Y"
-            if living is None and yr is None and not pool:
+            land_val = to_int(parts[lvi], 1, 2_000_000_000)
+            imp_val = to_int(parts[ivi], 1, 2_000_000_000)
+            total_val = to_int(parts[tvi], 1, 2_000_000_000)
+            lot = to_int(parts[lsi], 1, 2_000_000_000)
+            if lot is None:
+                acres = to_int(parts[lai], 1, 10_000_000)  # whole acres only as fallback
+                if acres is None:
+                    try:
+                        a = float(parts[lai].strip())
+                        lot = int(a * 43560) if 0 < a < 10_000_000 else None
+                    except (ValueError, TypeError):
+                        lot = None
+                else:
+                    lot = acres * 43560
+            row = [living, yr, pool, land_val, imp_val, total_val, lot]
+            if all(v in (None, False) for v in row):
                 continue
             prev = keys.get(key)
             if prev is None:
-                keys[key] = [living, yr, pool]
+                keys[key] = row
+            elif (living or 0) > (prev[0] or 0):
+                # largest dwelling wins wholesale; keep pool if either row had it
+                row[2] = row[2] or prev[2]
+                keys[key] = row
             else:
-                if (living or 0) > (prev[0] or 0):
-                    prev[0], prev[1] = living, yr or prev[1]
                 prev[2] = prev[2] or pool
             if dry_run and n >= 100_000:
                 print("dry-run: stopping parse at 100k rows", flush=True)
                 break
+    print(f"{path}: aggregated so far {len(keys):,} GIS links ({time.time() - started:.0f}s)", flush=True)
 
-    print(f"aggregated {len(keys):,} GIS links ({time.time() - started:.0f}s)", flush=True)
 
-    conn = psycopg2.connect(os.environ["DATABASE_URL"])
+def main() -> None:
+    args = [a for a in sys.argv[1:] if a != "--dry-run"]
+    dry_run = "--dry-run" in sys.argv
+    if not args:
+        print("usage: load_tarrant_attributes.py <R.zip|R.txt> [more files...] [--dry-run]")
+        sys.exit(1)
+
+    # gis_link -> [living, yr, pool, land_val, imp_val, total_val, lot_sqft]
+    keys: dict = {}
+    for path in args:
+        parse_file(path, keys, dry_run)
+
+    conn = psycopg2.connect(
+        os.environ["DATABASE_URL"],
+        keepalives=1,
+        keepalives_idle=30,
+        keepalives_interval=10,
+        keepalives_count=10,
+    )
     cur = conn.cursor()
     cur.execute(
         """CREATE TEMP TABLE tarrant_attrs (
-               gis_link TEXT PRIMARY KEY, living INT, yr INT, pool BOOLEAN
+               gis_link TEXT PRIMARY KEY, living INT, yr INT, pool BOOLEAN,
+               land_val BIGINT, imp_val BIGINT, total_val BIGINT, lot_sqft BIGINT
            )"""
     )
     buf = io.StringIO()
-    for key, (living, yr, pool) in keys.items():
+    for key, (living, yr, pool, land_val, imp_val, total_val, lot) in keys.items():
         buf.write(
             "\t".join(
                 [
@@ -93,6 +137,10 @@ def main() -> None:
                     r"\N" if living is None else str(living),
                     r"\N" if yr is None else str(yr),
                     "t" if pool else "f",
+                    r"\N" if land_val is None else str(land_val),
+                    r"\N" if imp_val is None else str(imp_val),
+                    r"\N" if total_val is None else str(total_val),
+                    r"\N" if lot is None else str(lot),
                 ]
             )
             + "\n"
@@ -101,37 +149,66 @@ def main() -> None:
     cur.copy_expert("COPY tarrant_attrs FROM STDIN", buf)
 
     cur.execute(
-        """SELECT count(*) FROM tarrant_attrs t
+        """SELECT count(*),
+                  count(*) FILTER (WHERE t.total_val IS NOT NULL),
+                  count(*) FILTER (WHERE t.lot_sqft IS NOT NULL)
+           FROM tarrant_attrs t
            JOIN parcels p ON p.county_fips = %s AND p.source_property_id = t.gis_link""",
         (TARRANT_FIPS,),
     )
-    print(f"joinable parcel rows: {cur.fetchone()[0]:,}", flush=True)
+    j, jv, jl = cur.fetchone()
+    print(f"joinable parcel rows: {j:,} (with values {jv:,} · with lot {jl:,})", flush=True)
 
     if dry_run:
         conn.rollback()
         print("dry-run complete, rolled back")
         return
 
+    # Values + lot: NEW wins (existing Tarrant values are source zeros, not data).
     cur.execute(
         """UPDATE parcels p SET
-               living_area_sqft = COALESCE(t.living, p.living_area_sqft),
-               year_built       = COALESCE(p.year_built, t.yr),
-               has_pool         = COALESCE(t.pool, p.has_pool)
+               living_area_sqft           = COALESCE(t.living, p.living_area_sqft),
+               year_built                 = COALESCE(p.year_built, t.yr),
+               has_pool                   = COALESCE(t.pool, p.has_pool),
+               assessed_land_value        = COALESCE(t.land_val, NULLIF(p.assessed_land_value, 0)),
+               assessed_improvement_value = COALESCE(t.imp_val, NULLIF(p.assessed_improvement_value, 0)),
+               assessed_total_value       = COALESCE(t.total_val, NULLIF(p.assessed_total_value, 0)),
+               lot_size_sqft              = COALESCE(t.lot_sqft, NULLIF(p.lot_size_sqft, 0))
            FROM tarrant_attrs t
            WHERE p.county_fips = %s AND p.source_property_id = t.gis_link""",
         (TARRANT_FIPS,),
     )
     print("parcel rows updated:", cur.rowcount, flush=True)
+
+    # Leftover source zeros ("$0" in the app) become clean NULLs (rendered as
+    # absent, per build doc §4: omit, never show a placeholder/zero).
+    cur.execute(
+        """UPDATE parcels SET
+               assessed_land_value        = NULLIF(assessed_land_value, 0),
+               assessed_improvement_value = NULLIF(assessed_improvement_value, 0),
+               assessed_total_value       = NULLIF(assessed_total_value, 0),
+               lot_size_sqft              = CASE WHEN lot_size_sqft < 1 THEN NULL ELSE lot_size_sqft END
+           WHERE county_fips = %s
+             AND (assessed_land_value = 0 OR assessed_improvement_value = 0
+                  OR assessed_total_value = 0 OR lot_size_sqft < 1)""",
+        (TARRANT_FIPS,),
+    )
+    print("zero->NULL cleanup rows:", cur.rowcount, flush=True)
     conn.commit()
 
     cur.execute(
-        """SELECT count(*) FILTER (WHERE living_area_sqft IS NOT NULL) AS sqft,
-                  count(*) FILTER (WHERE has_pool) AS pools
+        """SELECT count(*) FILTER (WHERE living_area_sqft IS NOT NULL),
+                  count(*) FILTER (WHERE has_pool),
+                  count(*) FILTER (WHERE assessed_total_value > 0),
+                  count(*) FILTER (WHERE lot_size_sqft > 0)
            FROM parcels WHERE county_fips = %s""",
         (TARRANT_FIPS,),
     )
-    sqft, pools = cur.fetchone()
-    print(f"Tarrant parcels with sqft: {sqft:,} | with pool: {pools:,}", flush=True)
+    sqft, pools, vals, lots = cur.fetchone()
+    print(
+        f"Tarrant parcels with sqft: {sqft:,} | pools: {pools:,} | values: {vals:,} | lot: {lots:,}",
+        flush=True,
+    )
 
 
 if __name__ == "__main__":
