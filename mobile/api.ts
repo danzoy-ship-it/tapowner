@@ -69,6 +69,7 @@ export interface AppConfig {
   };
   manage_plan_url_text: string;
   manage_plan_url: string;
+  farm_export?: { price_cents: number; beta: boolean; beta_cap_rows: number };
   data_broker_notice?: string;
 }
 
@@ -98,6 +99,7 @@ export const FALLBACK_CONFIG: AppConfig = {
   },
   manage_plan_url_text: 'Manage your plan at tapowner.com',
   manage_plan_url: 'https://tapowner.com/billing',
+  farm_export: { price_cents: 10, beta: true, beta_cap_rows: 300 },
   data_broker_notice: '',
 };
 

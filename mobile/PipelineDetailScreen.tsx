@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -18,6 +18,7 @@ import {
   getSavedProperty,
   updateSavedPropertyStatus,
   type SavedPropertyDetail,
+  type SavedPropertyNote,
   type SavedPropertyStatus,
 } from './api';
 import { useApp } from './AppContext';
@@ -45,6 +46,7 @@ export function PipelineDetailScreen() {
   const [noteText, setNoteText] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const notesRef = useRef<FlatList<SavedPropertyNote>>(null);
 
   const load = useCallback(() => {
     getSavedProperty(token, savedPropertyId)
@@ -91,6 +93,12 @@ export function PipelineDetailScreen() {
       </View>
     );
   }
+
+  // Chronological: oldest first, newest at the bottom — a running comms log you
+  // scroll down to catch up on.
+  const orderedNotes = [...detail.notes].sort(
+    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  );
 
   return (
     <KeyboardAvoidingView
@@ -153,18 +161,29 @@ export function PipelineDetailScreen() {
           </View>
         )}
 
-        <Text style={styles.sectionLabel}>Notes</Text>
+        <Text style={styles.sectionLabel}>Notes — oldest first, latest at the bottom</Text>
         <FlatList
+          ref={notesRef}
           style={styles.notesList}
-          data={detail.notes}
+          data={orderedNotes}
           keyExtractor={(item) => String(item.id)}
+          onContentSizeChange={() => notesRef.current?.scrollToEnd({ animated: false })}
           renderItem={({ item }) => (
             <View style={styles.noteRow}>
+              <Text style={styles.noteDate}>
+                {new Date(item.created_at).toLocaleString([], {
+                  month: 'short',
+                  day: 'numeric',
+                  hour: 'numeric',
+                  minute: '2-digit',
+                })}
+              </Text>
               <Text style={styles.noteBody}>{item.body}</Text>
-              <Text style={styles.noteDate}>{new Date(item.created_at).toLocaleDateString()}</Text>
             </View>
           )}
-          ListEmptyComponent={<Text style={styles.emptyText}>No notes yet.</Text>}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>No history yet — add the first note below.</Text>
+          }
         />
 
         {error && <Text style={styles.errorText}>{error}</Text>}
@@ -300,17 +319,21 @@ const styles = StyleSheet.create({
   },
   noteRow: {
     paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
+    paddingLeft: 10,
+    borderLeftWidth: 2,
+    borderLeftColor: '#e5e7eb',
+    marginBottom: 8,
+  },
+  noteDate: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#9ca3af',
+    marginBottom: 3,
   },
   noteBody: {
     fontSize: 14,
     color: '#111827',
-  },
-  noteDate: {
-    fontSize: 11,
-    color: '#9ca3af',
-    marginTop: 2,
+    lineHeight: 19,
   },
   emptyText: {
     color: '#6b7280',

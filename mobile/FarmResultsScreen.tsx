@@ -162,7 +162,7 @@ export function FarmResultsScreen() {
     const maxCost = ((toUnlock.length * config.trace_price_cents) / 100).toFixed(2);
     Alert.alert(
       `Unlock contacts for ${filtered.length} home${filtered.length === 1 ? '' : 's'}?`,
-      `${already > 0 ? `✓ ${already} already unlocked — free\n` : ''}🔓 ${toUnlock.length} new — up to $${maxCost} (included traces first, no-match never charged).`,
+      `${already > 0 ? `✓ ${already} already unlocked — free\n` : ''}🔓 ${toUnlock.length} new — up to $${maxCost}\nNo charge if no contact is found.`,
       [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Unlock', onPress: () => void runUnlock(toUnlock) },
@@ -225,8 +225,7 @@ export function FarmResultsScreen() {
 
   // ---------- Stage 2: actions ----------
 
-  async function handleExport() {
-    if (filtered.length === 0) return;
+  async function runExport() {
     setBusy('Exporting…');
     try {
       const gate = await logFarmExport(token, filtered.length);
@@ -234,7 +233,7 @@ export function FarmResultsScreen() {
         Alert.alert('Export limit reached', gate.error ?? 'Beta export limit reached — resets on the 1st.');
         return;
       }
-      const file = new File(Paths.cache, 'tapowner-farm.csv');
+      const file = new File(Paths.cache, 'tapowner-direct-mail.csv');
       file.create({ overwrite: true });
       file.write(buildCsv(filtered, traced));
       await Share.share({ url: file.uri });
@@ -248,34 +247,54 @@ export function FarmResultsScreen() {
     }
   }
 
+  // Cost confirmation before a direct-mail CSV export. Row price + beta waiver
+  // come from config.farm_export (Frederick: keep 10¢/row for now; beta = free
+  // up to the monthly cap). The server (logFarmExport) is the real gate.
+  function handleExport() {
+    if (filtered.length === 0) return;
+    const n = filtered.length;
+    const price = config.farm_export?.price_cents ?? 10;
+    const beta = config.farm_export?.beta ?? true;
+    const cost = ((n * price) / 100).toFixed(2);
+    Alert.alert(
+      'Export for a direct-mail campaign?',
+      beta
+        ? `This export of ${n} address${n === 1 ? '' : 'es'} would cost $${cost} (${n} × ${price}¢ each) — waived free during our beta. We'll then open your share options to save or send the file.`
+        : `This export of ${n} address${n === 1 ? '' : 'es'} will cost $${cost} (${n} × ${price}¢ each), charged to your account. We'll then open your share options to save or send the file.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: beta ? 'Export' : `Yes, export ($${cost})`, onPress: () => void runExport() },
+      ]
+    );
+  }
+
+  // Present the native "new contact" card for each owner in turn — the same
+  // approach as the single-contact screen. presentFormAsync needs NO contacts-
+  // access grant (the user saves through the system UI), so it avoids the iOS
+  // "share your contacts" permission picker that addContactAsync triggers. The
+  // user reviews, edits, and saves (or skips) each card one at a time.
   async function runBulkContacts(targets: FarmParcel[]) {
-    const { status } = await Contacts.requestPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Contacts permission needed', 'Allow contacts access in Settings to save owners.');
-      return;
-    }
-    setBusy(`Saving 0/${targets.length}…`);
-    let ok = 0;
     for (let i = 0; i < targets.length; i++) {
       const p = targets[i];
       const c = contactsFor(p, traced);
+      const name = p.owner_name ?? 'Property Owner';
       try {
-        await Contacts.addContactAsync({
-          contactType: Contacts.ContactTypes.Person,
-          name: p.owner_name,
-          firstName: p.owner_name,
-          company: p.situs_address ?? undefined,
-          phoneNumbers: c.phones.map((n) => ({ label: 'mobile', number: n })),
-          emails: c.emails.map((e) => ({ label: 'home', email: e })),
-        } as Contacts.Contact);
-        ok += 1;
+        await Contacts.presentFormAsync(
+          null,
+          {
+            contactType: Contacts.ContactTypes.Person,
+            name,
+            firstName: name,
+            company: p.situs_address ?? undefined,
+            phoneNumbers: c.phones.map((n) => ({ label: 'mobile', number: n })),
+            emails: c.emails.map((e) => ({ label: 'home', email: e })),
+          },
+          { isNew: true }
+        );
       } catch {
-        // skip failures, keep going
+        // user dismissed or the form failed — continue to the next owner
       }
-      setBusy(`Saving ${i + 1}/${targets.length}…`);
     }
-    setBusy(null);
-    Alert.alert('Done', `${ok} owner${ok === 1 ? '' : 's'} added to your Contacts.`);
   }
 
   async function runBulkCrm(targets: FarmParcel[]) {
@@ -317,7 +336,7 @@ export function FarmResultsScreen() {
       const paid = withContacts.length;
       options.push(`🔓 Unlock remaining ${locked} · up to $${maxCost}`);
       handlers.push(handleUnlock);
-      options.push('📄 Export CSV (mailing addresses — free)');
+      options.push('📮 Export for a direct-mail campaign');
       handlers.push(() => void handleExport());
       options.push('Cancel');
       ActionSheetIOS.showActionSheetWithOptions(
@@ -342,27 +361,19 @@ export function FarmResultsScreen() {
     // Everything is worked: phrase actions over the whole list wherever true.
     const allOf = (count: number) => (count === n ? `all ${n}` : `${count} of ${n}`);
 
-    if (withEmails.length > 0) {
-      if (withEmails.length > EMAIL_MAX) {
-        options.push(`📧 Email via CSV mail merge (${withEmails.length})`);
-        handlers.push(() => void handleExport());
-      } else {
-        options.push(`📧 Email owners (${allOf(withEmails.length)} have emails)`);
-        handlers.push(() => {
-          if (!features.draft_email) return showUpgrade();
-          navigation.navigate('FarmDraft', {
-            mode: 'email',
-            criteria,
-            emailGroups: withEmails.map((p) => contactsFor(p, traced).emails),
-          });
-        });
-      }
-    } else {
-      // No emails came back — the outreach screen still offers the letter.
-      options.push('📧 Draft outreach letter');
+    // Email is one-at-a-time from the agent's own Mail app (FarmDraft). For big
+    // lists or owners with no email, the direct-mail export below is the path —
+    // there is no in-app "letter" (Frederick 2026-07-14: physical mail is designed
+    // in the agent's own tool after the CSV export).
+    if (withEmails.length > 0 && withEmails.length <= EMAIL_MAX) {
+      options.push(`📧 Email owners (${allOf(withEmails.length)} have emails)`);
       handlers.push(() => {
         if (!features.draft_email) return showUpgrade();
-        navigation.navigate('FarmDraft', { mode: 'letter', criteria, emailGroups: [] });
+        navigation.navigate('FarmDraft', {
+          mode: 'email',
+          criteria,
+          emailGroups: withEmails.map((p) => contactsFor(p, traced).emails),
+        });
       });
     }
 
@@ -371,10 +382,10 @@ export function FarmResultsScreen() {
       handlers.push(() => {
         Alert.alert(
           `Add ${withContacts.length} to Contacts?`,
-          'Each owner is saved with their phone, email, and property address.',
+          `You'll get a contact card for each owner to review and save — one at a time.`,
           [
             { text: 'Cancel', style: 'cancel' },
-            { text: 'Add', onPress: () => void runBulkContacts(withContacts) },
+            { text: 'Start', onPress: () => void runBulkContacts(withContacts) },
           ]
         );
       });
@@ -383,7 +394,7 @@ export function FarmResultsScreen() {
       handlers.push(() => void runBulkCrm(withContacts));
     }
 
-    options.push('📄 Export CSV');
+    options.push('📮 Export for a direct-mail campaign');
     handlers.push(() => void handleExport());
 
     options.push('Cancel');

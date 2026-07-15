@@ -13,25 +13,24 @@ import {
 import * as MailComposer from 'expo-mail-composer';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { farmDraft } from './api';
+import { TEMPLATE_PREVIEWS } from './templatePreviews';
 import { useApp } from './AppContext';
 import type { RootNav, RootStackParamList } from './navigation';
 
-// Farm outreach: the SAME templates & tones as individual drafting, applied to
-// the whole filtered list. Email vs letter is picked HERE (Frederick's
-// 2026-07-14 note: a standalone "Draft letter only" action read as noise —
-// outreach type belongs with the template/tone choices). One letter generates,
-// then either the share sheet (letter -- postcards/mail merge) or one
-// pre-addressed Mail composer per home, sent one by one (email).
+// Farm EMAIL outreach: the SAME templates & tones as individual drafting,
+// applied to the whole filtered list. Pick a template (with preview), generate
+// one honest-at-scale draft, then open a pre-addressed Mail composer per home,
+// one at a time. Physical mail is NOT drafted here (Frederick 2026-07-14): the
+// direct-mail path is the CSV export -- the agent designs the piece in their own
+// tool / mail house.
 export function FarmDraftScreen() {
   const navigation = useNavigation<RootNav>();
   const route = useRoute<RouteProp<RootStackParamList, 'FarmDraft'>>();
-  const { mode, criteria, emailGroups } = route.params;
+  const { criteria, emailGroups } = route.params;
   const { token, config } = useApp();
 
-  const [outreach, setOutreach] = useState<'email' | 'letter'>(
-    mode === 'letter' || emailGroups.length === 0 ? 'letter' : 'email'
-  );
   const [templateId, setTemplateId] = useState<string>('buyer_neighborhood_match');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [toneId, setToneId] = useState('professional');
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [generating, setGenerating] = useState(false);
@@ -41,17 +40,11 @@ export function FarmDraftScreen() {
     try {
       const { subject, body } = await farmDraft(token, templateId, toneId, criteria);
 
-      if (outreach === 'letter') {
-        await Share.share({ message: `Subject: ${subject}\n\n${body}` });
-        navigation.goBack();
-        return;
-      }
-
       const mailAvailable = await MailComposer.isAvailableAsync();
       if (!mailAvailable) {
         Alert.alert(
           'Mail is not set up on this device',
-          'Sharing the letter instead — grab the addresses from the CSV export.'
+          'Sharing the email text instead — you can paste it into your mail app.'
         );
         await Share.share({ message: `Subject: ${subject}\n\n${body}` });
         navigation.goBack();
@@ -75,57 +68,56 @@ export function FarmDraftScreen() {
     }
   }
 
-  const buttonLabel =
-    outreach === 'email'
-      ? `Generate & open ${emailGroups.length} email${emailGroups.length === 1 ? '' : 's'}`
-      : 'Generate letter';
+  const buttonLabel = `Generate & open ${emailGroups.length} email${emailGroups.length === 1 ? '' : 's'}`;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.sectionLabel}>Outreach</Text>
-      <View style={styles.chipRow}>
-        <TouchableOpacity
-          style={[
-            styles.chip,
-            outreach === 'email' && styles.chipSelected,
-            emailGroups.length === 0 && styles.chipDisabled,
-          ]}
-          disabled={emailGroups.length === 0}
-          onPress={() => setOutreach('email')}
-        >
-          <Text style={[styles.chipText, outreach === 'email' && styles.chipTextSelected]}>
-            ✉️ Emails{emailGroups.length > 0 ? ` (${emailGroups.length})` : ''}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.chip, outreach === 'letter' && styles.chipSelected]}
-          onPress={() => setOutreach('letter')}
-        >
-          <Text style={[styles.chipText, outreach === 'letter' && styles.chipTextSelected]}>
-            📄 Letter
-          </Text>
-        </TouchableOpacity>
-      </View>
-
       <Text style={styles.scopeText}>
-        {outreach === 'email'
-          ? `One email per home — ${emailGroups.length} on your filtered list. You review and send each.`
-          : 'One letter for your whole filtered list — share it into notes, print, or a mail-merge tool.'}
+        Opens your Mail app with one ready-to-send email per owner — the {emailGroups.length} owner
+        {emailGroups.length === 1 ? '' : 's'} with an email on file. You review and hit send on each.
+        {'\n\n'}For a print / direct-mail campaign, use “Export for a direct-mail campaign” back on
+        the list.
       </Text>
 
-      <Text style={styles.sectionLabel}>Template</Text>
-      {config.draft.templates.map((t) => (
-        <TouchableOpacity
-          key={t.id}
-          style={[styles.templateRow, templateId === t.id && styles.templateRowSelected]}
-          onPress={() => setTemplateId(t.id)}
-        >
-          <Text style={[styles.templateRowText, templateId === t.id && styles.templateRowTextSelected]}>
-            {t.label}
-          </Text>
-          {templateId === t.id && <Text style={styles.templateCheck}>✓</Text>}
-        </TouchableOpacity>
-      ))}
+      <Text style={styles.sectionLabel}>Message — tap to preview, then pick one</Text>
+      {config.draft.templates.map((t) => {
+        const expanded = expandedId === t.id;
+        const selected = templateId === t.id;
+        const preview = TEMPLATE_PREVIEWS[t.id];
+        return (
+          <View key={t.id} style={[styles.templateCard, selected && styles.templateCardSelected]}>
+            <TouchableOpacity
+              style={styles.templateHeader}
+              onPress={() => setExpandedId(expanded ? null : t.id)}
+            >
+              <Text style={[styles.templateRowText, selected && styles.templateRowTextSelected]}>
+                {selected ? '✓ ' : ''}
+                {t.label}
+              </Text>
+              <Text style={styles.templateChevron}>{expanded ? 'Hide ▲' : 'Preview ▼'}</Text>
+            </TouchableOpacity>
+            {expanded && (
+              <View style={styles.previewBox}>
+                {preview && <Text style={styles.previewText}>“{preview}”</Text>}
+                <Text style={styles.previewNote}>
+                  Example only — your real emails are personalized to each owner.
+                </Text>
+                <TouchableOpacity
+                  style={[styles.selectButton, selected && styles.selectButtonSelected]}
+                  onPress={() => {
+                    setTemplateId(t.id);
+                    setExpandedId(null);
+                  }}
+                >
+                  <Text style={styles.selectButtonText}>
+                    {selected ? '✓ Selected' : 'Select this one'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        );
+      })}
 
       <Text style={styles.sectionLabel}>Tone</Text>
       <View style={styles.chipRow}>
@@ -177,9 +169,6 @@ const styles = StyleSheet.create({
     padding: 12,
     lineHeight: 18,
   },
-  chipDisabled: {
-    opacity: 0.4,
-  },
   sectionLabel: {
     marginTop: 16,
     marginBottom: 8,
@@ -187,20 +176,29 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#374151',
   },
-  templateRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  templateCard: {
     borderWidth: 1,
     borderColor: '#d1d5db',
     borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
     marginBottom: 6,
+    overflow: 'hidden',
   },
-  templateRowSelected: {
+  templateCardSelected: {
     borderColor: '#111827',
     backgroundColor: '#f9fafb',
+  },
+  templateHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  templateChevron: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#2563eb',
+    marginLeft: 8,
   },
   templateRowText: {
     fontSize: 14,
@@ -211,9 +209,35 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#111827',
   },
-  templateCheck: {
-    fontWeight: '700',
-    color: '#111827',
+  previewBox: {
+    paddingHorizontal: 14,
+    paddingBottom: 14,
+    paddingTop: 2,
+    gap: 10,
+  },
+  previewText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#374151',
+    fontStyle: 'italic',
+  },
+  previewNote: {
+    fontSize: 11,
+    color: '#9ca3af',
+  },
+  selectButton: {
+    backgroundColor: '#2563eb',
+    borderRadius: 8,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  selectButtonSelected: {
+    backgroundColor: '#16a34a',
+  },
+  selectButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
   },
   chipRow: {
     flexDirection: 'row',
