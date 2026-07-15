@@ -15,9 +15,11 @@ plus lot_size_sqft (Land_SqFt, fallback Land_Acres*43560). Values/lot take
 precedence over existing DB values because StratMap's Tarrant extract shipped
 literal zeros (forensics 2026-07-14: 809/757,171 nonzero MKT_VALUE at source).
 
-Beds/baths, garage, heat/air are BLANK in every current TAD file (True Prodigy
-re-export 2026-06-06 wiped them, verified across the 2021-2025 archives too) —
-PIA request is the only path for those.
+Beds/baths are BLANK in every TAD bulk file — but the app session fills them
+live from TAD's True Prodigy per-property API (see HANDOFF "TARRANT BEDS/BATHS").
+That fill resolves each parcel by the numeric TP pid, which it reads from
+parcels.apn — so this loader ALSO backfills parcels.apn = Account_Num (col 2 of
+the R file) where apn IS NULL, keeping the crosswalk alive across reloads.
 
 Usage:
     DATABASE_URL=... python load_tarrant_attributes.py <R.zip|R.txt> [more files...] [--dry-run]
@@ -50,16 +52,17 @@ def open_text(path: str):
     return open(path, encoding="latin-1", errors="replace")
 
 
-def parse_file(path: str, keys: dict, dry_run: bool) -> None:
+def parse_file(path: str, keys: dict, accts: dict, dry_run: bool) -> None:
     started = time.time()
     with open_text(path) as text:
         header = [h.strip() for h in text.readline().rstrip("\r\n").split("|")]
         idx = {h: i for i, h in enumerate(header)}
         gi = idx["GIS_Link"]
+        ai = idx.get("Account_Num")  # numeric True Prodigy pid (col 2)
         li, yi, pi = idx["Living_Area"], idx["Year_Built"], idx["Swimming_Pool_Ind"]
         lvi, ivi, tvi = idx["Land_Value"], idx["Improvement_Value"], idx["Total_Value"]
         lsi, lai = idx["Land_SqFt"], idx["Land_Acres"]
-        maxi = max(gi, li, yi, pi, lvi, ivi, tvi, lsi, lai)
+        maxi = max(gi, li, yi, pi, lvi, ivi, tvi, lsi, lai, ai or 0)
         for n, line in enumerate(text):
             parts = line.rstrip("\r\n").split("|")
             if len(parts) <= maxi:
@@ -67,6 +70,12 @@ def parse_file(path: str, keys: dict, dry_run: bool) -> None:
             key = parts[gi].strip()
             if not key:
                 continue
+            # apn crosswalk: GIS_Link -> Account_Num (the numeric TP pid the
+            # app's fill-on-blank resolves beds/baths by). Constant per GIS_Link.
+            if ai is not None and key not in accts:
+                acct = parts[ai].strip()
+                if acct:
+                    accts[key] = acct
             living = to_int(parts[li], 1, 2_000_000)
             yr = to_int(parts[yi], 1800, 2027)
             pool = parts[pi].strip().upper() == "Y"
@@ -111,8 +120,9 @@ def main() -> None:
 
     # gis_link -> [living, yr, pool, land_val, imp_val, total_val, lot_sqft]
     keys: dict = {}
+    accts: dict = {}  # gis_link -> Account_Num (numeric TP pid) for the apn crosswalk
     for path in args:
-        parse_file(path, keys, dry_run)
+        parse_file(path, keys, accts, dry_run)
 
     conn = psycopg2.connect(
         os.environ["DATABASE_URL"],
@@ -125,7 +135,8 @@ def main() -> None:
     cur.execute(
         """CREATE TEMP TABLE tarrant_attrs (
                gis_link TEXT PRIMARY KEY, living INT, yr INT, pool BOOLEAN,
-               land_val BIGINT, imp_val BIGINT, total_val BIGINT, lot_sqft BIGINT
+               land_val BIGINT, imp_val BIGINT, total_val BIGINT, lot_sqft BIGINT,
+               account_num TEXT
            )"""
     )
     buf = io.StringIO()
@@ -141,6 +152,7 @@ def main() -> None:
                     r"\N" if imp_val is None else str(imp_val),
                     r"\N" if total_val is None else str(total_val),
                     r"\N" if lot is None else str(lot),
+                    accts.get(key) or r"\N",
                 ]
             )
             + "\n"
@@ -194,6 +206,20 @@ def main() -> None:
         (TARRANT_FIPS,),
     )
     print("zero->NULL cleanup rows:", cur.rowcount, flush=True)
+
+    # Durability: the app-session's beds/baths fill-on-blank resolves each
+    # Tarrant parcel by the numeric True Prodigy pid, which it reads from
+    # parcels.apn. TAD's GIS_Link (our source_property_id) is the hyphenated
+    # geoID; Account_Num is the pid. Backfill apn where NULL so a reload of
+    # this loader never wipes the crosswalk and takes the fill dormant.
+    cur.execute(
+        """UPDATE parcels p SET apn = t.account_num
+           FROM tarrant_attrs t
+           WHERE p.county_fips = %s AND p.source_property_id = t.gis_link
+             AND p.apn IS NULL AND t.account_num IS NOT NULL""",
+        (TARRANT_FIPS,),
+    )
+    print("apn (TP pid) backfill rows:", cur.rowcount, flush=True)
     conn.commit()
 
     cur.execute(
