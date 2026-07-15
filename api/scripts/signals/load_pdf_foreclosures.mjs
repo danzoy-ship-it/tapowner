@@ -414,6 +414,86 @@ const SOURCES = {
             return out;
         },
     },
+    // Dallas County clerk (custom PHP site): foreclosures.php links a per-city
+    // PDF tree (/department/countyclerk/media/foreclosure/<Month>/<City>_<n>.pdf,
+    // folder = SALE month, no year -> near-future roll like Bell). Good embedded
+    // OCR text layer. NB: notices FILED on/after 2026-02-24 moved to Kofile/GovOS
+    // PublicSearch (dallas.tx.publicsearch.us -- the parked platform crack), so
+    // this tree ends at the May-2026 sale month; run with FC_BACK=4 to sweep the
+    // remaining backlog. Keep the entry: cheap to re-check monthly in case the
+    // clerk resumes posting PDFs.
+    dallas_cc: {
+        fips: "48113",
+        // sale venue: north side of the George Allen Courts Building,
+        // 600 Commerce St, Dallas (number-pinned; Commerce St has real homes)
+        venue: /GEORGE\s+ALLEN|\b600\s+COMMERCE\b/i,
+        discover: async () => {
+            const base = "https://www.dallascounty.org";
+            const html = await fetchText(base + "/government/county-clerk/foreclosures.php");
+            const now = new Date();
+            const out = [], seen = new Set();
+            for (const m of html.matchAll(/href="(\/department\/countyclerk\/media\/foreclosure\/([A-Za-z]+)\/([^"]+\.pdf))"/gi)) {
+                const mon = MONTHS.indexOf(m[2].slice(0, 3).toUpperCase()) + 1;
+                if (!mon) continue;
+                // folder carries no year: sale months are near-future
+                let year = now.getFullYear();
+                if (mon - (now.getMonth() + 1) < -6) year += 1;
+                if (!inWindow(year, mon) || seen.has(m[1])) continue;
+                seen.add(m[1]);
+                out.push({
+                    url: base + encodeURI(m[1]),
+                    year,
+                    month: mon,
+                    name: `dallas_${year}-${String(mon).padStart(2, "0")}_${decodeURIComponent(m[3]).replace(/[^\w.-]+/g, "_")}`,
+                });
+            }
+            return out;
+        },
+    },
+    // Williamson County clerk (apps.wilco.org, Oracle Portal-era app iframed
+    // into wilcotx.gov/308/Foreclosure-Trustee-Sales): /countyclerk/
+    // trustee_sales/ is a 12-month calendar, anchor text "July 7, 2026" (sale
+    // date WITH year); each month links <Month>/files.aspx listing ~100
+    // per-notice scanned PDFs named <filed MM-DD-YYYY>_File_<nnn>.pdf (skip
+    // the _File_IDX.pdf index). Image-only, NO text layer -> tesseract OCR.
+    // The calendar recycles: stale months keep last year's files, so gate on
+    // filed-date distance from the sale month.
+    williamson_cc: {
+        fips: "48491",
+        // sale venue: Williamson County Justice Center, 405 MLK St (also
+        // "Martin Luther King"), Georgetown
+        venue: /JUSTICE\s+CENTER|\b405\s+(?:M\.?\s*L\.?\s*K|MARTIN\s+LUTHER\s+KING)/i,
+        discover: async () => {
+            const base = "https://apps.wilco.org/countyclerk/trustee_sales/";
+            const cal = await fetchText(base);
+            const out = [];
+            for (const m of cal.matchAll(/href="([A-Za-z]+)\/files\.aspx"[^>]*>\s*([A-Za-z]+)\s+\d{1,2},\s*(\d{4})/gi)) {
+                const mon = MONTHS.indexOf(m[2].slice(0, 3).toUpperCase()) + 1;
+                const year = +m[3];
+                if (!mon || !inWindow(year, mon)) continue;
+                let idx;
+                try {
+                    idx = await fetchText(`${base}${m[1]}/files.aspx`);
+                } catch (e) {
+                    console.error(`  williamson ${m[1]}: index fetch failed (${e.message})`);
+                    continue;
+                }
+                for (const f of idx.matchAll(/HREF="((\d{2})-\d{2}-(\d{4})_File_(\d+)\.pdf)"/gi)) {
+                    // filed date must sit 0..4 months before the sale month,
+                    // else it's last year's leftover on a recycled month page
+                    const d = (year - +f[3]) * 12 + (mon - +f[2]);
+                    if (d < 0 || d > 4) continue;
+                    out.push({
+                        url: `${base}${m[1]}/${f[1]}`,
+                        year,
+                        month: mon,
+                        name: `williamson_${year}-${String(mon).padStart(2, "0")}_${f[1]}`,
+                    });
+                }
+            }
+            return out;
+        },
+    },
     // Smith County: NOT here -- smith-county.com/298/Foreclosures (CivicPlus)
     // publishes NO notice PDFs (re-verified 2026-07: prose + one dead
     // DocumentCenter link + no trustee-sale ArchiveCenter module); notices
