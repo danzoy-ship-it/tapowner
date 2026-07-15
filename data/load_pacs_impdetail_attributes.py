@@ -41,7 +41,7 @@ GARAGE_RE = re.compile(r"GARAGE|CARPORT", re.I)
 # vocabulary provenance per county). Floors are SUMMED per property.
 DWELLING_RE = re.compile(
     r"MAIN AREA|MAIN FLOOR|FLOOR RESID|MANUFACTURED HOUSE|LIVING AREA"
-    r"|\bRESIDENCE\b|2ND FLOOR|MOBILE HOME"
+    r"|RESIDEN|2ND FLOOR|MOBILE HOME"
     r"|\bBASE\b|SECOND FLOOR|\bMH[ABC]\b|\bMHOME\b",
     re.I,
 )
@@ -75,10 +75,23 @@ def parse_beds(value):
     return n if 1 <= n <= 20 else None
 
 
+BATHISH_RE = re.compile(r"^\s*\d+(?:\.\d+)?\s*$")
+
+
 def parse_baths(value):
     """Baths as full.half: '2.5'->(2,1); '3'->(3,0); 'BATH 2.0'->(2,0);
-    '1 Bath'->(1,0). Clamp full 1..20."""
-    f = _first_num(value)
+    '1 Bath'->(1,0). Clamp full 1..20.
+
+    The PACS 'Plumbing' attribute is overloaded across districts: some carry
+    real baths ('2.00', '2 BATH', '1 Bath'), but others stuff it with junk —
+    water/septic codes ('S1-MUNICIP', 'S2-SEPTIC'), garage sizes ('2 CAR'),
+    materials ('METAL'), etc. Accept a value ONLY if it is a bare number or
+    literally mentions BATH; reject everything else so junk never becomes a
+    bath count (learned on Nueces/Guadalupe, 2026-07-15)."""
+    s = str(value).strip()
+    if "BATH" not in s.upper() and not BATHISH_RE.match(s):
+        return None, None
+    f = _first_num(s)
     if f is None:
         return None, None
     full = int(f)
@@ -138,7 +151,7 @@ def main() -> None:
                 e["shed"] = True
             if GARAGE_RE.search(u):
                 e["garage"] = True
-            if (DWELLING_RE.search(u) or cd in ("MA", "MH")) and not EXCLUDE_RE.search(u):
+            if (DWELLING_RE.search(u) or cd in ("MA", "MH", "HSE")) and not EXCLUDE_RE.search(u):
                 living = to_int(line[93:108], 1, 2_000_000)
                 yr = to_int(line[85:89], 1800, 2027)
                 if living:
@@ -168,10 +181,18 @@ def main() -> None:
                     b = parse_beds(value)
                     if b is not None:
                         acc[pid]["beds"] = b
-                elif nu in ("PLUMBING", "BATHROOMS", "BATH"):
+                elif ("1/2" in nu or "HALF" in nu) and "BATH" in nu:
+                    # Separate half-bath count label (e.g. Nueces "Number of
+                    # 1/2 Baths"). Must NOT clobber the full-bath count.
+                    h = parse_beds(value)
+                    if h is not None:
+                        acc[pid]["bhalf"] = h
+                elif "BATH" in nu or nu == "PLUMBING":
                     full, half = parse_baths(value)
                     if full is not None:
-                        acc[pid]["bfull"], acc[pid]["bhalf"] = full, half
+                        acc[pid]["bfull"] = full
+                        if half:
+                            acc[pid]["bhalf"] = half
                 if dry_run and i >= 200_000:
                     print("dry-run: stopping attr parse", flush=True)
                     break

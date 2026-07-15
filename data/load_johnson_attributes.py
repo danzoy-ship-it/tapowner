@@ -16,6 +16,7 @@ join rate and rolls back.
 
 import csv
 import io
+import json
 import os
 import re
 import sys
@@ -26,6 +27,11 @@ import psycopg2
 
 JOHNSON_FIPS = "48251"
 POOL_RE = re.compile(r"pool", re.I)
+# Same improvement-type vocabulary as load_pacs_impdetail_attributes.py so the
+# Reverse-Prospecting booleans/JSONB stay consistent across counties.
+CASITA_RE = re.compile(r"CASITA|GUEST|QUARTERS|GARAGE APART|GAR APT|STUDIO", re.I)
+SHED_RE = re.compile(r"\bSHED\b|WORKSHOP|OUT ?BUILDING|STORAGE|STG BLDG|\bBARN\b", re.I)
+GARAGE_RE = re.compile(r"GARAGE|CARPORT", re.I)
 
 
 def to_int(value, lo, hi):
@@ -57,17 +63,33 @@ def main() -> None:
                 continue
             desc = (row.get("AI_DESCRIPTION") or "").strip()
             type_cd = (row.get("AI_TYPE_CDX") or "").strip()
-            entry = accounts.setdefault(acct, [None, None, False])
+            entry = accounts.setdefault(
+                acct,
+                {"living": None, "yr": None, "pool": False, "casita": False,
+                 "shed": False, "garage": False, "types": set()},
+            )
+            u = desc.upper()
+            if desc:
+                entry["types"].add(desc)
             if POOL_RE.search(desc) or POOL_RE.search(type_cd):
-                entry[2] = True
+                entry["pool"] = True
+            if CASITA_RE.search(u):
+                entry["casita"] = True
+            if SHED_RE.search(u):
+                entry["shed"] = True
+            if GARAGE_RE.search(u):
+                entry["garage"] = True
             if (row.get("AI_LIVING_IND") or "").strip().upper() == "Y":
                 living = to_int(row.get("AI_AREA_SIZE"), 1, 2_000_000)
                 yr = to_int(row.get("AI_YEAR_BUILT"), 1800, 2027)
                 if living:
-                    entry[0] = (entry[0] or 0) + living
-                entry[1] = entry[1] or yr
+                    entry["living"] = (entry["living"] or 0) + living
+                entry["yr"] = entry["yr"] or yr
 
-    accounts = {k: v for k, v in accounts.items() if v[0] or v[1] or v[2]}
+    accounts = {
+        k: v for k, v in accounts.items()
+        if v["living"] or v["yr"] or v["pool"] or v["types"]
+    }
     print(f"aggregated {len(accounts):,} accounts ({time.time() - started:.0f}s)", flush=True)
 
     for attempt in range(3):
@@ -81,17 +103,28 @@ def main() -> None:
             )
             cur = conn.cursor()
             cur.execute(
-                "CREATE TEMP TABLE jcad_attrs (acct TEXT PRIMARY KEY, living INT, yr INT, pool BOOLEAN)"
+                """CREATE TEMP TABLE jcad_attrs (
+                       acct TEXT PRIMARY KEY, living INT, yr INT, pool BOOLEAN,
+                       casita BOOLEAN, shed BOOLEAN, garage BOOLEAN, improvements JSONB
+                   )"""
             )
             buf = io.StringIO()
-            for acct, (living, yr, pool) in accounts.items():
+            for acct, v in accounts.items():
+                improv = (
+                    json.dumps(sorted(v["types"])).replace("\\", "\\\\")
+                    if v["types"] else r"\N"
+                )
                 buf.write(
                     "\t".join(
                         [
                             acct,
-                            r"\N" if living is None else str(living),
-                            r"\N" if yr is None else str(yr),
-                            "t" if pool else "f",
+                            r"\N" if v["living"] is None else str(v["living"]),
+                            r"\N" if v["yr"] is None else str(v["yr"]),
+                            "t" if v["pool"] else "f",
+                            "t" if v["casita"] else "f",
+                            "t" if v["shed"] else "f",
+                            "t" if v["garage"] else "f",
+                            improv,
                         ]
                     )
                     + "\n"
@@ -115,7 +148,11 @@ def main() -> None:
                 """UPDATE parcels p SET
                        living_area_sqft = COALESCE(a.living, p.living_area_sqft),
                        year_built       = COALESCE(p.year_built, a.yr),
-                       has_pool         = COALESCE(a.pool, p.has_pool)
+                       has_pool         = COALESCE(p.has_pool, FALSE) OR a.pool,
+                       has_casita       = COALESCE(p.has_casita, FALSE) OR a.casita,
+                       has_shed         = COALESCE(p.has_shed, FALSE) OR a.shed,
+                       has_garage       = COALESCE(p.has_garage, FALSE) OR a.garage,
+                       improvements     = COALESCE(a.improvements, p.improvements)
                    FROM jcad_attrs a
                    WHERE p.county_fips = %s AND p.source_property_id = a.acct""",
                 (JOHNSON_FIPS,),
@@ -125,12 +162,13 @@ def main() -> None:
 
             cur.execute(
                 """SELECT count(*) FILTER (WHERE living_area_sqft IS NOT NULL),
-                          count(*) FILTER (WHERE has_pool)
+                          count(*) FILTER (WHERE has_pool),
+                          count(*) FILTER (WHERE improvements IS NOT NULL)
                    FROM parcels WHERE county_fips = %s""",
                 (JOHNSON_FIPS,),
             )
-            sqft, pools = cur.fetchone()
-            print(f"Johnson parcels with sqft: {sqft:,} | with pool: {pools:,}", flush=True)
+            sqft, pools, improv = cur.fetchone()
+            print(f"Johnson parcels with sqft: {sqft:,} | pool: {pools:,} | improvements: {improv:,}", flush=True)
             return
         except psycopg2.OperationalError as err:
             print(f"DB phase attempt {attempt + 1} failed ({err}); retrying…", flush=True)
