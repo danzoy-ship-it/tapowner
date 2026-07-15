@@ -90,6 +90,15 @@ Some big CADs run a modern SPA / True Prodigy public search but STILL publish th
 
 - **pCloud public-link folder (Brazoria 48039):** CAD posts the roll on a pcloud "publink." Resolve programmatically: `GET https://api.pcloud.com/showpublink?code={CODE}` → lists `{name, fileid, size}`; then `GET https://api.pcloud.com/getpublinkdownload?code={CODE}&fileid={FILEID}` → returns `hosts[0]` + `path` → download `https://{host}{path}`. **The direct link is single-use / expires — re-resolve getpublinkdownload right before each download (a stale path 500s).** Brazoria 2026 prelim code `XZozEI5Z1PGl0VyK0YktEOohtankuS3KPWYV` → `2026_BRAZORIA_COUNTY _PRELIM_ALL.zip` (172MB → INFO 2.4GB / DETAIL 484MB / _ATTR 101MB). Source page: `brazoriacad.org/public-gis-and-property-data-downloads/`. Also a direct ProTax zip `brazoriacad.org/wp-content/uploads/2026/06/ProTax_06082026.zip` (format unverified).
 
+## True Prodigy BULK certified-export via public token (2026-07-15 crack — HIGH VALUE)
+
+Distinct from the per-property TP API (rate-limited, off-limits for mass-harvest): TP districts expose a **whole-county certified-export ZIP** (full PACS members: APPRAISAL_INFO + IMPROVEMENT_DETAIL + _ATTR + LAND_DETAIL) as a single file download, free, via a short-lived public token. Verified on Cooke 48097:
+1. Mint token: `GET https://prod-container.trueprodigyapi.com/trueprodigy/cadpublic/auth/token` → JSON `user.token` (public creds `cadpublic@trueprodigy.tech`, ~5-min TTL).
+2. Download: `GET https://prod-container.trueprodigyapi.com/public/filedownload/{county}/{GUID}.zip` with header `Authorization: Bearer {token}` (401 without). Cooke GUID `29377a4c-7c1b-11ef-8c4b-0242ac110006`.
+3. The **{GUID} comes from the county's `/reports` page**, "Certified Exports" category (rendered client-side by the SPA — inspect the page's API calls / builder.io content, or the reports list JSON).
+
+**This likely unlocks the TP counties still marked as gaps** — most importantly **Hidalgo 48215 SEGMENTS/beds** (its shapefile mdb had none, but a TP certified export would carry IMPROVEMENT_DETAIL). Also worth re-checking Tarrant beds, and it's the same family as Montgomery/Ellis/ValVerde (which posted their export on Drive instead). When a county is "TP SPA," try: (a) open dir / Drive on the CMS `/data-downloads`, (b) this `/public/filedownload/{county}/{GUID}` token path from `/reports`.
+
 **GSA Corp CADs (records-request lever):** Smith 48423 has NO free bulk online (exhaustively probed: smithcad.org static/PDF-only, smithcountymapsite.org 500, ArcGIS Hub has no CAMA fields). But Smith runs **GSA Corp** — the SAME vendor as Johnson CAD, which DOES publish free "Certified Data Roll" zips (repo has `data/load_johnson_attributes.py` for that exact format). So the $0 open-records ask is precise: "the same certified appraisal roll export with improvement detail that GSA produces for Johnson CAD." Same lever applies to any GSA-Corp county.
 
 ---

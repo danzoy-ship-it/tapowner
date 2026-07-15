@@ -6,9 +6,9 @@ Regenerate with `python data/build_coverage_log.py` after each mining batch (ref
 
 ## Scoreboard (253 counties)
 
-- ☑ **Mined (has improvements/feature tags): 70** / 253
-- Full attributes (improv+dims): 40  ·  Partial: 47  ·  Geometry-only (need mining): 166  ·  Missing from DB: 0
-- Seller-signals — sale date: 73 counties  ·  exemptions (homestead/over-65/DV tenure): 112 counties  ·  **any seller-signal: 131 counties**
+- ☑ **Mined (has improvements/feature tags): 74** / 253
+- Full attributes (improv+dims): 43  ·  Partial: 53  ·  Geometry-only (need mining): 157  ·  Missing from DB: 0
+- Seller-signals — sale date: 82 counties  ·  exemptions (homestead/over-65/DV tenure): 116 counties  ·  **any seller-signal: 140 counties**
 
 Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISSING. % = share of the county's parcels with that attribute.
 
@@ -41,17 +41,13 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Rusk | 48401 | 37,967 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Chambers | 48071 | 37,510 | · | · | · | · | · | 38 | GEOM-ONLY |
 | [ ] | Matagorda | 48321 | 37,211 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Jasper | 48241 | 37,136 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Atascosa | 48013 | 36,791 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Walker | 48471 | 35,582 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Cass | 48067 | 34,816 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Cooke | 48097 | 33,170 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Atascosa | 48013 | 36,791 | · | · | · | · | 71 | · | PARTIAL |
+| [ ] | Walker | 48471 | 35,582 | · | · | · | · | 85 | · | PARTIAL |
+| [ ] | Cass | 48067 | 34,816 | · | · | · | · | 77 | · | PARTIAL |
 | [ ] | Tyler | 48457 | 33,043 | · | · | · | · | 84 | · | PARTIAL |
 | [ ] | Wharton | 48481 | 31,888 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Valverde | 48465 | 31,635 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Brown | 48049 | 31,411 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Upshur | 48459 | 30,293 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Kendall | 48259 | 29,986 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Upshur | 48459 | 30,293 | · | · | · | · | 73 | · | PARTIAL |
+| [ ] | Kendall | 48259 | 29,986 | · | · | · | · | 90 | · | PARTIAL |
 | [ ] | Fannin | 48147 | 29,043 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Jimwells | 48249 | 27,944 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Jones | 48253 | 27,732 | · | · | · | · | · | · | GEOM-ONLY |
@@ -240,12 +236,16 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [x] | Victoria | 48469 | 45,104 | 76 | 58 | · | 76 | 86 | 42 | FULL+SIGNALS |
 | [x] | Wood | 48499 | 44,576 | 54 | · | · | 54 | 87 | 32 | PARTIAL |
 | [x] | Hardin | 48199 | 41,635 | 52 | · | 13 | 53 | 19 | 39 | PARTIAL |
+| [x] | Jasper | 48241 | 37,136 | 41 | · | · | 41 | 38 | 21 | PARTIAL |
 | [x] | Kerr | 48265 | 36,913 | 61 | 22 | 47 | 61 | 88 | · | FULL+SIGNALS |
 | [x] | Sanjacinto | 48407 | 36,346 | 44 | 4 | · | 44 | 83 | 22 | PARTIAL |
 | [x] | Lamar | 48277 | 36,246 | 52 | 6 | 49 | 65 | 81 | 33 | FULL+SIGNALS |
 | [x] | Bandera | 48019 | 33,261 | 44 | · | · | 44 | 74 | 19 | PARTIAL |
+| [x] | Cooke | 48097 | 33,170 | 64 | 49 | 49 | 65 | 86 | 32 | FULL+SIGNALS |
 | [x] | Gillespie | 48171 | 32,351 | 54 | 1 | · | 65 | 84 | 25 | PARTIAL |
 | [x] | Coryell | 48099 | 31,711 | 68 | 7 | 65 | 77 | 86 | 44 | FULL+SIGNALS |
+| [x] | Valverde | 48465 | 31,635 | 59 | · | 46 | 59 | 90 | 31 | FULL+SIGNALS |
+| [x] | Brown | 48049 | 31,411 | 68 | 15 | 40 | 68 | 83 | 30 | FULL+SIGNALS |
 | [x] | Wilson | 48493 | 28,827 | 70 | 3 | 18 | 70 | 84 | 45 | FULL+SIGNALS |
 | [x] | Aransas | 48007 | 26,690 | 60 | 29 | 35 | 61 | 85 | 25 | FULL+SIGNALS |
 | [x] | Caldwell | 48055 | 26,155 | 59 | 34 | 34 | 75 | 88 | 33 | FULL+SIGNALS |

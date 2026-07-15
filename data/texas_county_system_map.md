@@ -624,3 +624,14 @@ BATH SCHEMA NOTE: McLennan ATTR uses NUMBERED attr names — `22 No of Full Bath
 - **Palo Pinto 48363** — records-request (ISW/SWData portal 403s; StratMap has empty YEAR_BUILT). geometry upgrade only via StratMap25.
 
 **NEW: look for `sl_price` in CAD GIS map-file DBFs (HillCADMapFiles pattern) — a rare free SALE PRICE source. load_parcels_dbf.py captures sl_dt + sl_price + yr_blt, join spid==prop_id / apn==geo_id.**
+
+## 2026-07-15 — crack fleet wave 7 (10 counties, ALL solved)
+### Full PACS (load_pacs_roll.py)
+- **Jasper 48241** — `jaspercad.org/wp-content/uploads/2023/08/2020-09-01_000559_APPRAISAL_IMPROVEMENT_INFO.zip` (misnamed but full set; 2020 vintage). improv 15K, sqft 15K, sale 14K, exempt 8K.
+- **Brown 48049** — `brown-cad.org/wp-content/uploads/2026/04/2026-Brown-CAD-Preliminary-Real-Estate-Export.zip` (brown-cad.org, hyphen). improv 21K, sqft 21K, sale 26K, exempt 10K, beds 4.6K, baths avg 1.53.
+- **Val Verde 48465** — Google Drive `12mJF9IM9jm_8LxW76ZGRRGmH3WlaHhVh` (valverdecad.org TP-CMS /data-downloads). improv 19K, sqft 19K, sale 29K, exempt 10K.
+- **Cooke 48097** — TRUE PRODIGY TOKEN API: mint `GET prod-container.trueprodigyapi.com/trueprodigy/cadpublic/auth/token` → user.token (~5min TTL), then `GET /public/filedownload/cooke/29377a4c-7c1b-11ef-8c4b-0242ac110006.zip` with header `Authorization: Bearer {token}`. GUID from /reports "Certified Exports". improv 21K, sqft 21K, sale 29K, exempt 11K, **beds 16K**, baths avg 1.75. (Reusable TP-token bulk-download crack — GUID per county from its /reports page.)
+### BIS ArcGIS deed-date + year (load_bis_gis.py, need Referer: gis.bisclient.com; serverId from gis.bisclient.com/{cad}/cdn/6/config.json)
+- Upshur 48459 (sale 22K, year 15K), Atascosa 48013 (26K/21K), Walker 48471 (30K/15K), Cass 48067 (27K/16K), Kendall 48259 (27K/19K). ~132K sale + ~86K year.
+### Records-request: Wharton 48481 (TP, certified roll = $40 CD by written request; GIS = paid texascountygisdata).
+### No sale-price columns in any wave-7 county (Hill remains the lone sl_price source so far).
