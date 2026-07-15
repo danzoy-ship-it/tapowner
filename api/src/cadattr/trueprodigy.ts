@@ -7,7 +7,9 @@ import type { CadAttrResult } from "./provider.js";
 //   (1) the token is nested at user.token, and
 //   (2) data endpoints want the RAW token in Authorization -- NO "Bearer " prefix
 //       ("Bearer <token>" returns HTTP 500, which once hid the entire dataset).
-// Verified live 2026-07-15: Tarrant PropID 16497 -> 3 bed / 2 bath.
+// Verified live 2026-07-15: Tarrant pid 16497 -> 3bd/2ba ("Rooms: Bedrooms 3"),
+// Ellis pid 300915 -> 4bd/3ba ("Number of Bedrooms: FOUR BEDROOM"). Districts
+// phrase room counts differently, so the parser reads digit AND word forms.
 
 const BASE = "https://prod-container.trueprodigyapi.com";
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)";
@@ -50,6 +52,27 @@ function trailingNumber(s: string): number {
     if (!m) return 0;
     const n = parseFloat(m[1]!);
     return Number.isFinite(n) ? n : 0;
+}
+
+// Some districts spell the count as a word ("Number of Bedrooms: FOUR BEDROOM",
+// "Plumbing: THREE BATH" -- Ellis) rather than a digit (Tarrant's "Rooms:
+// Bedrooms 3"). Map the number words we expect on a room feature.
+const WORD_NUMBERS: Record<string, number> = {
+    zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7,
+    eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, thirteen: 13,
+    fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18,
+    nineteen: 19, twenty: 20,
+};
+
+// The room count on a feature string, whether written as a digit or a word.
+function roomCount(s: string): number {
+    const digit = trailingNumber(s);
+    if (digit > 0) return digit;
+    for (const w of s.toLowerCase().split(/[^a-z]+/)) {
+        const n = WORD_NUMBERS[w];
+        if (n !== undefined) return n;
+    }
+    return 0;
 }
 
 function toIntInRange(v: unknown, lo: number, hi: number): number | null {
@@ -125,8 +148,8 @@ export class TrueProdigyClient {
         const improvements = impResp.results ?? [];
 
         let beds = 0;
-        let bathFull = 0; // "Rooms: Bathrooms N" (may arrive as fractional segments)
-        let bathHalfExplicit = 0; // explicit "Half Bath" features, if any
+        let bathWhole = 0; // full baths: "Bathrooms 2", "THREE BATH" (may be fractional)
+        let bathHalf = 0; // explicit "half bath" features, if a district lists them
         let sqft: number | null = null;
         let year: number | null = null;
         const rawLabels = new Set<string>();
@@ -141,7 +164,10 @@ export class TrueProdigyClient {
             }
 
             if (imp.pImprovementID === undefined) continue;
-            // Room counts live in the improvement's features.
+            // Room counts live in the improvement's features. Districts phrase them
+            // differently -- "Rooms: Bedrooms 3" (Tarrant, digit) vs "Number of
+            // Bedrooms: FOUR BEDROOM" / "Plumbing: THREE BATH" (Ellis, word) -- so
+            // match on the keyword and read the count as a digit OR a number word.
             try {
                 const feat = (await tpFetch(
                     `${BASE}/public/propertyaccount/improvement/${imp.pImprovementID}/features`,
@@ -152,11 +178,10 @@ export class TrueProdigyClient {
                         rawLabels.add(f);
                         const lf = f.toLowerCase();
                         if (lf.includes("bedroom")) {
-                            beds += trailingNumber(f);
-                        } else if (lf.includes("half bath") || lf.includes("halfbath")) {
-                            bathHalfExplicit += trailingNumber(f);
-                        } else if (lf.includes("bathroom") || lf.includes("full bath")) {
-                            bathFull += trailingNumber(f);
+                            beds += roomCount(f);
+                        } else if (lf.includes("bath")) {
+                            if (lf.includes("half")) bathHalf += roomCount(f) || 1;
+                            else bathWhole += roomCount(f);
                         }
                     }
                 }
@@ -167,12 +192,12 @@ export class TrueProdigyClient {
 
         const bedrooms = beds > 0 ? Math.round(beds) : null;
         // +epsilon guards float drift (fractional segments summing to e.g. 1.9999).
-        const bathsFull = bathFull > 0 ? Math.floor(bathFull + 1e-6) : null;
-        // Half baths: explicit features win; otherwise a .5+ remainder on the full
-        // count (e.g. "Bathrooms 2.5") implies one half bath.
-        const fractionalHalf = bathFull > 0 && bathFull % 1 >= 0.5 ? 1 : 0;
+        const bathsFull = bathWhole > 0 ? Math.floor(bathWhole + 1e-6) : null;
+        // Half baths: explicit "half bath" features win; otherwise a .5+ remainder
+        // on the whole count (e.g. "Bathrooms 2.5") implies one half bath.
+        const fractionalHalf = bathWhole > 0 && bathWhole % 1 >= 0.5 ? 1 : 0;
         const bathsHalf =
-            bathHalfExplicit > 0 ? Math.round(bathHalfExplicit) : fractionalHalf > 0 ? fractionalHalf : null;
+            bathHalf > 0 ? Math.round(bathHalf) : fractionalHalf > 0 ? fractionalHalf : null;
 
         return {
             bedrooms,

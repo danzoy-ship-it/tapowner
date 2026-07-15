@@ -6,16 +6,22 @@ import { TrueProdigyClient } from "./trueprodigy.js";
 // Counties whose beds/baths exist ONLY behind a per-property CAD API (no usable
 // bulk file), so we fill them lazily: the first time a parcel is viewed with no
 // beds, fetch its attributes once and cache them into the parcels row forever.
-// Keyed by county_fips. The caller resolves each parcel via its TP pid, which
-// for these counties is stored in parcels.apn (Tarrant: TAD Account_Num, loaded
-// alongside GIS_Link -> source_property_id). Grow this as the data session
-// confirms more True-Prodigy-API-only counties (HANDOFF.md + DATA_HUNTING_PLAYBOOK.md #1).
+// Keyed by county_fips; each entry says which column holds that county's numeric
+// True Prodigy pid (see pidField). Grow this as the data session confirms more
+// counties whose TP API actually EXPOSES beds -- verify per county, because same
+// software != same public fields (Tarrant/Ellis expose beds; Travis/Denton/
+// Montgomery/McLennan don't). See HANDOFF.md + DATA_HUNTING_PLAYBOOK.md #1.
 interface FillSource {
     system: "trueprodigy";
     office: string; // True Prodigy office name (from /trueprodigy/officelookup)
+    // Which parcels column holds this county's numeric TP pid. Tarrant stores a
+    // hyphenated geoID in source_property_id, so its pid (TAD Account_Num) lives
+    // in apn; Ellis's source_property_id IS the numeric pid.
+    pidField: "apn" | "source_property_id";
 }
 const FILL_SOURCES: Record<string, FillSource> = {
-    "48439": { system: "trueprodigy", office: "Tarrant" },
+    "48439": { system: "trueprodigy", office: "Tarrant", pidField: "apn" },
+    "48139": { system: "trueprodigy", office: "Ellis", pidField: "source_property_id" },
 };
 
 const trueProdigy = new TrueProdigyClient();
@@ -27,8 +33,20 @@ const trueProdigy = new TrueProdigyClient();
 const lastAttempt = new Map<number, number>();
 const ATTEMPT_COOLDOWN_MS = 6 * 60 * 60 * 1000; // 6h
 
-export function isFillEligible(countyFips: string | null | undefined): boolean {
-    return typeof countyFips === "string" && countyFips in FILL_SOURCES;
+/** The True Prodigy pid to resolve this parcel by (from apn or source_property_id
+ *  per the county's registry entry), or null if the county isn't fill-eligible or
+ *  its pid column is empty. */
+export function fillPid(
+    countyFips: string | null | undefined,
+    parcel: { apn?: unknown; source_property_id?: unknown }
+): string | null {
+    if (!countyFips) return null;
+    const src = FILL_SOURCES[countyFips];
+    if (!src) return null;
+    const raw = src.pidField === "apn" ? parcel.apn : parcel.source_property_id;
+    if (raw === null || raw === undefined) return null;
+    const s = String(raw).trim();
+    return s === "" ? null : s;
 }
 
 /**

@@ -8,7 +8,7 @@ import { isPlaceholderOwner } from "../lib/owners.js";
 import { getLatestSubscription, isSubscriptionUsable } from "../lib/entitlements.js";
 import { getProductConfig } from "../lib/config.js";
 import { logEvent } from "../lib/events.js";
-import { isFillEligible, fillParcelAttrsInBackground } from "../cadattr/index.js";
+import { fillPid, fillParcelAttrsInBackground } from "../cadattr/index.js";
 
 // Farm mode caps: a neighborhood farm is a few hundred homes. The result cap
 // keeps responses bounded; the area cap stops a polygon drawn around half the
@@ -97,19 +97,14 @@ export async function parcelsRoutes(app: FastifyInstance) {
             });
 
             // Fill-on-blank (Reverse Prospecting data-hunt #2): for counties whose
-            // beds/baths live only behind a live CAD API (e.g. Tarrant / True
+            // beds/baths live only behind a live CAD API (Tarrant, Ellis / True
             // Prodigy), fetch + cache this parcel's attrs the first time it's
-            // viewed with no beds. Fire-and-forget: never blocks or fails the view,
-            // so this response ships county data as-is; the next view shows the fill.
-            // Resolves via the TP pid stored in apn (== TAD Account_Num); skipped
-            // when apn is absent (parcel not yet crosswalked by the data session).
-            if (parcel.bedrooms === null && parcel.apn && isFillEligible(parcel.county_fips)) {
-                fillParcelAttrsInBackground(
-                    parcel.id,
-                    parcel.county_fips,
-                    String(parcel.apn),
-                    request.log
-                );
+            // viewed with no beds. Fire-and-forget: never blocks or fails the view.
+            // fillPid returns the county's TP pid (from apn or source_property_id
+            // per the registry), or null when the parcel can't be resolved.
+            const cadPid = fillPid(parcel.county_fips, parcel);
+            if (parcel.bedrooms === null && cadPid) {
+                fillParcelAttrsInBackground(parcel.id, parcel.county_fips, cadPid, request.log);
             }
 
             return reply.send(parcel);
