@@ -39,7 +39,7 @@ Which CAMA/appraisal software each Texas county runs, its free bulk-roll URL whe
 | montgomery | 48339 | 320,915 | PACS | PACS-loadable | sqft only | mcad-tx.org | MCAD certified export |
 | williamson | 48491 | 282,983 | PACS (WCAD) | PACS-loadable ✅SOCRATA | beds+baths+sqft+improv+sale | wcad.org | **data.wcad.org SOCRATA API** (quickrefid=source_property_id): Segment 4kxj-e8c3→improvements, PropChar cvyp-ab5t→deeddate/sqft/garage; loaded 246,937 improv + 231,644 sale via load_wcad_socrata.py |
 | brazoria | 48039 | 275,131 | PACS (BCAD ProTax) | PACS-loadable | sqft only | brazoriacad.org | ProTax_ImprovementExport.txt |
-| galveston | 48167 | 188,695 | PACS/TrueAutomation | PACS-portal(no bulk found) | baths+sqft | galvestoncad.org |  |
+| galveston | 48167 | 188,695 | PACS/TrueAutomation | PACS-loadable ✅LOADED | improv+baths+sqft+sale+exempt | galvestoncad.org | galvestoncad.org/wp-content/uploads/2025/01/…APPRAISAL_IMPROVEMENT_DETAIL.zip is the FULL certified roll (std deflate): 146,673 improv (pool 14.7K, boat_dock/waterfront 3,608), 162,267 sale, 84,892 exempt. Found via wp-json probe 2026-07-16 |
 | cameron | 48061 | 185,062 | unknown | unclassified | beds+baths+sqft | cameroncad.com |  |
 | bell | 48027 | 167,412 | PACS | PACS-loadable | beds+baths+sqft | bellcad.org | Bell certified roll ATTR |
 | liberty | 48291 | 162,275 | unknown | unclassified | beds+baths+sqft | libertycad.org |  |
@@ -47,7 +47,7 @@ Which CAMA/appraisal software each Texas county runs, its free bulk-roll URL whe
 | smith | 48423 | 140,245 | PACS/TrueAutomation | PACS-portal(no bulk found) | sqft only | smithcad.org |  |
 | lubbock | 48303 | 135,112 | BIS Consultants (GIS) | BIS-gis (sqft only) | sqft only | lubbockcad.org | gis.bisclient.com/lubbockcad (sqft, no beds) |
 | jefferson | 48245 | 122,202 |  | no-domain | sqft only |  |  |
-| hays | 48209 | 117,427 | PACS | PACS-loadable | beds+baths+sqft | hayscad.com | Hays property data export SEGMENT |
+| hays | 48209 | 117,427 | Tyler ORION | orion-thin | beds+baths+sqft | hayscad.com | 2020 "fixed-length" export is actually ORION (Property/Owner/Exemption/Entity only — NO improvement/segment file, like Fort Bend). Improvements gap unfillable from this; beds came from an earlier source. Skip unless a segments export surfaces. |
 | mclennan | 48309 | 115,362 | unknown | unclassified | - | mclennancad.org |  |
 | henderson | 48213 | 106,708 | unknown | unclassified | - | hendersoncad.org |  |
 | comal | 48091 | 103,537 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | comalad.org |  |
