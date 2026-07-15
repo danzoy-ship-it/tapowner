@@ -12,7 +12,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
-    "sync:crosswalk": "node scripts/sync-crosswalk.mjs"
+    "sync:crosswalk": "node scripts/sync-crosswalk.mjs",
+    "test": "tsx --test src/cadattr/trueprodigy.test.ts src/lib/improvementTags.test.ts"
   },
   "dependencies": {
     "@fastify/cors": "^11.3.0",

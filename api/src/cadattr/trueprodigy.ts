@@ -62,7 +62,8 @@ const WORD_NUMBERS: Record<string, number> = {
 // Returns 0 when nothing plausible is found or the value exceeds `max` (a code,
 // not a count), so an unreadable/oddly-coded row leaves the field blank rather
 // than recording garbage (e.g. "Number of Bedrooms: 91").
-function roomCount(s: string, max: number): number {
+// Exported for the regression tests (real-world strings from Tarrant/Ellis/Denton).
+export function roomCount(s: string, max: number): number {
     let str = s.toLowerCase();
     let frac = 0;
     const fm = /(\d+)\s*\/\s*(\d+)/.exec(str);
