@@ -80,6 +80,12 @@ def parse_beds(value):
 # "UTILITY" (letter-prefix that isn't a lone B, or trailing non-numeric).
 BATHISH_RE = re.compile(r"^\s*B?\d+(?:\.\d+)?\s*$", re.I)
 
+# Truncated half-bath codes (Yoakum: 'A-1 1/2 Ba', 'B-2 1/2 Ba', 'C-3 1/2 Ba' —
+# the display width chops 'Baths' to 'Ba', so the BATH keyword check misses
+# them). 'N 1/2 BA...' = N full + 1 half. Also upgrades '2 1/2 Baths' style
+# values, which the first-number path would read as (2, 0).
+HALFBATH_RE = re.compile(r"(\d+)\s+1/2\s+BA", re.I)
+
 
 def parse_baths(value):
     """Baths as full.half: '2.5'->(2,1); '3'->(3,0); 'BATH 2.0'->(2,0);
@@ -92,6 +98,10 @@ def parse_baths(value):
     literally mentions BATH; reject everything else so junk never becomes a
     bath count (learned on Nueces/Guadalupe, 2026-07-15)."""
     s = str(value).strip()
+    m = HALFBATH_RE.search(s)
+    if m:
+        full = int(m.group(1))
+        return (full, 1) if 1 <= full <= 20 else (None, None)
     if "BATH" not in s.upper() and not BATHISH_RE.match(s):
         return None, None
     f = _first_num(s)
@@ -205,6 +215,42 @@ def main() -> None:
     acc = {k: v for k, v in acc.items()
            if v["living"] or v["yr"] or v["pool"] or v["types"] or v["beds"] or v["bfull"]}
     print(f"aggregated {len(acc):,} properties ({time.time() - started:.0f}s)", flush=True)
+
+    # Fixture-count guard: some districts' 'Plumbing' attr is the plumbing
+    # FIXTURE count, not baths (Angelina: bare '5'/'8' with modes at 5 and 8 —
+    # 1 bath ≈ 5 fixtures, 2 baths ≈ 8). Those pass the bare-number rule, so
+    # sanity-check the whole distribution: a real bath column has a median
+    # ≈ 2; median > 3.5 means fixtures — drop ALL baths rather than load junk.
+    fulls = sorted(v["bfull"] for v in acc.values() if v["bfull"] is not None)
+    if fulls:
+        median = fulls[len(fulls) // 2]
+        if median > 3.5:
+            print(
+                f"WARNING: median full-bath value {median} is implausible — "
+                "'Plumbing' here is fixture counts, NOT baths; dropping all "
+                f"{len(fulls):,} bath values (beds/sqft/pool still load)",
+                flush=True,
+            )
+            for v in acc.values():
+                v["bfull"] = None
+                v["bhalf"] = None
+        else:
+            # Uniform-value guard: some districts' 'Plumbing' is a boolean
+            # PRESENCE flag, not a count (Gillespie: 99.4% the literal "1").
+            # If ≥95% of bath values are identical, it carries no real
+            # information — drop it rather than claim every home has N baths.
+            from collections import Counter
+            mode_ct = Counter(fulls).most_common(1)[0][1]
+            if mode_ct >= 0.95 * len(fulls) and len(fulls) > 100:
+                print(
+                    f"WARNING: {100 * mode_ct / len(fulls):.0f}% of bath values "
+                    "are identical — 'Plumbing' here is a presence flag, not a "
+                    f"count; dropping all {len(fulls):,} bath values",
+                    flush=True,
+                )
+                for v in acc.values():
+                    v["bfull"] = None
+                    v["bhalf"] = None
     if not dry_run:
         _dump_labels(fips, label_counts)
 
