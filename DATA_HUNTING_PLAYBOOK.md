@@ -201,9 +201,25 @@ every county later is the expensive path.
 |---|---|---|---|---|---|
 | Harris | Houston | PACS (HCAD) | `fixtures.txt` bulk (RMB/RMF/RMH) | ✅ | **loaded** |
 | Dallas | Dallas | — | `NUM_BEDROOMS` bulk | ✅ | **loaded** |
-| Bexar | San Antonio | PACS → SARA ArcGIS | `BCAD_Parcels_PROD` FeatureServer (`Bedrooms`/`Whole_Bath`/`Half_Bath`), 99% | ✅ | **to build** (bulk) |
-| Travis | Austin | PACS / True Prodigy | `improvement_detail` coded rows (252/251/250/604) | ✅ | **to build** (bulk parse) |
-| Tarrant | Fort Worth | True Prodigy | live API `Rooms: Bedrooms/Bathrooms` | ✅ | **to build** (fill-on-blank API) |
+| Bexar | San Antonio | PACS → SARA ArcGIS | `BCAD_Parcels_PROD` FeatureServer (`Bedrooms`/`Whole_Bath`/`Half_Bath`), 99% | ✅ | **LOADED 587K beds** (2026-07-15) |
+| Rockwall | DFW | PACS | `IMPROVEMENT_DETAIL_ATTR`: `Number of Bedrooms` / `Plumbing` | ✅ | **LOADED 25.9K** |
+| Potter | Amarillo | PACS (PRAD) | ATTR `BEDROOMS` / `BATHROOMS` | ✅ | **LOADED 33.9K** |
+| Randall | Amarillo | PACS (PRAD) | ATTR `BEDROOMS` / `BATHROOMS` | ✅ | **LOADED 48.7K** |
+| Kaufman | DFW | PACS | ATTR `Number of Bedrooms` / `Plumbing` | ✅ | **LOADED 3.6K** (low native) |
+| Bell | Killeen | PACS | ATTR `Number of Bedrooms` / `Bath`="BATH 2.0" | ✅ | **LOADED 17.7K beds / 57.7K baths** |
+| Grayson | DFW | PACS | ATTR `Plumbing`="1 Bath" (no beds published) | ✅ | **LOADED baths 6.2K** |
+| Travis | Austin | True Prodigy | bulk export REMOVED from tad-style site; report categories 204; GIS layers bedless → **per-property API only** | ⚠️ | **APP LANE** (fill-on-blank; bulk no longer public) |
+| Tarrant | Fort Worth | True Prodigy | live API `Rooms: Bedrooms/Bathrooms` | ✅ | **APP LANE** (fill-on-blank API) |
+
+**PACS ATTR beds/baths recipe (cracked 2026-07-15):** beds/baths are NOT in the
+`IMPROVEMENT_DETAIL` file — they're improvement *characteristics* in the sibling
+`IMPROVEMENT_DETAIL_ATTR` file (attr name at cols 52:77, value at 77:). Bed attr
+names vary: `Number of Bedrooms` (True Automation), `BEDROOMS` (PRAD), `Beds`.
+Bath attr names vary: `Plumbing`, `BATHROOMS`, `Bath` — all full.half convention
+(`2.5`=2 full+1 half; values may be prefixed `BATH 2.0` / `1 Bath` → extract the
+first number). `data/load_pacs_impdetail_attributes.py` handles all of them and
+also captures the full improvement-type list into `parcels.improvements` (jsonb).
+Re-run it for EVERY PACS county's certified roll — this is the big lever.
 
 ---
 
