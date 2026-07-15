@@ -64,11 +64,31 @@ def to_int(v, lo, hi):
     return n if lo <= n <= hi else None
 
 
-def epoch_to_date(v):
-    try:
-        return datetime.fromtimestamp(int(v) / 1000, tz=timezone.utc).date()
-    except (ValueError, TypeError, OSError):
+def parse_any_date(v):
+    """Handle both epoch-ms (direct-server SaleDate) and string dates
+    (proxied Deed_Date 'MM/DD/YYYY' or ISO)."""
+    if v is None or v == "":
         return None
+    # epoch ms
+    if isinstance(v, (int, float)) or (isinstance(v, str) and v.strip().isdigit()):
+        try:
+            return datetime.fromtimestamp(int(v) / 1000, tz=timezone.utc).date()
+        except (ValueError, OSError):
+            return None
+    s = str(v).strip()
+    for fmt in ("%m/%d/%Y", "%Y-%m-%d", "%m-%d-%Y"):
+        try:
+            return datetime.strptime(s[:10], fmt).date()
+        except ValueError:
+            continue
+    return None
+
+
+def field(a, *names):
+    for n in names:
+        if a.get(n) not in (None, ""):
+            return a.get(n)
+    return None
 
 
 def main():
@@ -91,16 +111,16 @@ def main():
             break
         for f in feats:
             a = {k.lower(): v for k, v in f["attributes"].items()}
-            pid = str(a.get("prop_id") or a.get("quickrefid") or "").strip()
+            pid = str(field(a, "prop_id", "prop_id_text", "quickrefid") or "").strip()
             if not pid:
                 continue
-            ex = a.get("exemptions")
+            ex = field(a, "exemptions", "exemption")
             codes = [c.strip().upper() for c in str(ex).replace(";", ",").split(",") if c.strip()] if ex else None
             staged[pid] = (
-                to_int(a.get("totsqftlvg"), 1, 2_000_000),
-                to_int(a.get("yearbuilt"), 1800, date.today().year + 1),
-                epoch_to_date(a.get("saledate")) or epoch_to_date(a.get("deeddate")),
-                to_int(a.get("landsizeft"), 1, 500_000_000),
+                to_int(field(a, "totsqftlvg", "tot_sqft_lvg", "living_area", "sqft"), 1, 2_000_000),
+                to_int(field(a, "yearbuilt", "year_built", "yr_blt"), 1800, date.today().year + 1),
+                parse_any_date(field(a, "saledate", "sale_date", "deeddate", "deed_date")),
+                to_int(field(a, "landsizeft", "land_sqft", "landsizesqft"), 1, 500_000_000),
                 codes,
             )
         off += len(feats)
