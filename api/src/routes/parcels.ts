@@ -8,7 +8,7 @@ import { isPlaceholderOwner } from "../lib/owners.js";
 import { getLatestSubscription, isSubscriptionUsable } from "../lib/entitlements.js";
 import { getProductConfig } from "../lib/config.js";
 import { logEvent } from "../lib/events.js";
-import { deriveTags, tagLabel } from "../lib/improvementTags.js";
+import { tagsForParcel, tagLabel } from "../lib/improvementTags.js";
 import { fillPid, fillParcelAttrsInBackground } from "../cadattr/index.js";
 
 // Farm mode caps: a neighborhood farm is a few hundred homes. The result cap
@@ -66,7 +66,7 @@ export async function parcelsRoutes(app: FastifyInstance) {
                 // cosmetic -- the trace route re-checks and is the source of truth
                 // for charging -- so a null (grace-mode) viewer safely reads false.
                 `SELECT ${PARCEL_FIELDS},
-                        improvements, has_casita, has_shed,
+                        improvements, improvement_tags, has_casita, has_shed,
                         EXISTS (
                             SELECT 1 FROM user_traces ut
                             WHERE ut.user_id = $3 AND ut.parcel_id = parcels.id
@@ -85,14 +85,16 @@ export async function parcelsRoutes(app: FastifyInstance) {
             const parcel = result.rows[0];
             parcel.situs_address = formatSitusAddress(parcel);
 
-            // Canonical feature tags for the card's Features row (same crosswalk
-            // derivation the farm endpoint uses). Raw labels stay server-side.
-            parcel.features = deriveTags(parcel.improvements, {
+            // Canonical feature tags for the card's Features row (materialized
+            // column preferred, live derivation as fallback). Raw labels stay
+            // server-side.
+            parcel.features = tagsForParcel(parcel.improvement_tags, parcel.improvements, {
                 pool: parcel.has_pool,
                 casita: parcel.has_casita,
                 shed: parcel.has_shed,
             });
             delete parcel.improvements;
+            delete parcel.improvement_tags;
             delete parcel.has_casita;
             delete parcel.has_shed;
 
@@ -201,7 +203,7 @@ export async function parcelsRoutes(app: FastifyInstance) {
                         p.is_absentee,
                         p.living_area_sqft, p.bedrooms, p.baths_full, p.baths_half,
                         p.stories, p.year_built, p.has_pool,
-                        p.has_casita, p.has_shed, p.improvements,
+                        p.has_casita, p.has_shed, p.improvements, p.improvement_tags,
                         tr.payload AS trace_payload
                  FROM parcels p
                  CROSS JOIN poly
@@ -246,8 +248,8 @@ export async function parcelsRoutes(app: FastifyInstance) {
                         year_built: r.year_built,
                         has_pool: r.has_pool,
                         // Canonical feature tags (Reverse Prospecting filters) --
-                        // crosswalked from raw improvement labels + loader booleans.
-                        features: deriveTags(r.improvements, {
+                        // materialized column preferred, live derivation fallback.
+                        features: tagsForParcel(r.improvement_tags, r.improvements, {
                             pool: r.has_pool,
                             casita: r.has_casita,
                             shed: r.has_shed,

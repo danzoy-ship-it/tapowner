@@ -89,11 +89,40 @@ export function tagLabel(tag: string): string {
 }
 
 /**
- * A parcel's canonical feature tags: union of the loader-set boolean columns
- * and every crosswalk tag whose `match` hits (and no `exclude` hits) any raw
- * improvement label. boat_dock implies waterfront (taxonomy rule). Generic
- * "garage" is deliberately NOT a tag (see below) -- has_garage stays a plain
- * column fact for the card.
+ * A parcel's canonical feature tags for API responses. Prefers the
+ * materialized parcels.improvement_tags column (the data session's batch pass
+ * over the same crosswalk -- cheap and canonical) and falls back to deriving
+ * from raw labels for parcels the batch hasn't covered yet (e.g. fill-on-blank
+ * counties whose labels arrive per-tap). Boolean-column tags (pool/casita/shed)
+ * are ALWAYS unioned in: some counties know has_pool from a roll flag without
+ * any raw label, so the column alone can under-report them.
+ */
+export function tagsForParcel(
+    columnTags: unknown,
+    rawImprovements: unknown,
+    flags: {
+        pool?: boolean | null;
+        casita?: boolean | null;
+        shed?: boolean | null;
+    }
+): string[] {
+    const base =
+        Array.isArray(columnTags) && columnTags.length > 0
+            ? columnTags.filter((t): t is string => typeof t === "string")
+            : deriveTags(rawImprovements, {});
+    const tags = new Set<string>(base);
+    if (flags.pool === true) tags.add("pool");
+    if (flags.casita === true) tags.add("casita");
+    if (flags.shed === true) tags.add("shed_workshop");
+    // Frederick's UX call (2026-07-15): generic garage is not a feature tag.
+    tags.delete("garage");
+    if (tags.has("boat_dock")) tags.add("waterfront");
+    return [...tags];
+}
+
+/**
+ * Label-derived tags only (crosswalk regexes over raw improvement labels).
+ * Used as the fallback inside tagsForParcel; boolean flags are handled there.
  */
 export function deriveTags(
     rawImprovements: unknown,
