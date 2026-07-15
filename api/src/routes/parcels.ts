@@ -136,7 +136,14 @@ export async function parcelsRoutes(app: FastifyInstance) {
             // to the agent; the outreach-ethics rule keeps them OUT of AI copy.
             const { rows: sigRows } = await pool.query(
                 `SELECT signal_type, subtype, event_date FROM parcel_signals
-                 WHERE parcel_id = $1 ORDER BY event_date DESC NULLS LAST LIMIT 10`,
+                 WHERE parcel_id = $1
+                   -- a foreclosure is only "pre" while the sale date is still
+                   -- ahead; once the auction date passes the property may be sold
+                   -- at auction or reinstated, so a past notice must not keep the
+                   -- pre-foreclosure badge. Rows stay in the table (recency/history
+                   -- is still available), they just drop off this label.
+                   AND (signal_type <> 'pre_foreclosure' OR event_date >= current_date)
+                 ORDER BY event_date DESC NULLS LAST LIMIT 10`,
                 [parcel.id]
             );
             parcel.event_signals = sigRows;
@@ -257,6 +264,10 @@ export async function parcelsRoutes(app: FastifyInstance) {
                  LEFT JOIN LATERAL (
                      SELECT array_agg(DISTINCT signal_type) AS types
                      FROM parcel_signals ps WHERE ps.parcel_id = p.id
+                       -- pre-foreclosure only counts while the sale date is still
+                       -- pending (a past auction isn't "pre" anything) so the farm
+                       -- filter stays honest. Other signal types are unaffected.
+                       AND (ps.signal_type <> 'pre_foreclosure' OR ps.event_date >= current_date)
                  ) sig ON true
                  WHERE p.geom && poly.g
                    AND ST_Within(ST_PointOnSurface(p.geom), poly.g)
