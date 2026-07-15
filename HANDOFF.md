@@ -127,6 +127,52 @@ transcription artifacts; give layman step-by-step for anything he must do):**
 
 ---
 
+## 3b. THE TWO-SESSION CONTRACT (ratified 2026-07-15 — Frederick's order after coordination overlap)
+
+**Why this exists:** both sessions drifted into county-hunting and Frederick became the message
+bus; verdicts crossed (per-office TP flakiness minted contradictions). This contract is the
+permanent separation of duties. It survives compaction — re-read it before any cross-lane work.
+
+**THE MINER (data session, "TAPOWNER SESSION2"):** owns everything county-data — hunts, bulk
+loads, county verdicts, `data/texas_county_system_map.md` (the ONLY place verdicts change, with
+evidence + date), QA/repairs, the records-request list, `data/improvement_labels_seen.md`, and
+running the improvement_tags materialization pass. Sole writer of bulk DB changes; any deliberate
+record-nulling is logged in PROGRESS **before** anyone reports upward. Never deploys, never
+touches api/src|mobile/|web/, never mass-harvests per-property APIs.
+
+**THE PRODUCT (app session):** owns everything product — api/src, mobile/, web/, deploys,
+billing/App Store, the fill-on-blank runtime + FILL_SOURCES registry, the Reverse Prospecting
+filter UI/API, and `data/improvement_crosswalk.json` (content). **Does NOT hunt counties.**
+
+**The interfaces (the only cross-lane touchpoints):**
+1. **App-lane handoff (miner → product):** one line per county — FIPS | TP office | pid column |
+   sample pid → expected beds/baths, verified in a healthy window (TP backends are per-office and
+   flaky independently — 2-window rule before any verdict). Product wires it, deploys,
+   live-verifies the sample, replies "live."
+2. **Crosswalk loop (miner ↔ product):** miner logs unmapped improvement labels → product extends
+   the crosswalk → miner re-runs the tag pass. Raw labels are never modified.
+3. **Sessions message each other DIRECTLY** (ccd session messaging — proven). Frederick is NOT a
+   relay; he gets only money/business decisions, on-device build testing, and summaries.
+
+**Holdout policy (Frederick, 2026-07-15): NO PAID records requests.** $0-fee PIA emails are fine;
+paid ones are off the table. Remaining holdout counties are PARKED until `parcel_viewed` felt-gap
+events (~Jul-28 checkpoint) prove users actually hit those blanks. The $0.003/record vendor stays
+DECLINED per the standing legal-risk position (unlicensed-scraping signal; on the attorney packet)
+— revisit only after attorney clearance; the fill-on-blank+cache architecture is the pre-agreed
+plug-in point if ever cleared.
+
+**The deliverable both lanes serve — the 16 canonical filter tags** (spec: IMPROVEMENT_TAXONOMY.md,
+machine truth: data/improvement_crosswalk.json): `pool`, `spa`, `casita` (guest house/ADU),
+`shed_workshop`, `boat_dock`, `barn_stable`, `rv` (parking), `garage`, `carport`, `solar`,
+`basement`, `fireplace`, `sport_court`, `waterfront` (derived; boat_dock implies it),
+`corner_lot` (derived), `single_story` (derived from stories). Plus the base facts every county
+load must attempt: bedrooms, baths_full, baths_half, living_area_sqft, year_built, stories,
+lot_size_sqft, assessed values, sale date/price. Miner captures raw labels VERBATIM into
+`parcels.improvements` on every load + materializes `parcels.improvement_tags`; product turns the
+tags into the filter UI. Neither lane blocks the other beyond these interfaces.
+
+---
+
 ## 4. COUNTY DATA MINING (the active campaign)
 
 **Statewide as of 2026-07-14: 6,512,561 parcels with sqft · 466,792 verified pools ·
