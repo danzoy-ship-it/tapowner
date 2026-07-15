@@ -3,7 +3,7 @@
 // Regenerate after any crosswalk edit:  cd api && npm run sync:crosswalk
 export const CROSSWALK = {
   "_comment": "Single source of truth mapping raw CAD improvement/feature labels -> TapOwner canonical tags. Both the loaders (Python, at re-tag time) and the app (TS) read THIS file. Matching: lowercase the raw label, regex-search each `match` pattern (case-insensitive); the tag applies if any `match` hits AND no `exclude` hits. A property's improvement_tags = the union of tags across all its raw improvement labels. When the data session logs a new/unmapped label in data/improvement_labels_seen.md, add a pattern here (app session owns this file). See IMPROVEMENT_TAXONOMY.md for the full spec.",
-  "version": 2,
+  "version": 3,
   "updated": "2026-07-15",
   "tags": {
     "pool": {
@@ -151,7 +151,9 @@ export const CROSSWALK = {
         "att gar",
         "det gar",
         "attached garage",
-        "detached garage"
+        "detached garage",
+        "^ag$",
+        "^gar$"
       ],
       "exclude": [
         "carport",
@@ -181,7 +183,9 @@ export const CROSSWALK = {
         "carport",
         "car port",
         "^resc",
-        "covered parking"
+        "covered parking",
+        "^cp$",
+        "^cpt$"
       ],
       "exclude": []
     },
