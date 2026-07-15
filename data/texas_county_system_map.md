@@ -335,9 +335,33 @@ Walker (notice PDFs), Jasper (FILE_INFO export lacks the improvement members).
   `load_travis_improvement_detail.py` → 100,419 beds / 307,689 baths / 47,566 pools.
   Sample: pid 100107 → 5bd/4ba/1half. **App session: de-register Travis from
   fill-on-blank — it's a bulk load now.**
-- **Montgomery** — API returns empty features (no rooms). CHECK for an equivalent
-  free `improvement_detail` bulk file on MCAD's site (Travis's door) before PIA —
-  same True Prodigy software, likely publishes the same coded-row file.
+- **Montgomery** (48339, 320K) — API returns empty features (no rooms). Currently
+  sqft-only in our DB (beds/baths/improv all 0) — biggest untapped True Prodigy
+  county. Travis's free `improvement_detail` bulk file is the model. Scouted
+  2026-07-15: mcad-tx.org is a **React SPA on Amazon S3** (NO wp-json, so the
+  wp-json media trick fails), portal at `montgomery.prodigycad.com`, exemptions via
+  justappraised.com. Homepage nav is client-rendered (curl sees only CSS chunks);
+  the data-download page, if any, needs browser discovery of the SPA routes
+  (try /reports, /forms, /data, /public-information) or reading the JS bundle
+  (static/js/*.js) for hardcoded file/API URLs. If no free bulk exists, the True
+  Prodigy per-property API is app-lane (do NOT mass-harvest) → PIA for the roll.
+  **VERDICT (2026-07-15): NO free flat bulk file** — unlike Travis (WordPress
+  /largefiles), MCAD's site is an S3 SPA whose /data and /reports routes only
+  embed the interactive `montgomery.prodigycad.com` / `trueprodigy-taxtransparency.com`
+  portal (per-property, app-lane) plus an Open-Records-Request page. JS bundle has
+  no hardcoded .zip/.csv data URL. So Montgomery = **app-lane** (fill-on-blank, do
+  NOT mass-harvest) OR a $0-electronic-open-records request for the roll (parked
+  per the no-paid-PIA contract; worth trying as free electronic delivery later).
+- **Collin / Williamson / Montgomery / Hays improvements gap (scouted 2026-07-15)** —
+  all four are loaded with beds/baths/sqft but `improvements`=0, so they get NO
+  feature tags (garage/pool/shed/etc.) in the reverse-prospecting filters. Root
+  cause: their free sources are **property-SUMMARY only** and lack segment-level
+  improvement TYPE lists. Collin's state-portal dataset (data.texas.gov
+  `vffy-snc6`) carries only `imprvclasscd`/`imprvpoolflag` (pool captured; no
+  garage/shed segments); Williamson & Montgomery aren't on data.texas.gov at all.
+  Enriching them needs each CAD's certified-roll IMPROVEMENT_DETAIL export (PACS
+  fixed-width or True Prodigy bulk), not the summary feed. Higher-value than new
+  small counties (≈1.1M parcels combined) but each is a separate bulk-file hunt.
 - **McLennan** (48309) — RECORDS-REQUEST: TP report categories all 204 (no bulk),
   and our stored ids don't resolve as TP pids (no geoID→pid crosswalk available).
   A certified-roll PIA yields both the beds AND the crosswalk.
