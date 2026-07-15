@@ -147,11 +147,39 @@ def main():
         print("dry-run: label map built; skipping the batched tagging pass")
         return
 
+    # ---- Recompute mode: for a full re-tag after the crosswalk changes, null
+    # the column first (batched) so the resumable IS NULL filter reprocesses
+    # every parcel. Default (no flag) RESUMES — only untagged rows are touched,
+    # so the pass survives the 10-min background cap across invocations.
+    recompute = "--recompute" in sys.argv
+
+    # Optional --id-lo / --id-hi bound the pass to one id band, e.g. a single
+    # county after a crosswalk change: --recompute --id-lo 197374 --id-hi 906914.
+    def _arg(name):
+        if name in sys.argv:
+            return int(sys.argv[sys.argv.index(name) + 1])
+        return None
+    arg_lo, arg_hi = _arg("--id-lo"), _arg("--id-hi")
+
     # ---- Batched tagging (rule 3): 100K-id ranges, one txn each.
     lo, hi = retry_dml(lambda c: (lambda cu: (cu.execute(
         "SELECT min(id), max(id) FROM parcels WHERE improvements IS NOT NULL"), cu.fetchone())[1])(c.cursor()),
         "bounds")
-    print(f"tagging id range {lo:,}..{hi:,} in {BATCH:,}-id batches", flush=True)
+    if arg_lo is not None:
+        lo = max(lo, arg_lo)
+    if arg_hi is not None:
+        hi = min(hi, arg_hi)
+    print(f"tagging id range {lo:,}..{hi:,} in {BATCH:,}-id batches (recompute={recompute})", flush=True)
+
+    if recompute:
+        rstart = lo
+        while rstart <= hi:
+            rend = rstart + BATCH - 1
+            retry_dml(lambda c, s=rstart, e=rend: c.cursor().execute(
+                "UPDATE parcels SET improvement_tags = NULL WHERE id BETWEEN %s AND %s AND improvements IS NOT NULL",
+                (s, e)), f"reset@{rstart:,}")
+            rstart = rend + 1
+        print("recompute: cleared improvement_tags for a full re-tag", flush=True)
 
     total, t0, start = 0, time.time(), lo
     while start <= hi:
@@ -166,7 +194,8 @@ def main():
                          CROSS JOIN LATERAL jsonb_array_elements_text(p2.improvements) lbl
                          JOIN _label_tag_map m ON m.label = lower(trim(lbl))
                          CROSS JOIN LATERAL unnest(m.tags) t
-                         WHERE p2.improvements IS NOT NULL AND p2.id BETWEEN %s AND %s
+                         WHERE p2.improvements IS NOT NULL AND p2.improvement_tags IS NULL
+                           AND p2.id BETWEEN %s AND %s
                          GROUP BY p2.id) sub
                    WHERE p.id = sub.id""", (s, e))
             n = cur.rowcount
