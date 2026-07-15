@@ -9,6 +9,7 @@ import { getLatestSubscription, isSubscriptionUsable } from "../lib/entitlements
 import { getProductConfig } from "../lib/config.js";
 import { logEvent } from "../lib/events.js";
 import { tagsForParcel, tagLabel } from "../lib/improvementTags.js";
+import { deriveOwnerSignals } from "../lib/ownerSignals.js";
 import { fillPid, fillParcelAttrsInBackground } from "../cadattr/index.js";
 
 // Farm mode caps: a neighborhood farm is a few hundred homes. The result cap
@@ -66,7 +67,7 @@ export async function parcelsRoutes(app: FastifyInstance) {
                 // cosmetic -- the trace route re-checks and is the source of truth
                 // for charging -- so a null (grace-mode) viewer safely reads false.
                 `SELECT ${PARCEL_FIELDS},
-                        improvements, improvement_tags, has_casita, has_shed,
+                        improvements, improvement_tags, has_casita, has_shed, exemptions,
                         EXISTS (
                             SELECT 1 FROM user_traces ut
                             WHERE ut.user_id = $3 AND ut.parcel_id = parcels.id
@@ -120,6 +121,15 @@ export async function parcelsRoutes(app: FastifyInstance) {
             delete parcel.improvement_tags;
             delete parcel.has_casita;
             delete parcel.has_shed;
+
+            // "Likely to sell" owner signals: tenure (from last_sale_date) +
+            // senior/homestead (from Texas exemption codes). Raw exemptions stay
+            // server-side.
+            const signals = deriveOwnerSignals(parcel.exemptions, parcel.last_sale_date);
+            parcel.tenure_years = signals.tenure_years;
+            parcel.senior_owner = signals.senior_owner;
+            parcel.homestead = signals.homestead;
+            delete parcel.exemptions;
 
             // Felt-gap instrumentation (property-data API decision, 2026-07-14):
             // record what each opened card was missing so the real
@@ -227,6 +237,7 @@ export async function parcelsRoutes(app: FastifyInstance) {
                         p.living_area_sqft, p.bedrooms, p.baths_full, p.baths_half,
                         p.stories, p.year_built, p.has_pool,
                         p.has_casita, p.has_shed, p.improvements, p.improvement_tags,
+                        p.last_sale_date, p.exemptions,
                         tr.payload AS trace_payload
                  FROM parcels p
                  CROSS JOIN poly
@@ -277,6 +288,7 @@ export async function parcelsRoutes(app: FastifyInstance) {
                             casita: r.has_casita,
                             shed: r.has_shed,
                         }),
+                        ...deriveOwnerSignals(r.exemptions, r.last_sale_date),
                         phones: payload ? (payload.phones ?? []).map((x) => x.number).filter(Boolean) : [],
                         emails: payload ? (payload.emails ?? []).map((x) => x.email).filter(Boolean) : [],
                     };
@@ -293,7 +305,7 @@ export async function parcelsRoutes(app: FastifyInstance) {
                     "Owner", "Property Address", "City", "ZIP",
                     "Mailing Address", "Mailing City", "Mailing State", "Mailing ZIP", "Absentee",
                     "Sqft", "Beds", "Baths Full", "Baths Half", "Stories", "Year Built", "Pool",
-                    "Features", "Phones", "Emails",
+                    "Features", "Years Owned", "Senior 65+", "Homestead", "Phones", "Emails",
                 ];
                 const lines = [header.map(csvCell).join(",")];
                 for (const p of parcels) {
@@ -316,6 +328,9 @@ export async function parcelsRoutes(app: FastifyInstance) {
                             p.year_built ?? "",
                             p.has_pool === true ? "Yes" : p.has_pool === false ? "No" : "",
                             p.features.map(tagLabel).join("; "),
+                            p.tenure_years ?? "",
+                            p.senior_owner ? "Yes" : "",
+                            p.homestead ? "Yes" : "",
                             p.phones.join("; "),
                             p.emails.join("; "),
                         ]

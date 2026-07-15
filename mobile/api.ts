@@ -54,6 +54,11 @@ export interface ParcelDetail {
   // How many OTHER properties this owner holds (same owner name + same mailing
   // address, statewide). 0 or absent = none known.
   owner_portfolio_count?: number;
+  // "Likely to sell" owner signals (server-derived). tenure_years = years since
+  // last recorded sale; senior_owner = OV65 exemption; homestead = HS exemption.
+  tenure_years?: number | null;
+  senior_owner?: boolean;
+  homestead?: boolean;
 }
 
 export interface TierConfig {
@@ -369,6 +374,12 @@ export interface FarmParcel {
   // from county improvement records via the crosswalk. Optional so results
   // shaped by an older API stay valid.
   features?: string[];
+  // "Likely to sell" owner signals (server-derived; absent on older API):
+  // tenure_years = years since last recorded sale; senior_owner = OV65 exemption;
+  // homestead = owner-occupied (HS exemption).
+  tenure_years?: number | null;
+  senior_owner?: boolean;
+  homestead?: boolean;
   // Contacts the user already owns (traced) for this parcel.
   phones: string[];
   emails: string[];
@@ -419,6 +430,8 @@ export interface FarmCriteria {
   min_baths?: number;
   pool?: boolean;
   single_story?: boolean;
+  min_tenure_years?: number;
+  senior_owner?: boolean;
 }
 
 // Farm outreach letter: one AI-drafted letter for every home on the filtered

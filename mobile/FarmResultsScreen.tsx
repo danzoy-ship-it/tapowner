@@ -89,6 +89,9 @@ function rowFacts(p: FarmParcel): string {
   const extras = (p.features ?? []).filter((t) => t !== 'pool' && t !== 'single_story');
   for (const t of extras.slice(0, 3)) parts.push(tagLabel(t));
   if (extras.length > 3) parts.push(`+${extras.length - 3}`);
+  // "Likely to sell" signals — long tenure and senior owner both suggest a move.
+  if ((p.tenure_years ?? 0) >= 10) parts.push(`Owned ${p.tenure_years}y`);
+  if (p.senior_owner) parts.push('65+');
   return parts.join(' · ');
 }
 
@@ -111,6 +114,10 @@ export function FarmResultsScreen() {
   const [minBaths, setMinBaths] = useState(0);
   const [poolOnly, setPoolOnly] = useState(false);
   const [singleStory, setSingleStory] = useState(false);
+  // "Likely to sell" signal filters (SIGNALS_ROADMAP.md): min years owned, and
+  // senior-owner (OV65 exemption). 0 = off.
+  const [minTenure, setMinTenure] = useState(0);
+  const [seniorOnly, setSeniorOnly] = useState(false);
   // Selected canonical feature tags (AND semantics: a home must have them all).
   const [featureTags, setFeatureTags] = useState<Set<string>>(new Set());
   const [traced, setTraced] = useState<Record<number, Contact>>({});
@@ -122,7 +129,8 @@ export function FarmResultsScreen() {
 
   const minSqft = parseInt(minSqftText, 10) || 0;
   const filtersActive =
-    minSqft > 0 || minBeds > 0 || minBaths > 0 || poolOnly || singleStory || featureTags.size > 0;
+    minSqft > 0 || minBeds > 0 || minBaths > 0 || poolOnly || singleStory ||
+    minTenure > 0 || seniorOnly || featureTags.size > 0;
 
   // Feature chips only exist where the data does: count each tag across THIS
   // area's homes and offer only tags with at least one match (an unmined county
@@ -155,13 +163,15 @@ export function FarmResultsScreen() {
         const stories = p.stories ? parseFloat(p.stories) : NaN;
         if (stories !== 1) return false;
       }
+      if (minTenure > 0 && !((p.tenure_years ?? -1) >= minTenure)) return false;
+      if (seniorOnly && p.senior_owner !== true) return false;
       if (featureTags.size > 0) {
         const f = p.features ?? [];
         for (const t of featureTags) if (!f.includes(t)) return false;
       }
       return true;
     });
-  }, [result.parcels, filtersActive, minSqft, minBeds, minBaths, poolOnly, singleStory, featureTags]);
+  }, [result.parcels, filtersActive, minSqft, minBeds, minBaths, poolOnly, singleStory, minTenure, seniorOnly, featureTags]);
 
   const criteria: FarmCriteria = {
     ...(minSqft > 0 ? { min_sqft: minSqft } : {}),
@@ -169,6 +179,8 @@ export function FarmResultsScreen() {
     ...(minBaths > 0 ? { min_baths: minBaths } : {}),
     ...(poolOnly ? { pool: true } : {}),
     ...(singleStory ? { single_story: true } : {}),
+    ...(minTenure > 0 ? { min_tenure_years: minTenure } : {}),
+    ...(seniorOnly ? { senior_owner: true } : {}),
   };
 
   function isUnlocked(p: FarmParcel): boolean {
@@ -182,6 +194,8 @@ export function FarmResultsScreen() {
     setMinBaths(0);
     setPoolOnly(false);
     setSingleStory(false);
+    setMinTenure(0);
+    setSeniorOnly(false);
     setFeatureTags(new Set());
   }
 
@@ -567,8 +581,33 @@ export function FarmResultsScreen() {
               )}
             </View>
           </View>
+          <View style={styles.filterRow}>
+            <Text style={styles.filterLabel}>Owned</Text>
+            <View style={styles.chipRow}>
+              {[0, 10, 15, 20].map((n) => (
+                <TouchableOpacity
+                  key={n}
+                  style={[styles.chip, minTenure === n && styles.chipSelected]}
+                  onPress={() => setMinTenure(n)}
+                >
+                  <Text style={[styles.chipText, minTenure === n && styles.chipTextSelected]}>
+                    {n === 0 ? 'Any' : `${n}+ yrs`}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+              <TouchableOpacity
+                style={[styles.chip, seniorOnly && styles.chipSelected]}
+                onPress={() => setSeniorOnly(!seniorOnly)}
+              >
+                <Text style={[styles.chipText, seniorOnly && styles.chipTextSelected]}>
+                  Owner 65+
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
           <Text style={styles.filterHint}>
-            Homes missing a value are excluded while that filter is on.
+            Homes missing a value are excluded while that filter is on. "Owned" &
+            "65+" need county sale-date / exemption data (growing by county).
           </Text>
           <TouchableOpacity
             style={styles.applyButton}

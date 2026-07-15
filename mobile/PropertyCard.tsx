@@ -104,6 +104,16 @@ export function PropertyCard({
           </Text>
         </View>
       )}
+      {detail.senior_owner && (
+        <View style={[styles.badge, styles.badgeSenior]}>
+          <Text style={styles.badgeText}>Owner 65+</Text>
+        </View>
+      )}
+      {(detail.tenure_years ?? 0) >= 15 && (
+        <View style={[styles.badge, styles.badgeSenior]}>
+          <Text style={styles.badgeText}>Owned {detail.tenure_years}y</Text>
+        </View>
+      )}
     </View>
   );
 
@@ -218,6 +228,24 @@ export function PropertyCard({
               detail.last_sale_date
                 ? `${detail.last_sale_date.slice(0, 10)}${formatMoney(detail.last_sale_price) ? ` · ${formatMoney(detail.last_sale_price)}` : ''}`
                 : null
+            }
+          />
+          <DetailRow
+            label="Owned"
+            value={
+              detail.tenure_years != null
+                ? `${detail.tenure_years} year${detail.tenure_years === 1 ? '' : 's'}`
+                : null
+            }
+          />
+          <DetailRow
+            label="Owner"
+            value={
+              detail.senior_owner
+                ? `65+ exemption${detail.homestead ? ' · owner-occupied' : ''}`
+                : detail.homestead
+                  ? 'Owner-occupied (homestead)'
+                  : null
             }
           />
 
@@ -391,6 +419,9 @@ const styles = StyleSheet.create({
   },
   badgePortfolio: {
     backgroundColor: '#e0e7ff',
+  },
+  badgeSenior: {
+    backgroundColor: '#fef3c7',
   },
   badgeText: {
     fontSize: 12,

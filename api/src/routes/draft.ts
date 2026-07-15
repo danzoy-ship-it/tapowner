@@ -236,6 +236,11 @@ export async function draftRoutes(app: FastifyInstance) {
             return reply.code(400).send({ error: "Invalid template_id" });
         }
         const c = request.body.criteria ?? {};
+        // Whitelist ONLY physical/feature criteria into the letter. Seller-signal
+        // filters (tenure, senior_owner, and future distress/life-event signals)
+        // are deliberately EXCLUDED per the outreach-ethics rule (SIGNALS_ROADMAP.md
+        // / APP_BIBLE §8): the trigger can be a record, but the letter must never
+        // reveal the sensitive part. Do NOT add signal fields here.
         const criteria = {
             min_sqft: Number.isFinite(Number(c.min_sqft)) && Number(c.min_sqft) > 0 ? Math.floor(Number(c.min_sqft)) : undefined,
             min_beds: Number.isInteger(c.min_beds) && (c.min_beds as number) > 0 ? (c.min_beds as number) : undefined,
