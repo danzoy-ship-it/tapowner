@@ -3704,3 +3704,931 @@ Append-only log so the app session can extend the canonical crosswalk.
 | SARA/BCAD (PACS) | Bexar | `WDD` | 6131 |
 | SARA/BCAD (PACS) | Bexar | `WD` | 3768 |
 | SARA/BCAD (PACS) | Bexar | `W` | 2 |
+| PACS | fips 48477 | `Storage Area` | 27017 |
+| PACS | fips 48477 | `Open Porch` | 25731 |
+| PACS | fips 48477 | `Main Area` | 25517 |
+| PACS | fips 48477 | `Roof Only Area` | 10518 |
+| PACS | fips 48477 | `Uncovered Patio Concrete` | 10460 |
+| PACS | fips 48477 | `Shed Area` | 9320 |
+| PACS | fips 48477 | `Garage Area` | 7090 |
+| PACS | fips 48477 | `Wooddeck` | 6785 |
+| PACS | fips 48477 | `Barn Area` | 5386 |
+| PACS | fips 48477 | `Main Area 2` | 3276 |
+| PACS | fips 48477 | `Roofed-wooddeck` | 2862 |
+| PACS | fips 48477 | `Carport` | 2218 |
+| PACS | fips 48477 | `Covered Patio` | 2134 |
+| PACS | fips 48477 | `Paving-concrete` | 1513 |
+| PACS | fips 48477 | `Uncovered Patio Brick` | 1336 |
+| PACS | fips 48477 | `Swimming Pool` | 1192 |
+| PACS | fips 48477 | `Screened Porch` | 1026 |
+| PACS | fips 48477 | `Detached Garage` | 951 |
+| PACS | fips 48477 | `Canopy` | 796 |
+| PACS | fips 48477 | `Living Quarters` | 627 |
+| PACS | fips 48477 | `Loft - Average Quality` | 602 |
+| PACS | fips 48477 | `Office Area - Average Qua` | 393 |
+| PACS | fips 48477 | `Uncovered Peagravel Patio` | 364 |
+| PACS | fips 48477 | `Main Area Annex` | 261 |
+| PACS | fips 48477 | `Paving-asphalt` | 236 |
+| PACS | fips 48477 | `Balcony` | 213 |
+| PACS | fips 48477 | `Breezway` | 186 |
+| PACS | fips 48477 | `Loading Dock` | 109 |
+| PACS | fips 48477 | `Attached Garage` | 97 |
+| PACS | fips 48477 | `Tennis Court` | 60 |
+| PACS | fips 48477 | `Walk-in Cooler` | 29 |
+| PACS | fips 48477 | `Main Area - 3rd Fl.` | 27 |
+| PACS | fips 48477 | `Gas Canopy - Good Quality` | 25 |
+| PACS | fips 48477 | `Breezeway` | 24 |
+| PACS | fips 48477 | `Loft - Low Quality` | 17 |
+| PACS | fips 48477 | `Loft - Good Quality` | 17 |
+| PACS | fips 48477 | `Basement Area-unfinished` | 15 |
+| PACS | fips 48477 | `Gas Canopy - Average Qual` | 14 |
+| PACS | fips 48477 | `Mechanical Room` | 14 |
+| PACS | fips 48477 | `Catwalk` | 8 |
+| PACS | fips 48477 | `Walk-in Freezer` | 7 |
+| PACS | fips 48477 | `Atrium` | 7 |
+| PACS | fips 48477 | `Basement Area-finished` | 7 |
+| PACS | fips 48477 | `Office Area - Low Quality` | 6 |
+| PACS | fips 48477 | `Gas Canopy - Low Quality` | 5 |
+| PACS | fips 48477 | `Covered Dock` | 4 |
+| PACS | fips 48477 | `Office Area - Good Qualit` | 4 |
+| PACS | fips 48477 | `Boat Dock` | 3 |
+| PACS | fips 48477 | `Basement` | 3 |
+| PACS | fips 48477 | `Main Area - 4th Fl.` | 2 |
+| PACS | fips 48477 | `Atm Building - Good Quali` | 2 |
+| PACS | fips 48477 | `Atm Building - Low Qualit` | 2 |
+| PACS | fips 48477 | `Parking Lot` | 1 |
+| PACS | fips 48477 | `ANY TYPE` | 1 |
+| PACS | fips 48477 | `Atm Building - Average Qu` | 1 |
+| PACS | fips 48165 | `PORCH` | 11491 |
+| PACS | fips 48165 | `STORAGE` | 8045 |
+| PACS | fips 48165 | `LIVING AREA` | 6918 |
+| PACS | fips 48165 | `COMMERCIAL` | 4377 |
+| PACS | fips 48165 | `CARPORT` | 4088 |
+| PACS | fips 48165 | `BARN` | 3126 |
+| PACS | fips 48165 | `ATTACHED GARAGE` | 2991 |
+| PACS | fips 48165 | `MH UTILITIES` | 2192 |
+| PACS | fips 48165 | `MOBILE HOME` | 2133 |
+| PACS | fips 48165 | `SHED` | 1911 |
+| PACS | fips 48165 | `DOUBLE WIDE MH` | 1154 |
+| PACS | fips 48165 | `PRE-FAB CARPORT` | 988 |
+| PACS | fips 48165 | `DG` | 700 |
+| PACS | fips 48165 | `MH ADDITION` | 308 |
+| PACS | fips 48165 | `ATTACHED STORAGE` | 137 |
+| PACS | fips 48165 | `SWIMMING POOL` | 122 |
+| PACS | fips 48165 | `FINISHED BASEMENT` | 114 |
+| PACS | fips 48165 | `RV HOOKUP` | 50 |
+| PACS | fips 48165 | `WOOD DECK` | 42 |
+| PACS | fips 48165 | `OUTDOOR KITCHEN` | 30 |
+| PACS | fips 48165 | `PAVING` | 29 |
+| PACS | fips 48165 | `12" FENCE` | 22 |
+| PACS | fips 48165 | `CORRALS` | 20 |
+| PACS | fips 48165 | `PATIO` | 16 |
+| PACS | fips 48165 | `LA` | 12 |
+| PACS | fips 48165 | `AG` | 10 |
+| PACS | fips 48165 | `BALL PARK LIGHTS` | 9 |
+| PACS | fips 48165 | `GRAIN BIN` | 9 |
+| PACS | fips 48165 | `POOL` | 7 |
+| PACS | fips 48165 | `PARK EQUIPMENT` | 6 |
+| PACS | fips 48165 | `TANK ABOVE GROUND` | 4 |
+| PACS | fips 48165 | `BLEACHERS` | 4 |
+| PACS | fips 48165 | `GRAIN BINS` | 4 |
+| PACS | fips 48165 | `LIVING AREA ADDITION` | 4 |
+| PACS | fips 48165 | `BUILDING` | 4 |
+| PACS | fips 48165 | `EQUIPMENT` | 3 |
+| PACS | fips 48165 | `FENCE 6'` | 3 |
+| PACS | fips 48165 | `FLAG POLE` | 3 |
+| PACS | fips 48165 | `EXCEPTIONAL` | 3 |
+| PACS | fips 48165 | `STG BINS IN BUSHEL CAPACI` | 3 |
+| PACS | fips 48165 | `RESTROOMS` | 3 |
+| PACS | fips 48165 | `HOTEL` | 2 |
+| PACS | fips 48165 | `ENCLOSED PORCH` | 2 |
+| PACS | fips 48165 | `DUMP PIT` | 2 |
+| PACS | fips 48165 | `LIFT` | 2 |
+| PACS | fips 48165 | `ASPHALT` | 2 |
+| PACS | fips 48165 | `DUGOUTS` | 2 |
+| PACS | fips 48165 | `WATER TOWER` | 1 |
+| PACS | fips 48165 | `TENNIS COURT` | 1 |
+| PACS | fips 48165 | `ELEVATOR` | 1 |
+| PACS | fips 48165 | `FENCE 5'` | 1 |
+| PACS | fips 48165 | `TANK UNDERGROUND` | 1 |
+| PACS | fips 48165 | `PUMP` | 1 |
+| PACS | fips 48165 | `TALL LEG 80'` | 1 |
+| PACS | fips 48165 | `RESIDENCE FLAT/VALUE` | 1 |
+| PACS | fips 48165 | `HOPPER` | 1 |
+| PACS | fips 48165 | `TOWER` | 1 |
+| PACS | fips 48165 | `SINGLE COMPUTING` | 1 |
+| PACS | fips 48165 | `MF+   COMMERICAL METAL` | 1 |
+| PACS | fips 48127 | `MAIN AREA` | 6195 |
+| PACS | fips 48127 | `ROOFLINE COVERED PORCH` | 3686 |
+| PACS | fips 48127 | `SHD` | 2047 |
+| PACS | fips 48127 | `MOBILE HOME` | 1606 |
+| PACS | fips 48127 | `WDSHDDIRT` | 1575 |
+| PACS | fips 48127 | `STORAGE AVG` | 1338 |
+| PACS | fips 48127 | `STORAGE GOOD` | 1213 |
+| PACS | fips 48127 | `STORAGE FAIR` | 885 |
+| PACS | fips 48127 | `STORAGE EXC` | 672 |
+| PACS | fips 48127 | `WDDKFRQUAL` | 642 |
+| PACS | fips 48127 | `CANOPY` | 557 |
+| PACS | fips 48127 | `CRPT SIM TO HSE` | 531 |
+| PACS | fips 48127 | `WDDKRFFRQUAL` | 498 |
+| PACS | fips 48127 | `ADDITION LOW` | 319 |
+| PACS | fips 48127 | `CONCRETE` | 274 |
+| PACS | fips 48127 | `SHOP WAREHOUSE` | 270 |
+| PACS | fips 48127 | `STORAGE IN/SAME AS HOUSE` | 260 |
+| PACS | fips 48127 | `ADDITION FAIR` | 228 |
+| PACS | fips 48127 | `RECREATIONAL VEH PARK IMP` | 180 |
+| PACS | fips 48127 | `1/2WALL SCRN PORCH` | 164 |
+| PACS | fips 48127 | `WDDKRFAVGQUAL` | 157 |
+| PACS | fips 48127 | `ATT GAR FIN-2` | 144 |
+| PACS | fips 48127 | `WDDKAVGQUAL` | 142 |
+| PACS | fips 48127 | `ATT GAR FIN-1` | 130 |
+| PACS | fips 48127 | `FENCE` | 125 |
+| PACS | fips 48127 | `FULL TWO STORY` | 120 |
+| PACS | fips 48127 | `COVERED CUSTOM PATIO` | 111 |
+| PACS | fips 48127 | `1 & 1/2 STORY` | 95 |
+| PACS | fips 48127 | `OFFICE/WAREHOUSE/SHOP` | 91 |
+| PACS | fips 48127 | `ADDITION AVERAGE` | 79 |
+| PACS | fips 48127 | `OPEN PORCH 1/3 BASE VALUE` | 73 |
+| PACS | fips 48127 | `ASPHALT` | 72 |
+| PACS | fips 48127 | `FIREPLACE-GOOD QUAL` | 66 |
+| PACS | fips 48127 | `CONCRETE SLAB/WALKWAY` | 65 |
+| PACS | fips 48127 | `FIREPLACE-EXCEL QUAL` | 58 |
+| PACS | fips 48127 | `SWIMMING POOL AVERAGE QUA` | 44 |
+| PACS | fips 48127 | `CARPORT FRAME CLASS 1` | 43 |
+| PACS | fips 48127 | `BALCONY` | 42 |
+| PACS | fips 48127 | `GATE-SOLAR POWERED` | 42 |
+| PACS | fips 48127 | `POOL AVG QUAL` | 40 |
+| PACS | fips 48127 | `MOBILE HOME PARK IMPROVEM` | 36 |
+| PACS | fips 48127 | `CHURCH` | 35 |
+| PACS | fips 48127 | `ENCL PORCH` | 33 |
+| PACS | fips 48127 | `POOL LOW QUAL` | 33 |
+| PACS | fips 48127 | `CHAINLINK FENCE 6FT` | 26 |
+| PACS | fips 48127 | `BLACKTOP DRIVEWAY` | 25 |
+| PACS | fips 48127 | `MOTEL` | 23 |
+| PACS | fips 48127 | `GARAPT/POOR2ND` | 22 |
+| PACS | fips 48127 | `ADDDITION CLASS 1` | 22 |
+| PACS | fips 48127 | `STORAGE FRAME CLASS 1` | 22 |
+| PACS | fips 48127 | `WOOD FENCE 6FT` | 21 |
+| PACS | fips 48127 | `WDDKRFGDQUAL` | 21 |
+| PACS | fips 48127 | `BREEZEWAY` | 21 |
+| PACS | fips 48127 | `OPEN CUSTOM PATIO` | 21 |
+| PACS | fips 48127 | `PATIO` | 21 |
+| PACS | fips 48127 | `DET GAR FIN-2` | 20 |
+| PACS | fips 48127 | `CONCRETE DRIVE/PARKING` | 18 |
+| PACS | fips 48127 | `DET GAR FIN-1` | 16 |
+| PACS | fips 48127 | `ATT GAR UNF-2` | 16 |
+| PACS | fips 48127 | `2ND FLOOR FULL VALUE OF B` | 15 |
+| PACS | fips 48127 | `STORAGE 2/3 BASE VALUE` | 15 |
+| PACS | fips 48127 | `WDDKGDQUAL` | 14 |
+| PACS | fips 48127 | `GRAVEL` | 14 |
+| PACS | fips 48127 | `CHAINLINK FENCE 4FT` | 13 |
+| PACS | fips 48127 | `ATT GAR UNF-1` | 13 |
+| PACS | fips 48127 | `ADDITION EXC` | 13 |
+| PACS | fips 48127 | `STORAGE MASONRY CLASS 1` | 12 |
+| PACS | fips 48127 | `PUBLIC BUILDING SCHOOL` | 11 |
+| PACS | fips 48127 | `DET GAR UNF-2` | 11 |
+| PACS | fips 48127 | `POOL EXC QUAL` | 11 |
+| PACS | fips 48127 | `PERGOLA/ OUTDOOR KITCHEN` | 11 |
+| PACS | fips 48127 | `HANGER` | 11 |
+| PACS | fips 48127 | `JACQUZI/HUT TUB-GOOD QUAL` | 10 |
+| PACS | fips 48127 | `PORCH WOOD CLASS 1` | 9 |
+| PACS | fips 48127 | `DET GAR UNF-1` | 9 |
+| PACS | fips 48127 | `GATE ENTRANCE 2` | 9 |
+| PACS | fips 48127 | `METAL MATERIAL FENCE` | 8 |
+| PACS | fips 48127 | `OPEN FRAME SHED CLASS 1` | 8 |
+| PACS | fips 48127 | `CANOPY COVER CLASS 1` | 7 |
+| PACS | fips 48127 | `CAR WASH` | 6 |
+| PACS | fips 48127 | `FRATERNAL BUILDING` | 6 |
+| PACS | fips 48127 | `OPEN PORCH FRA/STE CLASS` | 6 |
+| PACS | fips 48127 | `MULTIPLEX MASONRY CLASS 2` | 6 |
+| PACS | fips 48127 | `OPEN STEEL SHED CLASS 1` | 6 |
+| PACS | fips 48127 | `BALCONY 1/3 VALUE OF BASE` | 5 |
+| PACS | fips 48127 | `SILOS-GRAIN BINS` | 5 |
+| PACS | fips 48127 | `INDUSTRIAL MANUFACTURING` | 5 |
+| PACS | fips 48127 | `STORAGE METAL CLASS 1` | 5 |
+| PACS | fips 48127 | `ADDITION CLASS 2` | 4 |
+| PACS | fips 48127 | `BRICK FENCE` | 4 |
+| PACS | fips 48127 | `CONCRETE EXC` | 4 |
+| PACS | fips 48127 | `BRICK AND STEEL FENCE` | 4 |
+| PACS | fips 48127 | `STORAGE METAL CLASS 2` | 4 |
+| PACS | fips 48127 | `DECK PORCH WOOD CLASS 1` | 4 |
+| PACS | fips 48127 | `STORAGE MASONRY CLASS 2` | 4 |
+| PACS | fips 48127 | `SWIMMING POOL UNIQUE QUAL` | 4 |
+| PACS | fips 48127 | `WATER SYSTEMS` | 4 |
+| PACS | fips 48127 | `PORCH WOOD CLASS 3` | 4 |
+| PACS | fips 48127 | `3RD FLOOR FULL VALUE OF B` | 4 |
+| PACS | fips 48127 | `MULTI-PLEX VENEER CLASS 5` | 4 |
+| PACS | fips 48127 | `CANOPY COVER CLASS 2` | 4 |
+| PACS | fips 48127 | `CARPORT STEEL CLASS 1` | 3 |
+| PACS | fips 48127 | `ADDITION CLASS 3` | 3 |
+| PACS | fips 48127 | `WOOD FENCE 4FT` | 3 |
+| PACS | fips 48127 | `ADDITION` | 3 |
+| PACS | fips 48127 | `BSMTFIN ONE ROOM` | 3 |
+| PACS | fips 48127 | `NURSING HOME` | 3 |
+| PACS | fips 48127 | `SCREEN PORCH WOOD FRAME` | 3 |
+| PACS | fips 48127 | `DOCK FLOOR` | 3 |
+| PACS | fips 48127 | `STORAGE METAL CLASS 3` | 3 |
+| PACS | fips 48127 | `TENNIS COURT` | 3 |
+| PACS | fips 48127 | `GATE-ELECTRIC POWERED` | 3 |
+| PACS | fips 48127 | `GATE ENTRANCE 4` | 3 |
+| PACS | fips 48127 | `WDDKRFEXCQUAL` | 3 |
+| PACS | fips 48127 | `GATE ENTRANCE 3` | 3 |
+| PACS | fips 48127 | `OPEN PORCH FULL BASE VALU` | 3 |
+| PACS | fips 48127 | `COMMERCIAL STEEL PRE-FAB` | 3 |
+| PACS | fips 48127 | `OVERHANG 1/3 BASE VALUE` | 2 |
+| PACS | fips 48127 | `PORCH MASONRY 1` | 2 |
+| PACS | fips 48127 | `PORCH VENEER CLASS 1` | 2 |
+| PACS | fips 48127 | `MORTUARY` | 2 |
+| PACS | fips 48127 | `GARAGE MASONRY ATTACHED` | 2 |
+| PACS | fips 48127 | `SIGN` | 2 |
+| PACS | fips 48127 | `CARPORT 1/2 VALUE OF BASE` | 2 |
+| PACS | fips 48127 | `ELAVATOR` | 2 |
+| PACS | fips 48127 | `SKEET/TRAP RANGE-ELECTRON` | 2 |
+| PACS | fips 48127 | `AIRSTRIP FAIR-PAVED/CONCR` | 2 |
+| PACS | fips 48127 | `ADN` | 2 |
+| PACS | fips 48127 | `OPEN PORCH STEEL CLASS 3` | 2 |
+| PACS | fips 48127 | `OPEN PORCH STEEL CLASS 1` | 2 |
+| PACS | fips 48127 | `MULTI-PLEX FRAME CLASS 2` | 2 |
+| PACS | fips 48127 | `DECK PORCH FRAME CLASS 1` | 1 |
+| PACS | fips 48127 | `CANOPY COVER CLASS 4` | 1 |
+| PACS | fips 48127 | `COMMERCIAL VENEER CLASS 5` | 1 |
+| PACS | fips 48127 | `POST OFFICE` | 1 |
+| PACS | fips 48127 | `STORAGE VENEER CLASS 3` | 1 |
+| PACS | fips 48127 | `CARWASH VACCUM UNIT-LOW C` | 1 |
+| PACS | fips 48127 | `CONCRETE AVG` | 1 |
+| PACS | fips 48127 | `OPEN PORCH 1/2 BASE VALUE` | 1 |
+| PACS | fips 48127 | `GARAGE VENEER ATTACHED` | 1 |
+| PACS | fips 48127 | `BASEMENT` | 1 |
+| PACS | fips 48127 | `ENCLOSED STEEL SHED CLASS` | 1 |
+| PACS | fips 48127 | `MULTI PLEX VENEER CLASS 5` | 1 |
+| PACS | fips 48127 | `WAREHOUSE STEEL PRE-FAB C` | 1 |
+| PACS | fips 48127 | `GARAGE FRAME ATTACHED 1` | 1 |
+| PACS | fips 48127 | `CARPORT WOOD CLASS 1` | 1 |
+| PACS | fips 48127 | `1/2WALL GLS PORCH` | 1 |
+| PACS | fips 48127 | `JACQUZI/HOT TUB-LOW COST` | 1 |
+| PACS | fips 48127 | `GREENHOUSE AVG` | 1 |
+| PACS | fips 48127 | `STABLES CLASS C- M&S GUID` | 1 |
+| PACS | fips 48127 | `SKEET/TRAP RANGE NON ELEC` | 1 |
+| PACS | fips 48127 | `WAREHOUSE VENEER CLASS 1` | 1 |
+| PACS | fips 48127 | `FUEL KIOSK` | 1 |
+| PACS | fips 48127 | `SCALE 100K LB CAPACITY` | 1 |
+| PACS | fips 48127 | `GARAGE MASONRY DETACHED` | 1 |
+| PACS | fips 48127 | `STORAGE MASONRY CLASS 3` | 1 |
+| PACS | fips 48127 | `OPEN STEEL SHED CLASS 3` | 1 |
+| PACS | fips 48127 | `TANK 17K GAL CAPACITY` | 1 |
+| PACS | fips 48127 | `ENCLOSED FRAME SHED CLASS` | 1 |
+| PACS | fips 48127 | `BSMNT UNFIN` | 1 |
+| PACS | fips 48127 | `GATE ENTRANCE  1` | 1 |
+| PACS | fips 48127 | `AIRSTRIP EXCELLENT-PAVED/` | 1 |
+| PACS | fips 48127 | `GREENHOUSE CLASS 2` | 1 |
+| PACS | fips 48127 | `GARAGE FRAME DETACHED` | 1 |
+| PACS | fips 48127 | `MOBILEHOME ADDN CLASS 1` | 1 |
+| PACS | fips 48127 | `MOBILEHOME ADDN CLASS 2` | 1 |
+| PACS | fips 48127 | `SWIMMING POOL GOOD QUAL` | 1 |
+| PACS | fips 48267 | `PORCH` | 5271 |
+| PACS | fips 48267 | `LIVING AREA` | 4165 |
+| PACS | fips 48267 | `STORAGE` | 3870 |
+| PACS | fips 48267 | `SHEDS` | 2856 |
+| PACS | fips 48267 | `CARPORT` | 1624 |
+| PACS | fips 48267 | `BARN` | 1156 |
+| PACS | fips 48267 | `COMMERCIAL` | 1062 |
+| PACS | fips 48267 | `PATIO` | 500 |
+| PACS | fips 48267 | `WOOD DECK` | 405 |
+| PACS | fips 48267 | `ATTACHED GARAGE` | 318 |
+| PACS | fips 48267 | `DETACHED GARAGE` | 317 |
+| PACS | fips 48267 | `POOL` | 78 |
+| PACS | fips 48267 | `PAVING` | 76 |
+| PACS | fips 48267 | `RVHOOKUP RESIDENTIAL` | 33 |
+| PACS | fips 48267 | `GREENHOUSE` | 17 |
+| PACS | fips 48267 | `ACAD CONV CODE: POOL` | 10 |
+| PACS | fips 48267 | `RV HOOKUPS` | 7 |
+| PACS | fips 48267 | `MAIN AREA` | 4 |
+| PACS | fips 48267 | `SHED` | 3 |
+| PACS | fips 48267 | `CANOPY` | 3 |
+| PACS | fips 48267 | `OPEN PORCH` | 1 |
+| PACS | fips 48267 | `GARAGE/SINGLE` | 1 |
+| PACS | fips 48165 | `PORCH` | 11491 |
+| PACS | fips 48165 | `STORAGE` | 8045 |
+| PACS | fips 48165 | `LIVING AREA` | 6918 |
+| PACS | fips 48165 | `COMMERCIAL` | 4377 |
+| PACS | fips 48165 | `CARPORT` | 4088 |
+| PACS | fips 48165 | `BARN` | 3126 |
+| PACS | fips 48165 | `ATTACHED GARAGE` | 2991 |
+| PACS | fips 48165 | `MH UTILITIES` | 2192 |
+| PACS | fips 48165 | `MOBILE HOME` | 2133 |
+| PACS | fips 48165 | `SHED` | 1911 |
+| PACS | fips 48165 | `DOUBLE WIDE MH` | 1154 |
+| PACS | fips 48165 | `PRE-FAB CARPORT` | 988 |
+| PACS | fips 48165 | `DG` | 700 |
+| PACS | fips 48165 | `MH ADDITION` | 308 |
+| PACS | fips 48165 | `ATTACHED STORAGE` | 137 |
+| PACS | fips 48165 | `SWIMMING POOL` | 122 |
+| PACS | fips 48165 | `FINISHED BASEMENT` | 114 |
+| PACS | fips 48165 | `RV HOOKUP` | 50 |
+| PACS | fips 48165 | `WOOD DECK` | 42 |
+| PACS | fips 48165 | `OUTDOOR KITCHEN` | 30 |
+| PACS | fips 48165 | `PAVING` | 29 |
+| PACS | fips 48165 | `12" FENCE` | 22 |
+| PACS | fips 48165 | `CORRALS` | 20 |
+| PACS | fips 48165 | `PATIO` | 16 |
+| PACS | fips 48165 | `LA` | 12 |
+| PACS | fips 48165 | `AG` | 10 |
+| PACS | fips 48165 | `BALL PARK LIGHTS` | 9 |
+| PACS | fips 48165 | `GRAIN BIN` | 9 |
+| PACS | fips 48165 | `POOL` | 7 |
+| PACS | fips 48165 | `PARK EQUIPMENT` | 6 |
+| PACS | fips 48165 | `TANK ABOVE GROUND` | 4 |
+| PACS | fips 48165 | `BLEACHERS` | 4 |
+| PACS | fips 48165 | `GRAIN BINS` | 4 |
+| PACS | fips 48165 | `LIVING AREA ADDITION` | 4 |
+| PACS | fips 48165 | `BUILDING` | 4 |
+| PACS | fips 48165 | `EQUIPMENT` | 3 |
+| PACS | fips 48165 | `FENCE 6'` | 3 |
+| PACS | fips 48165 | `FLAG POLE` | 3 |
+| PACS | fips 48165 | `EXCEPTIONAL` | 3 |
+| PACS | fips 48165 | `STG BINS IN BUSHEL CAPACI` | 3 |
+| PACS | fips 48165 | `RESTROOMS` | 3 |
+| PACS | fips 48165 | `HOTEL` | 2 |
+| PACS | fips 48165 | `ENCLOSED PORCH` | 2 |
+| PACS | fips 48165 | `DUMP PIT` | 2 |
+| PACS | fips 48165 | `LIFT` | 2 |
+| PACS | fips 48165 | `ASPHALT` | 2 |
+| PACS | fips 48165 | `DUGOUTS` | 2 |
+| PACS | fips 48165 | `WATER TOWER` | 1 |
+| PACS | fips 48165 | `TENNIS COURT` | 1 |
+| PACS | fips 48165 | `ELEVATOR` | 1 |
+| PACS | fips 48165 | `FENCE 5'` | 1 |
+| PACS | fips 48165 | `TANK UNDERGROUND` | 1 |
+| PACS | fips 48165 | `PUMP` | 1 |
+| PACS | fips 48165 | `TALL LEG 80'` | 1 |
+| PACS | fips 48165 | `RESIDENCE FLAT/VALUE` | 1 |
+| PACS | fips 48165 | `HOPPER` | 1 |
+| PACS | fips 48165 | `TOWER` | 1 |
+| PACS | fips 48165 | `SINGLE COMPUTING` | 1 |
+| PACS | fips 48165 | `MF+   COMMERICAL METAL` | 1 |
+| PACS | fips 48099 | `OPEN PORCH` | 37909 |
+| PACS | fips 48099 | `MAIN AREA` | 23586 |
+| PACS | fips 48099 | `STORAGE MARSHAL & SWIFT` | 15384 |
+| PACS | fips 48099 | `ATT FINISHED GARAGE` | 13417 |
+| PACS | fips 48099 | `BARN` | 11032 |
+| PACS | fips 48099 | `SITE VALUE` | 7419 |
+| PACS | fips 48099 | `PATIO` | 5465 |
+| PACS | fips 48099 | `WOOD DECK` | 2929 |
+| PACS | fips 48099 | `CARPORT` | 2905 |
+| PACS | fips 48099 | `STORY TWO` | 2731 |
+| PACS | fips 48099 | `STORAGE` | 2471 |
+| PACS | fips 48099 | `CONCRETE` | 2167 |
+| PACS | fips 48099 | `CARPORT FREE STANDING DIR` | 2047 |
+| PACS | fips 48099 | `DOUBLEWIDE` | 1214 |
+| PACS | fips 48099 | `SINGLEWIDE` | 1185 |
+| PACS | fips 48099 | `SWIMMING POOL` | 918 |
+| PACS | fips 48099 | `CARPORT FREE STANDING SLA` | 770 |
+| PACS | fips 48099 | `SCREEN PORCH` | 687 |
+| PACS | fips 48099 | `DET UNFINISHED GARAGE` | 628 |
+| PACS | fips 48099 | `CANOPY` | 606 |
+| PACS | fips 48099 | `ASPHALT` | 543 |
+| PACS | fips 48099 | `DET FINISHED GARAGE` | 470 |
+| PACS | fips 48099 | `ENCLOSED PORCH` | 443 |
+| PACS | fips 48099 | `PRE-FAB CARPORT2` | 330 |
+| PACS | fips 48099 | `GRAIN BINS` | 296 |
+| PACS | fips 48099 | `GLASS PORCH` | 287 |
+| PACS | fips 48099 | `GAZEBO` | 283 |
+| PACS | fips 48099 | `ADDITION` | 277 |
+| PACS | fips 48099 | `PRE-FAB CARPORT` | 261 |
+| PACS | fips 48099 | `STG OPEN PORCH` | 217 |
+| PACS | fips 48099 | `PERGOLA` | 201 |
+| PACS | fips 48099 | `PATIO COVER` | 117 |
+| PACS | fips 48099 | `ATT UNFINISHED GARAGE` | 115 |
+| PACS | fips 48099 | `BREEZEWAY` | 107 |
+| PACS | fips 48099 | `SHOP` | 80 |
+| PACS | fips 48099 | `STG COVERED PORCH` | 76 |
+| PACS | fips 48099 | `BASEMENT` | 53 |
+| PACS | fips 48099 | `OPEN PORCH SHOP` | 27 |
+| PACS | fips 48099 | `BALCONY` | 26 |
+| PACS | fips 48099 | `STORY THREE` | 24 |
+| PACS | fips 48099 | `MOBILE HOME PARK` | 23 |
+| PACS | fips 48099 | `STAND ALONE GARAGE` | 11 |
+| PACS | fips 48099 | `BUILDING` | 8 |
+| PACS | fips 48099 | `HORSE STABLE` | 5 |
+| PACS | fips 48099 | `SOLAR DEVICE` | 5 |
+| PACS | fips 48099 | `POLLUTION CONTROL EQUIP` | 4 |
+| PACS | fips 48099 | `SCALES` | 1 |
+| PACS | fips 48099 | `STORY FOUR` | 1 |
+| PACS | fips 48099 | `RESIDENTIAL POND` | 1 |
+| PACS | fips 48055 | `COVERED PORCH (20% MAIN A` | 17764 |
+| PACS | fips 48055 | `MAIN AREA` | 17195 |
+| PACS | fips 48055 | `DETACHED STORAGE/UTILITY` | 16243 |
+| PACS | fips 48055 | `SHED` | 11686 |
+| PACS | fips 48055 | `UTILITY` | 11239 |
+| PACS | fips 48055 | `PATIO COVERED (20% OF MAI` | 7876 |
+| PACS | fips 48055 | `MOBILE HOME` | 6553 |
+| PACS | fips 48055 | `ATTACHED GARAGE (40% OF M` | 5091 |
+| PACS | fips 48055 | `WOOD DECK` | 4470 |
+| PACS | fips 48055 | `DETACHED CARPORT` | 3672 |
+| PACS | fips 48055 | `ATTACHED STORAGE/UTILITY` | 3046 |
+| PACS | fips 48055 | `PATIO OPEN-NO ROOF (5% OF` | 3008 |
+| PACS | fips 48055 | `BARN` | 2615 |
+| PACS | fips 48055 | `ATTACHED CARPORT (25% OF` | 1864 |
+| PACS | fips 48055 | `MAIN AREA SECOND FLOOR (8` | 1861 |
+| PACS | fips 48055 | `DETACHED GARAGE` | 1743 |
+| PACS | fips 48055 | `ENCLOSED PORCH (78% OF MA` | 858 |
+| PACS | fips 48055 | `SCREEN PORCH (30% OF MAIN` | 727 |
+| PACS | fips 48055 | `ENCLOSED GARAGE (88% OF M` | 726 |
+| PACS | fips 48055 | `CONCRETE SLAB` | 713 |
+| PACS | fips 48055 | `SWIMMING POOL` | 660 |
+| PACS | fips 48055 | `COVERED PORCH SECOND FLOO` | 465 |
+| PACS | fips 48055 | `CONCRETE DRIVE` | 352 |
+| PACS | fips 48055 | `GLASS PORCH ENCLOSED (45%` | 348 |
+| PACS | fips 48055 | `BLACK TOP` | 332 |
+| PACS | fips 48055 | `MH ADDN AVERAGE` | 321 |
+| PACS | fips 48055 | `MH ADDN GOOD` | 302 |
+| PACS | fips 48055 | `GREEN HOUSE` | 283 |
+| PACS | fips 48055 | `GREEN ENERGY-SOLAR-WIND` | 258 |
+| PACS | fips 48055 | `MAIN AREA STORY AND HALF` | 226 |
+| PACS | fips 48055 | `CANOPY COVER` | 204 |
+| PACS | fips 48055 | `PATIO COVERED 2nd (20% OF` | 163 |
+| PACS | fips 48055 | `MAIN AREA LOFT` | 155 |
+| PACS | fips 48055 | `MH ADDN FAIR` | 130 |
+| PACS | fips 48055 | `GAZEBO` | 127 |
+| PACS | fips 48055 | `TANKS` | 79 |
+| PACS | fips 48055 | `FENCE (CHAIN LINK)` | 70 |
+| PACS | fips 48055 | `FENCE (ROCK/BRICK)` | 68 |
+| PACS | fips 48055 | `MISCELLANEOUS` | 64 |
+| PACS | fips 48055 | `MAIN AREA THIRD FLOOR (85` | 50 |
+| PACS | fips 48055 | `BASEMENT UNFINISHED` | 44 |
+| PACS | fips 48055 | `GRAVEL PARKING` | 37 |
+| PACS | fips 48055 | `ATTACHED 2nd FL STORAGE/U` | 27 |
+| PACS | fips 48055 | `RESTROOMS` | 26 |
+| PACS | fips 48055 | `FENCE (IRON/METAL)` | 25 |
+| PACS | fips 48055 | `BASEMENT FINISHED` | 23 |
+| PACS | fips 48055 | `CONCRETE DRIVE HEAVY LOAD` | 20 |
+| PACS | fips 48055 | `SCREEN PORCH SECOND FLOOR` | 16 |
+| PACS | fips 48055 | `FENCE (WOOD PRIVACY)` | 12 |
+| PACS | fips 48055 | `TENNIS COURTS` | 10 |
+| PACS | fips 48055 | `CONCRETE WALK` | 8 |
+| PACS | fips 48055 | `WAREHOUSE (40% OF MAIN AR` | 8 |
+| PACS | fips 48055 | `ATTACHED GARAGE-DIRT FLOO` | 1 |
+| PACS | fips 48501 | `CNPY` | 3021 |
+| PACS | fips 48501 | `LIVING AREA` | 2964 |
+| PACS | fips 48501 | `STORAGE` | 2769 |
+| PACS | fips 48501 | `COMMERCIAL` | 2313 |
+| PACS | fips 48501 | `CARPORT` | 1399 |
+| PACS | fips 48501 | `SHED` | 1166 |
+| PACS | fips 48501 | `BARN` | 1126 |
+| PACS | fips 48501 | `ATTACHED GARAGE` | 1013 |
+| PACS | fips 48501 | `MH` | 700 |
+| PACS | fips 48501 | `PORCHES` | 320 |
+| PACS | fips 48501 | `WD` | 237 |
+| PACS | fips 48501 | `DET GARAGE` | 192 |
+| PACS | fips 48501 | `RESIDENTIAL` | 173 |
+| PACS | fips 48501 | `UNK` | 92 |
+| PACS | fips 48501 | `STG` | 80 |
+| PACS | fips 48501 | `PENS` | 38 |
+| PACS | fips 48501 | `CP` | 36 |
+| PACS | fips 48501 | `POOL` | 34 |
+| PACS | fips 48501 | `COMM` | 22 |
+| PACS | fips 48501 | `APT` | 21 |
+| PACS | fips 48501 | `PAVING` | 13 |
+| PACS | fips 48501 | `AGF2` | 11 |
+| PACS | fips 48501 | `ADDN` | 6 |
+| PACS | fips 48501 | `GRH` | 4 |
+| PACS | fips 48501 | `GH` | 3 |
+| PACS | fips 48501 | `EP` | 3 |
+| PACS | fips 48501 | `WHSE` | 3 |
+| PACS | fips 48501 | `STR3` | 2 |
+| PACS | fips 48501 | `AGF1` | 2 |
+| PACS | fips 48501 | `LIGHT POLE` | 2 |
+| PACS | fips 48501 | `DGU2` | 2 |
+| PACS | fips 48501 | `CONCRETE RESIDENTIAL` | 1 |
+| PACS | fips 48501 | `TCL` | 1 |
+| PACS | fips 48501 | `TCR` | 1 |
+| PACS | fips 48501 | `RV HOOK UPS` | 1 |
+| PACS | fips 48501 | `RES` | 1 |
+| PACS | fips 48501 | `POOL LOW QUAL` | 1 |
+| PACS | fips 48501 | `SUPPORT` | 1 |
+| PACS | fips 48501 | `SIGN` | 1 |
+| PACS | fips 48501 | `BLDG` | 1 |
+| PACS | fips 48501 | `OUTDOOR KITCHEN` | 1 |
+| PACS | fips 48351 | `STORAGE BLDG` | 12224 |
+| PACS | fips 48351 | `COVERED PORCH` | 11084 |
+| PACS | fips 48351 | `CARPORT` | 9942 |
+| PACS | fips 48351 | `MAIN AREA` | 9248 |
+| PACS | fips 48351 | `OPEN PORCH` | 4395 |
+| PACS | fips 48351 | `WOODEN WALK` | 1820 |
+| PACS | fips 48351 | `DECKS` | 1288 |
+| PACS | fips 48351 | `SECOND MAIN AREA` | 1169 |
+| PACS | fips 48351 | `GARAGE` | 1159 |
+| PACS | fips 48351 | `CONCRETE DRIVE` | 980 |
+| PACS | fips 48351 | `CONCRETE SLAB` | 921 |
+| PACS | fips 48351 | `CONCRETE WALKWAY` | 642 |
+| PACS | fips 48351 | `SCREENED PORCH` | 466 |
+| PACS | fips 48351 | `BARN` | 349 |
+| PACS | fips 48351 | `BOATHOUSE` | 273 |
+| PACS | fips 48351 | `ENCLOSED PORCH WITH MINIM` | 269 |
+| PACS | fips 48351 | `EV-IMSMALL POOL` | 133 |
+| PACS | fips 48351 | `BREEZEWAY` | 86 |
+| PACS | fips 48351 | `PARKING AREA/ CONCRETE` | 86 |
+| PACS | fips 48351 | `ENCLOSED PORCH WITH ROUGH` | 76 |
+| PACS | fips 48351 | `RV SPACES` | 68 |
+| PACS | fips 48351 | `ENCLOSED PORCH WITH FINIS` | 54 |
+| PACS | fips 48351 | `M H` | 53 |
+| PACS | fips 48351 | `GAZEBO` | 41 |
+| PACS | fips 48351 | `MISC` | 40 |
+| PACS | fips 48351 | `ASPHALT` | 40 |
+| PACS | fips 48351 | `PATIOS` | 36 |
+| PACS | fips 48351 | `CANOPY` | 33 |
+| PACS | fips 48351 | `BOAT HOUSE` | 32 |
+| PACS | fips 48351 | `PIERS` | 31 |
+| PACS | fips 48351 | `CHICHEN HOUSES` | 22 |
+| PACS | fips 48351 | `PARKING LOT` | 8 |
+| PACS | fips 48351 | `DRIVEWAY` | 8 |
+| PACS | fips 48351 | `CNCRETE DRIVEWAY` | 4 |
+| PACS | fips 48351 | `PARKING AREA` | 2 |
+| PACS | fips 48351 | `TENNIS COURTS` | 1 |
+| PACS | fips 48351 | `ST BLDG` | 1 |
+| PACS | fips 48119 | `RES` | 10844 |
+| PACS | fips 48119 | `SHED` | 3957 |
+| PACS | fips 48119 | `BARN` | 1308 |
+| PACS | fips 48119 | `COMMERCIAL` | 936 |
+| PACS | fips 48119 | `MAIN AREA` | 317 |
+| PACS | fips 48119 | `CONC 1` | 140 |
+| PACS | fips 48119 | `MH` | 10 |
+| PACS | fips 48119 | `CONC 3` | 8 |
+| PACS | fips 48119 | `CONC 2` | 3 |
+| PACS | fips 48119 | `STORAGE SHED` | 1 |
+| PACS | fips 48119 | `WORKSHOP` | 1 |
+| PACS | fips 48119 | `WOOD DECK` | 1 |
+| PACS | fips 48119 | `WOOD PORCH` | 1 |
+| PACS | fips 48119 | `COVERED PORCH` | 1 |
+| PACS | fips 48119 | `ATTACHED GARAGE` | 1 |
+| PACS | fips 48335 | `CANOPY` | 5574 |
+| PACS | fips 48335 | `STORAGE` | 4226 |
+| PACS | fips 48335 | `LIVING AREA` | 3760 |
+| PACS | fips 48335 | `CARPORT` | 3073 |
+| PACS | fips 48335 | `COMMERCIAL` | 1559 |
+| PACS | fips 48335 | `SHEDS` | 1170 |
+| PACS | fips 48335 | `MOBILE HOME` | 702 |
+| PACS | fips 48335 | `AG` | 570 |
+| PACS | fips 48335 | `DETACHED GARAGE` | 539 |
+| PACS | fips 48335 | `BARN` | 525 |
+| PACS | fips 48335 | `PATIO` | 450 |
+| PACS | fips 48335 | `WOOD DECK` | 366 |
+| PACS | fips 48335 | `PAVING` | 141 |
+| PACS | fips 48335 | `SHOP` | 135 |
+| PACS | fips 48335 | `POOL` | 56 |
+| PACS | fips 48335 | `CANOPY COMMERCIAL` | 38 |
+| PACS | fips 48335 | `MULTI-FAMILY` | 11 |
+| PACS | fips 48335 | `BASEMENT` | 9 |
+| PACS | fips 48335 | `ENCLOSED PORCH` | 1 |
+| PACS | fips 48335 | `OPEN PORCH MOBILE HOME` | 1 |
+| PACS | fips 48449 | `Main Area` | 14317 |
+| PACS | fips 48449 | `COVERED PORCH` | 12720 |
+| PACS | fips 48449 | `COVERED PATIO` | 4595 |
+| PACS | fips 48449 | `METAL STORAGE` | 4577 |
+| PACS | fips 48449 | `conv code SHD` | 4519 |
+| PACS | fips 48449 | `CARPORT` | 4411 |
+| PACS | fips 48449 | `STORAGE WOOD` | 3742 |
+| PACS | fips 48449 | `ATT FINISHED 2 CAR GARAGE` | 2680 |
+| PACS | fips 48449 | `OPEN PORCH SLAB ONLY` | 2249 |
+| PACS | fips 48449 | `WOOD DECK` | 2167 |
+| PACS | fips 48449 | `conv code CNPY` | 2061 |
+| PACS | fips 48449 | `ATTACHED STORAGE` | 1939 |
+| PACS | fips 48449 | `Pre-engineered Mtl Bldg` | 1628 |
+| PACS | fips 48449 | `PREFAB CARPORT` | 1399 |
+| PACS | fips 48449 | `conv code STG` | 1170 |
+| PACS | fips 48449 | `MAIN AREA SECOND STORY` | 921 |
+| PACS | fips 48449 | `conv code BARN` | 898 |
+| PACS | fips 48449 | `HAY SHED` | 629 |
+| PACS | fips 48449 | `conv code CONC` | 619 |
+| PACS | fips 48449 | `conv code DGF` | 611 |
+| PACS | fips 48449 | `PREENGINERED METAL SHED` | 599 |
+| PACS | fips 48449 | `conv code POOL` | 549 |
+| PACS | fips 48449 | `MAIN AREA ADDITION` | 544 |
+| PACS | fips 48449 | `ATT FINISHED 1 CAR GARAGE` | 542 |
+| PACS | fips 48449 | `BOAT DOCK` | 501 |
+| PACS | fips 48449 | `SCREENED PORCH` | 470 |
+| PACS | fips 48449 | `POOL PATIO CONCRETE` | 466 |
+| PACS | fips 48449 | `conv code ASPH` | 383 |
+| PACS | fips 48449 | `conv code CON` | 332 |
+| PACS | fips 48449 | `ENCLOSED PORCH` | 316 |
+| PACS | fips 48449 | `RV CARPORT` | 288 |
+| PACS | fips 48449 | `BREEZEWAY` | 216 |
+| PACS | fips 48449 | `RETAINING WALL WOOD` | 196 |
+| PACS | fips 48449 | `RV PARK` | 161 |
+| PACS | fips 48449 | `BOAT HOUSE AVG` | 151 |
+| PACS | fips 48449 | `ENCLOSED GARAGE` | 135 |
+| PACS | fips 48449 | `ATT FINISHED 3 CAR GARAGE` | 123 |
+| PACS | fips 48449 | `CHURCH CLASS C AVERAGE` | 112 |
+| PACS | fips 48449 | `CABANA` | 87 |
+| PACS | fips 48449 | `GLASS PORCH` | 84 |
+| PACS | fips 48449 | `conv code GZ` | 78 |
+| PACS | fips 48449 | `BALCONY` | 77 |
+| PACS | fips 48449 | `Green House Plastic` | 67 |
+| PACS | fips 48449 | `PC OUTBUILDING` | 66 |
+| PACS | fips 48449 | `conv code SHOP` | 66 |
+| PACS | fips 48449 | `FLAT CANOPY` | 66 |
+| PACS | fips 48449 | `Green House Fiberglass` | 54 |
+| PACS | fips 48449 | `LOFT` | 51 |
+| PACS | fips 48449 | `ENCLOSED CARPORT` | 45 |
+| PACS | fips 48449 | `BOAT HOUSE FAIR` | 42 |
+| PACS | fips 48449 | `POOL HOUSE` | 34 |
+| PACS | fips 48449 | `DET FINISHED 2 CAR GARAGE` | 33 |
+| PACS | fips 48449 | `RETAINING WALL VINYL` | 31 |
+| PACS | fips 48449 | `MH/ RV  HOOKUPS` | 28 |
+| PACS | fips 48449 | `DET FINISHED 1 CAR GARAGE` | 26 |
+| PACS | fips 48449 | `BOAT HOUSE GOOD` | 24 |
+| PACS | fips 48449 | `CHURCH CLASS D LOW` | 23 |
+| PACS | fips 48449 | `STEEL TANKS` | 19 |
+| PACS | fips 48449 | `conv code BASE` | 19 |
+| PACS | fips 48449 | `BONUS ROOM` | 18 |
+| PACS | fips 48449 | `FINISHED BASEMENT` | 17 |
+| PACS | fips 48449 | `conv code HG` | 17 |
+| PACS | fips 48449 | `CHURCH CLASS S AVERAGE` | 15 |
+| PACS | fips 48449 | `TENNIS COURT` | 15 |
+| PACS | fips 48449 | `PATIO WITH ROOF` | 15 |
+| PACS | fips 48449 | `RETAINING WALL` | 15 |
+| PACS | fips 48449 | `POOL PATIO STONE` | 10 |
+| PACS | fips 48449 | `RETAINING WALL METAL` | 9 |
+| PACS | fips 48449 | `ATT FINISHED 4 CAR GARAGE` | 8 |
+| PACS | fips 48449 | `conv code LD` | 7 |
+| PACS | fips 48449 | `conv code TENN` | 6 |
+| PACS | fips 48449 | `conv code GAR` | 6 |
+| PACS | fips 48449 | `conv code GYM` | 6 |
+| PACS | fips 48449 | `UNFINISHED BASEMENT` | 6 |
+| PACS | fips 48449 | `conv code GM` | 6 |
+| PACS | fips 48449 | `BOAT HOUSE` | 5 |
+| PACS | fips 48449 | `1.5 STORY` | 4 |
+| PACS | fips 48449 | `conv code COMM` | 3 |
+| PACS | fips 48449 | `OPEN PORCH` | 3 |
+| PACS | fips 48449 | `DET FINISHED 3 CAR GARAGE` | 3 |
+| PACS | fips 48449 | `conv code PV` | 3 |
+| PACS | fips 48449 | `conv code AGF` | 3 |
+| PACS | fips 48449 | `conv code PR` | 2 |
+| PACS | fips 48449 | `CHURCH CLASS D AVERAGE` | 2 |
+| PACS | fips 48449 | `ATT UNFINIISHED 1 CAR GAR` | 2 |
+| PACS | fips 48449 | `ATT UNFINIISHED 2 CAR GAR` | 2 |
+| PACS | fips 48449 | `POLE SHED` | 2 |
+| PACS | fips 48449 | `conv code DGU` | 1 |
+| PACS | fips 48449 | `conv code CH` | 1 |
+| PACS | fips 48449 | `conv code M1` | 1 |
+| PACS | fips 48449 | `FREESTANDING CAR PORT PRE` | 1 |
+| PACS | fips 48449 | `DET UNFINIISHED 2 CAR GAR` | 1 |
+| PACS | fips 48449 | `conv code KN` | 1 |
+| PACS | fips 48449 | `conv code AW` | 1 |
+| PACS | fips 48449 | `DET FINISHED 4 CAR GARAGE` | 1 |
+| PACS | fips 48449 | `conv code BLDG` | 1 |
+| PACS | fips 48285 | `OPEN PORCH` | 14215 |
+| PACS | fips 48285 | `MAIN AREA` | 13030 |
+| PACS | fips 48285 | `SHED` | 10267 |
+| PACS | fips 48285 | `CARPORT` | 4790 |
+| PACS | fips 48285 | `FRAME BUILDING` | 3337 |
+| PACS | fips 48285 | `MISC. UTILITY BUILDING` | 3073 |
+| PACS | fips 48285 | `PATIO COVER` | 2973 |
+| PACS | fips 48285 | `ATTACHED GARAGE FINISHED` | 2378 |
+| PACS | fips 48285 | `WOOD DECK` | 2309 |
+| PACS | fips 48285 | `METAL BUILDING-UNFINISHED` | 1940 |
+| PACS | fips 48285 | `MULTI-PURPOSE BUILDING` | 1818 |
+| PACS | fips 48285 | `EQUIPMENT SHED` | 1785 |
+| PACS | fips 48285 | `PATIO` | 1753 |
+| PACS | fips 48285 | `STORAGE AREA` | 1570 |
+| PACS | fips 48285 | `BARN` | 1419 |
+| PACS | fips 48285 | `METAL BUILDING` | 1125 |
+| PACS | fips 48285 | `ATTACHED GARAGE UNFINISH` | 896 |
+| PACS | fips 48285 | `DETACHED GAR CLASS 3 LOW` | 757 |
+| PACS | fips 48285 | `MAIN AREA - ATTACHED ADDI` | 746 |
+| PACS | fips 48285 | `CONCRETE SLAB` | 613 |
+| PACS | fips 48285 | `SCREENED PORCH` | 603 |
+| PACS | fips 48285 | `ENCLOSED PORCH` | 587 |
+| PACS | fips 48285 | `PATIO COVER (AVERAGE)` | 580 |
+| PACS | fips 48285 | `MAIN AREA 2ND FLOOR` | 519 |
+| PACS | fips 48285 | `MISC UTILITY BLDG` | 464 |
+| PACS | fips 48285 | `CANOPY` | 435 |
+| PACS | fips 48285 | `DETACHED GAR UNFIN CLASS` | 373 |
+| PACS | fips 48285 | `DETACHED GAR UNFINISHED` | 351 |
+| PACS | fips 48285 | `COVERED PORCH` | 321 |
+| PACS | fips 48285 | `BREEZEWAY - 25%` | 278 |
+| PACS | fips 48285 | `Exellent Pool` | 278 |
+| PACS | fips 48285 | `METAL BUILDING - FINISHED` | 267 |
+| PACS | fips 48285 | `Detached Carport` | 261 |
+| PACS | fips 48285 | `DETACHED GAR CLASS 3 AVG` | 242 |
+| PACS | fips 48285 | `OPEN PORCH LOW` | 224 |
+| PACS | fips 48285 | `ASPHALT PARKING` | 212 |
+| PACS | fips 48285 | `POOL` | 211 |
+| PACS | fips 48285 | `ADDITION - 100%` | 204 |
+| PACS | fips 48285 | `DETACHED GAR CLASS 2 LOW` | 177 |
+| PACS | fips 48285 | `OPEN PORCH - SECOND STORY` | 167 |
+| PACS | fips 48285 | `PREFABRICATED FRAME BUILD` | 164 |
+| PACS | fips 48285 | `CAMPHOUSE` | 164 |
+| PACS | fips 48285 | `DETACHED GARAGE - 40%` | 161 |
+| PACS | fips 48285 | `CANOPY - 25%` | 130 |
+| PACS | fips 48285 | `GAMEROOM` | 110 |
+| PACS | fips 48285 | `DETACHED GAR CLASS 3 GOOD` | 104 |
+| PACS | fips 48285 | `CAMPHOUSE 2` | 98 |
+| PACS | fips 48285 | `DETACHED GAR CLASS 2 AVG` | 81 |
+| PACS | fips 48285 | `GREENHOUSE` | 77 |
+| PACS | fips 48285 | `WAREHOUSE` | 71 |
+| PACS | fips 48285 | `MINI WHAREHOUSE` | 67 |
+| PACS | fips 48285 | `Patio Cover (GOOD)` | 61 |
+| PACS | fips 48285 | `Canopy (Fair)` | 56 |
+| PACS | fips 48285 | `DETACHED GAR CLASS 2 GOOD` | 54 |
+| PACS | fips 48285 | `MAIN AREA - SPLIT SECTION` | 51 |
+| PACS | fips 48285 | `Prefabricated Building` | 39 |
+| PACS | fips 48285 | `PREFABRICATED BUILDING` | 39 |
+| PACS | fips 48285 | `STABLE` | 35 |
+| PACS | fips 48285 | `GLASS PORCH` | 33 |
+| PACS | fips 48285 | `Canopy (Average)` | 33 |
+| PACS | fips 48285 | `Canopy (Good)` | 32 |
+| PACS | fips 48285 | `DETACHED GARAGE - 50%` | 29 |
+| PACS | fips 48285 | `OFFICE` | 28 |
+| PACS | fips 48285 | `GAS PPUMP CANOPY` | 26 |
+| PACS | fips 48285 | `Detached Garage` | 26 |
+| PACS | fips 48285 | `LIGHTED CONCRETE PARKING` | 25 |
+| PACS | fips 48285 | `LOFT` | 25 |
+| PACS | fips 48285 | `Patio Cover (Very Good)` | 24 |
+| PACS | fips 48285 | `BUILDING` | 22 |
+| PACS | fips 48285 | `Canopy (Very Good)` | 22 |
+| PACS | fips 48285 | `MISC UTILITY BUILDING` | 21 |
+| PACS | fips 48285 | `APARTMENT` | 15 |
+| PACS | fips 48285 | `BASEMENT` | 14 |
+| PACS | fips 48285 | `COOLER` | 13 |
+| PACS | fips 48285 | `BALCONY - 25%` | 9 |
+| PACS | fips 48285 | `DETACHED GARAGE` | 7 |
+| PACS | fips 48285 | `OUTBUILDING` | 7 |
+| PACS | fips 48285 | `INDUSTRIAL` | 6 |
+| PACS | fips 48285 | `FRATERNAL` | 6 |
+| PACS | fips 48285 | `ENCLOSED PORCH - SPEC PRI` | 5 |
+| PACS | fips 48285 | `LIGHTED ASPHALT PARKING` | 5 |
+| PACS | fips 48285 | `SERVICE STATION` | 5 |
+| PACS | fips 48285 | `DETACHED GAR FINISHED 2 C` | 4 |
+| PACS | fips 48285 | `SCHOOL` | 3 |
+| PACS | fips 48285 | `SHED/SHELTER` | 3 |
+| PACS | fips 48285 | `Agricultural Bins` | 3 |
+| PACS | fips 48285 | `LAUNDROMAT` | 2 |
+| PACS | fips 48285 | `STORE` | 2 |
+| PACS | fips 48285 | `DETACHED GAR FINISHED 1 C` | 2 |
+| PACS | fips 48285 | `POULTRY HOUSE` | 2 |
+| PACS | fips 48285 | `CHURCH` | 2 |
+| PACS | fips 48285 | `Patio Covered 20% of base` | 1 |
+| PACS | fips 48285 | `DETACHED GAR FINISHED 3 C` | 1 |
+| PACS | fips 48285 | `COMMERCIAL` | 1 |
+| PACS | fips 48285 | `TRAVEL TRAILER` | 1 |
+| PACS | fips 48277 | `PORCHES` | 35989 |
+| PACS | fips 48277 | `LIVING AREA` | 22225 |
+| PACS | fips 48277 | `STORAGE` | 14683 |
+| PACS | fips 48277 | `AG` | 7847 |
+| PACS | fips 48277 | `CARPORT` | 7826 |
+| PACS | fips 48277 | `COM` | 7451 |
+| PACS | fips 48277 | `WORKSHOP` | 5249 |
+| PACS | fips 48277 | `SHEDS` | 5180 |
+| PACS | fips 48277 | `PORCH` | 4343 |
+| PACS | fips 48277 | `MOBILE HOME` | 3849 |
+| PACS | fips 48277 | `BARN` | 3355 |
+| PACS | fips 48277 | `WOOD DECK` | 2340 |
+| PACS | fips 48277 | `DG` | 1511 |
+| PACS | fips 48277 | `PAVING` | 1216 |
+| PACS | fips 48277 | `POOL- IN GROUND` | 943 |
+| PACS | fips 48277 | `CANOPY` | 932 |
+| PACS | fips 48277 | `MULTI-FAMILY` | 873 |
+| PACS | fips 48277 | `DOCK` | 435 |
+| PACS | fips 48277 | `CONCRETE` | 179 |
+| PACS | fips 48277 | `PATIO` | 48 |
+| PACS | fips 48277 | `STORAGE SHED` | 46 |
+| PACS | fips 48277 | `MAIN AREA` | 32 |
+| PACS | fips 48277 | `MISC. IMPROVEMENT` | 23 |
+| PACS | fips 48277 | `TENNIS COURT` | 19 |
+| PACS | fips 48277 | `SHED` | 8 |
+| PACS | fips 48277 | `PORCH WITH ROOFING` | 4 |
+| PACS | fips 48277 | `POOL` | 3 |
+| PACS | fips 48277 | `STORAGE AREA` | 2 |
+| PACS | fips 48277 | `ATTACHED ADDITION` | 2 |
+| PACS | fips 48277 | `DET GARAGE UNFINISHED 2 C` | 1 |
+| PACS | fips 48277 | `POLE BARN` | 1 |
+| PACS | fips 48277 | `METAL BLDG DIRT` | 1 |
+| PACS | fips 48277 | `SCREEN PORCH` | 1 |
+| PACS | fips 48277 | `ASPHALT` | 1 |
+| PACS | fips 48277 | `R` | 1 |
+| PACS | fips 48277 | `GAR` | 1 |
+| PACS | fips 48277 | `ATT GARAGE FINISHED 2 CAR` | 1 |
+| PACS | fips 48277 | `PATIO UNCOVERED` | 1 |
+| PACS | fips 48277 | `COVERED PATIO` | 1 |
+| PACS | fips 48277 | `STORAGE IMPROVEMENT` | 1 |
+| PACS | fips 48171 | `OPEN PORCH` | 30806 |
+| PACS | fips 48171 | `MAIN AREA` | 25178 |
+| PACS | fips 48171 | `SHED` | 8021 |
+| PACS | fips 48171 | `STORAGE` | 7126 |
+| PACS | fips 48171 | `CARPORT` | 5993 |
+| PACS | fips 48171 | `PATIO` | 5651 |
+| PACS | fips 48171 | `ATT GARAGE FINISHED DOUBL` | 4953 |
+| PACS | fips 48171 | `WOOD DECK` | 4083 |
+| PACS | fips 48171 | `BARN` | 3645 |
+| PACS | fips 48171 | `CANOPY` | 2510 |
+| PACS | fips 48171 | `MAIN AREA 2ND STORY` | 2441 |
+| PACS | fips 48171 | `STORAGE GOOD` | 2313 |
+| PACS | fips 48171 | `STORAGE AVG` | 2291 |
+| PACS | fips 48171 | `STORAGE LOW` | 1872 |
+| PACS | fips 48171 | `MAIN AREA HALF STORY` | 1480 |
+| PACS | fips 48171 | `OUTBUILDING` | 1255 |
+| PACS | fips 48171 | `POOL` | 1205 |
+| PACS | fips 48171 | `SCREENED PORCH` | 1038 |
+| PACS | fips 48171 | `BUILDING` | 1007 |
+| PACS | fips 48171 | `STORAGE EXC` | 778 |
+| PACS | fips 48171 | `ATT GARAGE FINISHED SINGL` | 772 |
+| PACS | fips 48171 | `PARKING LOT` | 714 |
+| PACS | fips 48171 | `UTILITY ROOM` | 704 |
+| PACS | fips 48171 | `OPEN PORCH 2ND STORY` | 661 |
+| PACS | fips 48171 | `APARTMENT` | 653 |
+| PACS | fips 48171 | `DETACHED GARAGE AVG` | 645 |
+| PACS | fips 48171 | `ENCLOSED PORCH` | 585 |
+| PACS | fips 48171 | `DETACHED GARAGE GOOD` | 536 |
+| PACS | fips 48171 | `HOT TUB` | 530 |
+| PACS | fips 48171 | `GREEN HOUSE` | 516 |
+| PACS | fips 48171 | `METAL STORAGE` | 506 |
+| PACS | fips 48171 | `WORK SHOP` | 458 |
+| PACS | fips 48171 | `DETACHED GARAGE LOW` | 457 |
+| PACS | fips 48171 | `DETACHED GARAGE EXC` | 454 |
+| PACS | fips 48171 | `ATT GARAGE UNFIN DOUBLE` | 432 |
+| PACS | fips 48171 | `PATIO COVER` | 407 |
+| PACS | fips 48171 | `STORAGE FAIR` | 404 |
+| PACS | fips 48171 | `POLE BARN` | 302 |
+| PACS | fips 48171 | `BREEZEWAY` | 238 |
+| PACS | fips 48171 | `ATT GARAGE UNFIN SINGLE` | 224 |
+| PACS | fips 48171 | `CABIN` | 222 |
+| PACS | fips 48171 | `SELF-STG/MINI WAREHOUSE` | 212 |
+| PACS | fips 48171 | `BASEMENT` | 192 |
+| PACS | fips 48171 | `LOFT` | 188 |
+| PACS | fips 48171 | `DETACHED GARAGE FAIR` | 183 |
+| PACS | fips 48171 | `SHED-US` | 157 |
+| PACS | fips 48171 | `WINERY (TASTING-DISPLAY)` | 156 |
+| PACS | fips 48171 | `MOTEL` | 134 |
+| PACS | fips 48171 | `GLASS PORCH` | 127 |
+| PACS | fips 48171 | `DETACHED GARAGE UNFIN DOU` | 122 |
+| PACS | fips 48171 | `SHED-LS` | 100 |
+| PACS | fips 48171 | `SHED-UF` | 94 |
+| PACS | fips 48171 | `WALK IN COOLER` | 80 |
+| PACS | fips 48171 | `DETACHED GARAGE POOR` | 76 |
+| PACS | fips 48171 | `GAZEBO` | 75 |
+| PACS | fips 48171 | `TANK HOUSE` | 75 |
+| PACS | fips 48171 | `LIGHT POLES` | 71 |
+| PACS | fips 48171 | `SILO` | 68 |
+| PACS | fips 48171 | `STORAGE WAREHOUSE (20-30'` | 64 |
+| PACS | fips 48171 | `DETACHED GARAGE UNFIN SIN` | 59 |
+| PACS | fips 48171 | `DETACHED GARAGE FINISHED` | 57 |
+| PACS | fips 48171 | `TENNIS COURT` | 40 |
+| PACS | fips 48171 | `CANOPY GOOD` | 40 |
+| PACS | fips 48171 | `RESTROOMS` | 39 |
+| PACS | fips 48171 | `SHED-ES` | 39 |
+| PACS | fips 48171 | `GRAIN TANK` | 39 |
+| PACS | fips 48171 | `CANOPY LOW` | 38 |
+| PACS | fips 48171 | `BARNUS` | 36 |
+| PACS | fips 48171 | `LOADING DOCK` | 30 |
+| PACS | fips 48171 | `SHED-UC` | 29 |
+| PACS | fips 48171 | `OFFICE` | 26 |
+| PACS | fips 48171 | `DETACHED GARAGE VERY GOOD` | 26 |
+| PACS | fips 48171 | `HOG SHED` | 20 |
+| PACS | fips 48171 | `STORAGE WAREHOUSE (12-16'` | 19 |
+| PACS | fips 48171 | `FIREPLACE` | 19 |
+| PACS | fips 48171 | `RESTROOM BUILDING` | 18 |
+| PACS | fips 48171 | `POOL HOUSE` | 17 |
+| PACS | fips 48171 | `CANOPY AVERAGE` | 16 |
+| PACS | fips 48171 | `BARNUF` | 16 |
+| PACS | fips 48171 | `STORAGE WAREHOUS (16-20'` | 14 |
+| PACS | fips 48171 | `CONCRETE` | 13 |
+| PACS | fips 48171 | `SOLAR DEVICE` | 13 |
+| PACS | fips 48171 | `SHED-HS` | 12 |
+| PACS | fips 48171 | `SHED-LF` | 12 |
+| PACS | fips 48171 | `ADDITION` | 12 |
+| PACS | fips 48171 | `BARNLS` | 12 |
+| PACS | fips 48171 | `GOAT SHED` | 12 |
+| PACS | fips 48171 | `CONVALESCENT HOME` | 12 |
+| PACS | fips 48171 | `CABANA` | 10 |
+| PACS | fips 48171 | `SHED POLE BARN` | 9 |
+| PACS | fips 48171 | `HANGAR` | 9 |
+| PACS | fips 48171 | `JACUZZI` | 9 |
+| PACS | fips 48171 | `DET GARAGE FINISHED SINGL` | 8 |
+| PACS | fips 48171 | `PARTY HOUSE` | 8 |
+| PACS | fips 48171 | `SCALES` | 7 |
+| PACS | fips 48171 | `PAVERS` | 7 |
+| PACS | fips 48171 | `BARNLF` | 6 |
+| PACS | fips 48171 | `BARNUC` | 6 |
+| PACS | fips 48171 | `ASPHALT` | 6 |
+| PACS | fips 48171 | `MAIN AREA SPLIT LEVEL` | 5 |
+| PACS | fips 48171 | `ACAD CONV CODE: MH` | 5 |
+| PACS | fips 48171 | `SHED-LC` | 4 |
+| PACS | fips 48171 | `BARNLC` | 4 |
+| PACS | fips 48171 | `WORK SHOP FRAME` | 4 |
+| PACS | fips 48171 | `WORK SHOP STEEL` | 3 |
+| PACS | fips 48171 | `TRAVEL TRAILER` | 3 |
+| PACS | fips 48171 | `SPA` | 2 |
+| PACS | fips 48171 | `SHEDEF` | 2 |
+| PACS | fips 48171 | `SHED-HF` | 2 |
+| PACS | fips 48171 | `CHICKEN COOP` | 2 |
+| PACS | fips 48171 | `GARAGE APARTMENT` | 1 |
+| PACS | fips 48171 | `FARROWING HOUSE` | 1 |
+| PACS | fips 48171 | `SHED-EC` | 1 |
+| PACS | fips 48171 | `GOLF COURSE` | 1 |
+| PACS | fips 48171 | `WORK SHOP CONCRETE` | 1 |
+| PACS | fips 48171 | `CH,CA` | 1 |
+| PACS | fips 48171 | `ATRIUM` | 1 |
+| PACS | fips 48171 | `ACAD CONV CODE: R` | 1 |
+| PACS | fips 48171 | `DETACHED GARAGE VERY LOW` | 1 |
+| PACS | fips 48171 | `SUNROOM` | 1 |
