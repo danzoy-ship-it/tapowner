@@ -534,3 +534,6 @@ Where beds are a GENUINE gap (district doesn't collect them — verified, not as
 
 ### Batch J (2026-07-16): 6 Harris-eSearch homestead counties loaded
 Archer(48009) 2,690 HS, Haskell(48207) 1,479, Crockett(48105) 693, Upton(48461) 1,272, Dawson(48115) 2,351, Coke(48081) 937 — via load_harris_esearch_csv.py (Coke = direct WP .csv). BIS-eSearch search-only (open-records): Terry(48445, terrycoad.org), Mason(48319), Mills(48333), Real(48385), Concho(48095), Madison(48313), Edwards(48137), Zavala(48507, zavalacad.com). Motley(48345)=no website (Floyd CAD admin).
+
+### Batches G+H (2026-07-16): 10 more Harris/BIS-eSearch homestead counties loaded
+Karnes(48255) 2,389, Franklin(48159) 3,073, Ward(48475) 2,286, LiveOak(48297) 2,697, Culberson(48109) 429, Clay(48077) 3,167, Nolan(48353) 3,247, Frio(48163) 2,398, SanAugustine(48405) 1,210, Refugio(48391) 2,602 — all via /Forms/ExcelDownload CSV. **MAP CORRECTION:** Clay/Nolan/Frio/SanAugustine/Refugio were tagged P&A-hard but P&A migrated them to BIS-hosted sites with the free eSearch CSV. Scurry(48415) has a richer REAL-ROLL.zip (9.5MB, likely sqft) — TODO load. BIS-eSearch-only (records-request): presidio/young/gray/lee/duval/blanco/pecos + willacy/lamb/zapata/rains(Blazor). SWData: runnels(WebForms), hamilton/stephens(Blazor), floyd. TrueProdigy: reeves, lasalle. Dead-end whoownsit: robertson, redriver, coleman.

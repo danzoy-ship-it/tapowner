@@ -43,6 +43,7 @@ def truthy(v):
 
 def get_reader(src):
     if src.startswith("http"):
+        src = src.replace(" ", "%20")  # CAD fileNames contain raw spaces
         req = urllib.request.Request(src, headers={"User-Agent": UA})
         raw = urllib.request.urlopen(req, timeout=180).read()
     else:
