@@ -688,3 +688,15 @@ SWData "export_collector" pipe-delimited roll (collector_* cols; collections rol
 
 ## 2026-07-15 — wave 10C (12 tiny counties): 8 BIS deed-date loaded (~33K sale)
 Dallam 48111, Sutton 48435(geo), Terrell 48443, Oldham 48359(geo), Hartley 48205, McMullen 48311(geo), Bailey 48017(bailey-cad.org), Cochran 48079(cochrancad.com). Brooks 48047 = BIS but Deed_Date field 100% empty (skip). Baylor 48023/Roberts 48393/Throckmorton 48447 = StratMap25 only (geometry+owner+values, no deed/sqft/exempt = no signal); their BIS apps return SB_0005 "Subscription disabled" — re-check monthly.
+
+## 2026-07-15 — ULTRACODE difficult-counties pass (11 biggest gated counties)
+### SOLVED — full/partial improvement (TP token cert-export via /public/config/reports)
+- **Webb 48479** — TP token (Bearer), `webb/56bb0d2e-7221-11f0-a0a2-0242ac110007.zip` (NESTED → inner ..._Real_Only.zip). improv 80K, sqft 80K, sale 88K, exempt 42K. FULL.
+- **Harrison 48203** — TP token (RAW, Bearer→500), category "DATA EXPORTS", `harrison/bea638f4-544e-11f1-aea0-0242ac110006.zip`. improv 29K, sqft 29K, exempt 17K (INFO 9814-wide → deed offset off, sale sparse 1.4K; improvements/sqft/exempt fine). No beds (material-code ATTR).
+### SOLVED — deed-date/year signal
+- **Comal 48091** — BIS FS `services7.arcgis.com/Yz6eib2o8WvEgWq8/ComalCADWebService` (no Referer). sale 98K. **Hunt 48231** — BIS FS `services3.arcgis.com/GIIiqmeq0npieHV9/HuntCADWebService`, sale 62K + year 48K. **Henderson 48213** — BIS FS `services7.arcgis.com/4x7oelC9W8TNucjG/HendersonCADWebService`, sale 26K.
+- **Matagorda 48321** — `matagorda-cad.org/wp-content/uploads/2024/08/2024-GIS-DATA.zip`→Ownership.dbf (deed_dt). sale 30K. **Starr 48427** — `starrcad.org/wp-content/uploads/2023/04/data.zip`→Ownership.dbf (2021 vintage). sale 22K. (load_parcels_dbf now reads deed_dt.)
+- **Bowie 48037** — Drive `bowie_ownership.csv` (id 1LS7KrEqCRWtnPV-IqRdNRCWsgLoCWgVN). year 19K + sale 27K + homestead 22K (derived from ownerimprovementhsvalue/ownerlandhsvalue>0). join spid==geoid.
+### RECORDS-REQUEST (genuinely gated, confirmed):
+- **Smith 48423** — GSA `smithcad-search.gsacorp.io` CAMA only behind session search+export (no bulk file); ArcGIS Hub Tax_Parcels_Improvements = 17.5K/140K deed only. Ask GSA cert-roll. (903) 510-8600.
+- **Anderson 48001** — TP reports all-PDF; bulk API 401. Ask PACS export. **Wharton 48481** — TP reports xlsx/PDF only; $40 CD by written request. 979-532-8931.

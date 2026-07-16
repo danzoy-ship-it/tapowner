@@ -6,9 +6,9 @@ Regenerate with `python data/build_coverage_log.py` after each mining batch (ref
 
 ## Scoreboard (253 counties)
 
-- ☑ **Mined (has improvements/feature tags): 76** / 253
-- Full attributes (improv+dims): 44  ·  Partial: 105  ·  Geometry-only (need mining): 104  ·  Missing from DB: 0
-- Seller-signals — sale date: 137 counties  ·  exemptions (homestead/over-65/DV tenure): 130 counties  ·  **any seller-signal: 202 counties**
+- ☑ **Mined (has improvements/feature tags): 78** / 253
+- Full attributes (improv+dims): 44  ·  Partial: 112  ·  Geometry-only (need mining): 97  ·  Missing from DB: 0
+- Seller-signals — sale date: 145 counties  ·  exemptions (homestead/over-65/DV tenure): 133 counties  ·  **any seller-signal: 210 counties**
 
 Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISSING. % = share of the county's parcels with that attribute.
 
@@ -17,15 +17,13 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Hidalgo | 48215 | 328,322 | 81 | · | · | · | 93 | 47 | PARTIAL |
 | [ ] | Smith | 48423 | 140,245 | 55 | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Lubbock | 48303 | 135,112 | 78 | · | · | · | 95 | · | PARTIAL |
-| [ ] | Henderson | 48213 | 106,708 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Comal | 48091 | 103,537 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Henderson | 48213 | 106,708 | · | · | · | · | 24 | · | GEOM-ONLY |
+| [ ] | Comal | 48091 | 103,537 | · | · | · | · | 95 | · | PARTIAL |
 | [ ] | Parker | 48367 | 100,548 | · | · | · | · | 92 | · | PARTIAL |
-| [ ] | Webb | 48479 | 98,291 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Ector | 48135 | 75,891 | 77 | · | · | 20 | 68 | 42 | PARTIAL |
-| [ ] | Hunt | 48231 | 69,728 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Hunt | 48231 | 69,728 | · | · | · | · | 89 | · | PARTIAL |
 | [ ] | Tomgreen | 48451 | 58,686 | · | · | · | · | 98 | · | PARTIAL |
-| [ ] | Bowie | 48037 | 53,212 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Harrison | 48203 | 50,995 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Bowie | 48037 | 53,212 | · | · | · | · | 50 | 41 | PARTIAL |
 | [ ] | Burnet | 48053 | 50,138 | · | · | · | · | 92 | · | PARTIAL |
 | [ ] | Waller | 48473 | 48,136 | · | · | · | · | 88 | · | PARTIAL |
 | [ ] | Nacogdoches | 48347 | 48,003 | · | · | · | · | 17 | 38 | GEOM-ONLY |
@@ -37,10 +35,10 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Hill | 48217 | 39,355 | · | · | · | · | 33 | · | PARTIAL |
 | [ ] | Llano | 48299 | 38,879 | · | · | · | · | 87 | · | PARTIAL |
 | [ ] | Palopinto | 48363 | 38,698 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Starr | 48427 | 38,571 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Starr | 48427 | 38,571 | · | · | · | · | 56 | · | PARTIAL |
 | [ ] | Rusk | 48401 | 37,967 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Chambers | 48071 | 37,510 | · | · | · | · | · | 38 | GEOM-ONLY |
-| [ ] | Matagorda | 48321 | 37,211 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Matagorda | 48321 | 37,211 | · | · | · | · | 81 | · | PARTIAL |
 | [ ] | Atascosa | 48013 | 36,791 | · | · | · | · | 71 | · | PARTIAL |
 | [ ] | Walker | 48471 | 35,582 | · | · | · | · | 85 | · | PARTIAL |
 | [ ] | Cass | 48067 | 34,816 | · | · | · | · | 77 | · | PARTIAL |
@@ -213,6 +211,7 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [x] | Mclennan | 48309 | 115,362 | 77 | · | 65 | 77 | 84 | 42 | FULL+SIGNALS |
 | [x] | Johnson | 48251 | 101,847 | 68 | · | · | 72 | · | · | PARTIAL |
 | [x] | Ellis | 48139 | 98,803 | 81 | · | · | 81 | 95 | 53 | PARTIAL |
+| [x] | Webb | 48479 | 98,291 | 82 | · | · | 82 | 90 | 43 | PARTIAL |
 | [x] | Guadalupe | 48187 | 95,571 | 72 | 37 | 43 | 78 | 93 | 48 | FULL+SIGNALS |
 | [x] | Kaufman | 48257 | 94,650 | 78 | 4 | 8 | 78 | 91 | 50 | PARTIAL |
 | [x] | Grayson | 48181 | 89,348 | 59 | · | 7 | 68 | · | · | PARTIAL |
@@ -229,6 +228,7 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [x] | Rockwall | 48397 | 52,739 | 84 | 49 | 66 | 87 | 97 | 63 | FULL+SIGNALS |
 | [x] | Sanpatricio | 48409 | 51,385 | 64 | · | · | 64 | 57 | 36 | PARTIAL |
 | [x] | Hood | 48221 | 51,275 | 60 | · | · | 65 | 93 | 39 | PARTIAL |
+| [x] | Harrison | 48203 | 50,995 | 57 | · | · | 57 | 3 | 33 | PARTIAL |
 | [x] | Orange | 48361 | 50,337 | 43 | · | · | 47 | · | · | PARTIAL |
 | [x] | Wise | 48497 | 48,705 | 54 | · | 38 | 67 | 49 | · | FULL+SIGNALS |
 | [x] | Victoria | 48469 | 45,104 | 76 | 58 | · | 76 | 86 | 42 | FULL+SIGNALS |

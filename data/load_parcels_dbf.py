@@ -65,7 +65,7 @@ def main():
         geo = str(geo).strip() if geo not in (None, "") else ""
         if not pid and not geo:
             continue
-        dt = to_dt(field(r, "sl_dt", "sale_date", "deed_date", "Deed_Date"))
+        dt = to_dt(field(r, "sl_dt", "sale_date", "deed_date", "Deed_Date", "deed_dt", "deeddt"))
         price = to_price(field(r, "sl_price", "sale_price"))
         yr = field(r, "yr_blt", "year_built", "actual_yr", "actualyr")
         try:
