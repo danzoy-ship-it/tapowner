@@ -7,7 +7,7 @@ re-checked. Loaders: `api/scripts/signals/load_pdf_foreclosures.mjs` (the shared
 CivicLive/etc counties), `load_kofile_foreclosures.mjs` (Kofile WebSocket), `load_collin_/travis_/
 county_foreclosures.mjs` (bespoke). System map + crack recipes: `FORECLOSURE_SOURCES.md`.
 
-**Last updated:** 2026-07-16.
+**Last updated:** 2026-07-16 (revisit-queue pass, see bottom section).
 
 ## ⚠️ Why this is NOT a "~10 systems → 254 counties" campaign (unlike the CAD/Miner side)
 CAD data collapses to ~10 vendor systems because (a) the system fixes the access recipe and (b) the
@@ -123,3 +123,94 @@ and their parcel layers carry geometry+ID only (no CAUSE_NO/SALE_DATE/MIN_BID/ST
 Bexar's `ForeclosuresProd` does not generalize; do not re-chase this lever. **One unverified
 follow-up:** El Paso CAD's own server `https://gis.epcad.org/arcgis/rest/services?f=json` was
 Cloudflare-blocked (522/403) on this IP — genuinely unverified, not cleared; retry from a clean IP.
+
+## REVISIT-QUEUE PASS (2026-07-16, second session) — new loader `load_fc_revisit.mjs`
+
+Worked the non-clean-IP-blocked revisit tail. Net new: **+1 Leon tie, +9 Orange ties (15 rows),
+-1 Karnes false-positive tie removed** (data-quality fix, see below). Two minimal, additive fixes
+landed in the shared parser (noted inline in the code with today's date) after root-causing real
+bugs, not just re-running: `load_pdf_foreclosures.mjs`'s `splitCity`/`directMatch` gained a rural
+route-number alias tier ("COUNTY ROAD 461" == "CR 461" == the parcel's stored "CR 461" — neither
+the last-token SUFFIX rule nor `normStreetAll` caught this because the road-TYPE word isn't the
+last token, the route NUMBER is); `load_fc_ne_southcentral.mjs`'s `rains_cc` now reads the sale
+month/year from anchor TEXT instead of requiring it in the filename (the live July packet is
+linked under a generic reused filename with no date in it at all).
+
+- **Marion (48315):** re-ran marion_cc (already had a working loader, 0 rows stored). 3 packets;
+  the in-window one parses to a single LEGAL-ONLY notice ("Tract 2, a 17.56 acre tract... John
+  Caldwell Survey") — pure metes-and-bounds, no lot/block, no street address. Genuine absence of
+  a tie-able identifier; loaded (1 row, 0 tied), not a bug.
+- **Rains (48379): FIXED, real bug.** Discovery was returning 0 packets because the current (July
+  2026) posting is linked under a generic reused filename ("forclosure sales.pdf") with the
+  month/year carried only in the anchor TEXT ("JULY 2026") — the old regex required the date to be
+  IN the filename (true for Jan-Jun, false for the live one). Fixed `rains_cc`'s discover() in
+  `load_fc_ne_southcentral.mjs` to read the anchor text. Now finds 1 real notice: "370 N Locust
+  Street, Point, TX 75472" (sale 2026-07-07). Did NOT tie: the likely real parcel (370 Locust St,
+  owner Lloyd June) omits the notice's leading directional "N" — a near-miss, not force-tied
+  per the unique-match-only rule. Loaded (1 row, 0 tied).
+- **Leon (48289): FIXED + TIED, real bug.** Discovery worked (2 packets); the Yeager notice's
+  caption address ("7028 County Road 461, Normangee, TX 77871") failed to tie even though the
+  EXACT parcel exists (owner "YEAGER CODY MATTHEW & CRYSTAL MARIE", situs "7028 CR 461,
+  Normangee, TX 77871") — root cause: (1) a document barcode glued into the OCR line between the
+  route number and the city broke `splitCity`'s suffix-cut, and (2) even after that, "COUNTY ROAD
+  461" and "CR 461" don't normalize to the same string anywhere in the matcher (the road-TYPE word
+  isn't the last token, so the SUFFIX/`normStreetAll` machinery never touches it). Fixed both in
+  `load_pdf_foreclosures.mjs` (additive-only: a new equality tier tried only when every existing
+  tier misses, so it can't change any prior match). Leon now ties 1/1 [direct]. This class of fix
+  likely helps other rural CR/FM/PR-addressed counties going forward, not just Leon.
+- **Sabine (48403):** re-ran sabine_cc (working loader, 0 rows). 4 packets, all HOA/POA
+  assessment-lien notices (Pendleton Harbor Subdivision) with non-standard alphanumeric lot IDs
+  ("Lot R-431", "Unit 4, Lots R431, 432") — not a Lot+Block plat format the legal parser
+  recognizes, and no street address anywhere. Genuine format gap; loaded packets, 0 notices.
+- **Orange (48361): CRACKED, new source, +9 ties.** The legacy AS400 "Real Vision Software" grid
+  (`http://as400.co.orange.tx.us:8081/pgms/rvimain.pgm?...`) needs NO POST-emulation of the
+  per-doc PDF viewer at all — the grid itself already carries everything needed (owner/primary
+  party name + sale date), so the "needs session-bound POST to view the image" blocker from the
+  earlier pass turned out to be irrelevant. One plain (cookie-less) GET + one plain form POST
+  (bumping `pagecnt` to the dropdown's max, 36) returns 36 of 39 live rows with zero auth. Wrote
+  `load_fc_revisit.mjs` (bespoke fetch -> parse-rows -> `matchOwnerName` -> upsert; the shared
+  PDF/address pipeline doesn't apply since there's no PDF and no address, only owner name). 15
+  rows land in the future/current window (`event_date >= today`); 9/15 tied uniquely by owner name
+  against `parcels.owner_name` (GOV_OWNER-guarded), e.g. "JACKSON, BYRON KEITH & SHIROND[A]" ->
+  31 Knotty Pine, Orange TX; "CAFFEY, ROBERT" -> 102 Robin Ave, Bridge City TX. Re-runnable
+  monthly; source_ref is the AS400's own stable per-document code (e.g. "EAAABMK4"), so re-runs are
+  idempotent.
+- **Childress (48075): retried, still genuine absence (revised).** The site's ActiveStorage blob
+  route — reported as 0% reachable in the prior pass — actually worked on the FIRST attempt this
+  time (the www.childresstx.us Rails app 500s intermittently, ~33-50% of page loads, but that's
+  independent of blob-download success). Downloaded and OCR'd the top-listed "Notice of Trustee
+  Sale" PDF: it is dated **August 2020** ("TS No TX06000013-20-1S"), sitting at the top of a
+  reverse-chronological-looking archive next to a 2020 election notice — a stale artifact, not a
+  live current posting. Revises the prior "REAL SIGNAL SOURCE CONFIRMED" note: the infra blocker is
+  gone, but there is still no CURRENT notice to load. Genuine absence for this window, not a fetch
+  bug; re-check if/when the county posts something newer.
+- **Karnes (48255): DATA-QUALITY FIX, -1 false tie.** Re-diagnosed the existing tied row: the
+  caption fallback had matched "2470 S US 181, Karnes City, TX 78118" — which is the COUNTY
+  CLERK'S OWN recording-office address, stamped as a running header on every page of the notice PDF
+  — via the Census geocode-fallback path to an unrelated highway parcel (owner "RED EWALD LLC",
+  situs "0 US-181"). The actual foreclosed property in that notice is a rural 10.58-acre metes-and-
+  bounds tract (H.R. Ammons Survey) with no street address at all; the true owner per the deed of
+  trust is unrelated to Red Ewald LLC. **Deleted the false-positive `parcel_signals` row**
+  (id 6715158). The county's other 2 in-window notices remain genuinely untied: one has a spelled-
+  out/OCR-garbled lot number ("LOTS AND SIX BLOCK 136" — likely "LOTS FIVE AND SIX", no digit lot
+  the parser can extract), the other is the same rural Tract-only description (no lot/block).
+  Net: karnes_cc now 3 rows / 0 tied (was 3/1, the 1 was wrong).
+- **La Salle (48283):** re-ran lasalle_cc (working loader). 1 in-window packet; a genuine
+  parser-format gap — a compound multi-lot description ("east 20 feet of Lot Four... AND ALL OF
+  LOTS FIVE (5) AND SIX (6)... BLOCK NUMBER THIRTEEN (13)") where the lot numbers are spelled out
+  in words with digits only in trailing parens, several words before "BLOCK" — doesn't fit the
+  shared `LEGAL_RE`'s single "LOT N, BLOCK M" template. Not fixed (too narrow/risky a regex change
+  for one multi-lot phrasing); logged as a genuine parser gap, light pass only per instructions.
+- **Brooks (48047) / Newton (48351) / Falls (48145):** re-ran all three. Brooks: 3 in-window
+  legal-only notices, all pure metes-and-bounds tracts (Loma Blanca Grant, La Rucia Grant survey
+  tracts) — confirmed genuine absence, no lot/block anywhere. Newton: 2 in-window packets, both
+  pure metes-and-bounds (Martin Parmer Survey) — confirmed genuine absence. Falls: still 1/1 tied
+  (1410 Lorene Ln, Marlin TX) — already correct, no change needed.
+- **Clay (48077) / Harrison (48203):** re-verified with a fresh fetch each — both still fail at
+  the TLS/TCP level from this IP (`fetch failed` before any HTTP response). Consistent with every
+  prior finding. Left for a clean-IP session per the standing note; not chased further.
+
+**New foreclosure grand total (2026-07-16, end of this pass): 4,820 rows / 2,485 tied to parcels
+across 150 counties** (was 148 counties / 2,426 tied at the top of this file, though most of that
+delta reflects work done between this file's last edit and this session's start, not just this
+pass — this pass's own net contribution is +1 Leon, +9 Orange, -1 Karnes cleanup).

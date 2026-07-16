@@ -2945,10 +2945,42 @@ function splitCity(street, city) {
     // token; whatever follows is the city.
     const toks = street.split(/\s+/);
     for (let i = toks.length - 2; i > 0; i--) {
-        if (SUFFIX[toks[i].toUpperCase().replace(/\W/g, "")])
-            return { street: toks.slice(0, i + 1).join(" "), city: toks.slice(i + 1).join(" ") };
+        if (SUFFIX[toks[i].toUpperCase().replace(/\W/g, "")]) {
+            // rural TX route addressing ("COUNTY ROAD 461", "FARM ROAD 129"):
+            // a bare number immediately after the suffix word is the ROUTE
+            // NUMBER, not the start of a city name (no real city starts with
+            // pure digits) -- absorb it into the street before cutting.
+            // (2026-07-16, foreclosure revisit pass -- fixes Leon/Yeager,
+            // additive only: never fires on a legit "<suffix> <CityName>" cut.)
+            let cut = i;
+            if (i + 1 < toks.length && /^\d{1,5}[A-Za-z]?$/.test(toks[i + 1])) cut = i + 1;
+            return { street: toks.slice(0, cut + 1).join(" "), city: toks.slice(cut + 1).join(" ") };
+        }
     }
     return { street, city: "" };
+}
+
+// Rural TX road-type aliases: parcels commonly store the abbreviated form
+// ("CR 461", "FM 129", "PR 1270") while notices spell it out ("County Road
+// 461", "Farm Road 129", "Private Road 1270"). Neither the SUFFIX dictionary
+// (fires only on the LAST token) nor normStreetAll (mid-name mapping) catches
+// this, because the road-TYPE word isn't the last token -- the route NUMBER
+// is. Canonicalize to "<ABBR> <NUM>" for a narrow, additional equality tier
+// in directMatch; only fires on a bare "<road words> <number>" shape, so it
+// can't misfire on an ordinary named street. (2026-07-16 foreclosure revisit.)
+const ROUTE_TYPE = [
+    [/^(?:COUNTY\s+ROAD|CO\s*RD|CR)\s+(\d{1,5}[A-Z]?)$/, "CR"],
+    [/^(?:FARM(?:\s+TO\s+MARKET)?\s+ROAD|FARM\s+RD|FM)\s+(\d{1,5}[A-Z]?)$/, "FM"],
+    [/^(?:RANCH(?:\s+TO\s+MARKET)?\s+ROAD|RANCH\s+RD|RR|RM)\s+(\d{1,5}[A-Z]?)$/, "RR"],
+    [/^(?:PRIVATE\s+ROAD|PVT\s+RD|PR)\s+(\d{1,5}[A-Z]?)$/, "PR"],
+];
+function routeCanon(s) {
+    const up = tokens(s).join(" ");
+    for (const [re, abbr] of ROUTE_TYPE) {
+        const m = up.match(re);
+        if (m) return `${abbr} ${m[1]}`;
+    }
+    return null;
 }
 
 // "ELIZAMEADOWCOURT" -> "ELIZAMEADOW COURT": peel a glued suffix word off
@@ -3282,6 +3314,13 @@ async function directMatch(c, fips, notices) {
             if (nFull && (nFull === cFull || nAll === normStreetAll(cs))) tier = 1;
             else if (nName && nName === cName) tier = 2;
             else if (nName && cName && levenshtein(nName, cName) <= (Math.min(nName.length, cName.length) >= 8 ? 2 : 1)) tier = 3;
+            // rural route-number alias ("COUNTY ROAD 461" == "CR 461") --
+            // only tried once the exact/name/fuzzy tiers all miss, so it never
+            // overrides a stronger existing match (2026-07-16 revisit pass).
+            if (tier === 9) {
+                const nRoute = routeCanon(n.street), cRoute = routeCanon(cs);
+                if (nRoute && cRoute && nRoute === cRoute) tier = 1;
+            }
             if (tier === 9) continue;
             // city/zip agreement breaks ties within a tier
             const bonus = (n.zip && n.zip === cand.situs_zip ? 0 : 0.2) + (n.city && cand.situs_city && n.city.toUpperCase() !== cand.situs_city.toUpperCase() ? 0.2 : 0);

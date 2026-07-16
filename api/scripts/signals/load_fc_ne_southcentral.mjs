@@ -97,24 +97,32 @@ const SOURCES = {
         },
     },
     // Rains County clerk (CivicLive, co.rains.tx.us): /page/rains.Foreclosure
-    // posts ONE consolidated packet per sale month, "<MONTH> <YYYY> TRUSTEE
-    // SALES.pdf" (a dateless "forclosure sales.pdf" catch-all is also
-    // linked -- skipped, no month to bucket it by).
+    // posts ONE consolidated packet per sale month. REVISIT FIX (2026-07-16):
+    // the old discover() required the filename itself to spell "<MONTH>
+    // <YYYY> TRUSTEE SALES.pdf" -- true for Jan-Jun 2026, but the CURRENT
+    // (July 2026) packet is linked under a generic reused filename
+    // ("forclosure sales.pdf", no date at all) with the month/year carried
+    // only in the anchor TEXT ("JULY 2026"). That's why this source returned
+    // 0 packets: the live current-month posting was silently skipped by
+    // construction, not a genuine absence. Fixed to read the date from the
+    // anchor text (works for both filename styles; Aug-Dec are plain
+    // unlinked text on the page today, so they naturally yield nothing).
     rains_cc: {
         fips: "48379",
         venue: /COURT\s*HOUSE/i,
         discover: async () => {
             const base = "https://www.co.rains.tx.us";
             const html = await fetchText(base + "/page/rains.Foreclosure");
-            const out = [];
-            for (const m of html.matchAll(/href="(\/upload\/page\/\d+\/([A-Za-z]+)\s+(\d{4})\s+TRUSTEE\s+SALES\.pdf)"/gi)) {
+            const out = [], seen = new Set();
+            for (const m of html.matchAll(/href="(\/upload\/page\/\d+\/[^"]+\.pdf)"[^>]*>\s*([A-Za-z]+)\s+(\d{4})/gi)) {
                 const mon = MONTHS.indexOf(m[2].slice(0, 3).toUpperCase()) + 1;
-                if (!mon || !inWindow(+m[3], mon)) continue;
+                if (!mon || !inWindow(+m[3], mon) || seen.has(m[1])) continue;
+                seen.add(m[1]);
                 out.push({
                     url: base + encodeURI(m[1]),
                     year: +m[3],
                     month: mon,
-                    name: `rains_${m[3]}-${String(mon).padStart(2, "0")}.pdf`,
+                    name: `rains_${m[3]}-${String(mon).padStart(2, "0")}_${basename(m[1]).replace(/[^\w.-]+/g, "_")}`,
                 });
             }
             return out;
