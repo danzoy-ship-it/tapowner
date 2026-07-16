@@ -119,15 +119,20 @@ signals are **read-time queries joining permits × parcels × parcel_signals —
 - #4 claim-window ⭐: roof_damage hit 6–20mo ago `AND NOT EXISTS (roof permit since the storm)` →
   **502,709 parcels** (in the 6 permit counties alone)
 - #8 roof-age: `roof_age = now() − COALESCE(latest roof-permit issued_date, year_built)` (the invariant)
-**DESIGN RULE (disk-driven):** materialize signals only when they can't be a query. The storm/hail
-signal was MATERIALIZED (3.3M parcel rows = 3.5GB) and that + the wind backfill hit the DB disk ceiling
-(24GB total, `mdzeroextend` failure). Storm signals SHOULD move to store-the-swath + intersect-at-query
-(a few thousand polygon rows) — leaner and tunable. Do NOT re-materialize wind. Permit signals stay
-queries.
-**DISK / COST decision for Frederick:** DB is at ~24GB on Railway (parcels 18GB is inherent). At the
-6-county permit scale we're fine. Taking permits STATEWIDE (254 counties) would grow that table ~10–40×
-and WILL need a bigger Railway volume (a cost/plan decision, his call) — flag before the Miner goes
-statewide. Reclaiming the hail 3.5GB by de-materializing it to swaths is the free alternative.
+**DESIGN RULE (disk-driven):** materialize signals only when they can't be a query. Storm signals
+SHOULD live as store-the-swath + intersect-at-query (a few thousand polygon rows) — leaner and tunable.
+**REALITY (corrected 2026-07-16 by the claims audit):** BOTH storm signals are currently MATERIALIZED
+in `parcel_signals` — hail 3,394,527 rows (`hail_spc`) AND wind 3,038,919 rows (`wind_spc`), 6.43M
+roof_damage rows ≈ 3.5GB. The earlier "wind backfill FAILED / do not re-materialize wind" note was
+WRONG: the wind rows are live and are a primary driver of the disk pressure below. De-materialization
+to swaths has NOT happened. (A wind backfill run did hit an `mdzeroextend` disk-full at one point, but
+3.04M rows had already landed.)
+**DISK / COST decision for Frederick (LIVE — this is the real blocker):** DB is 24GB on Railway
+(parcels 18GB is inherent, storm rows ~3.5GB, permits 3GB) — at/near the volume ceiling. Two paths to
+unblock a statewide permit expansion (which would grow the permits table ~10–40×): (a) **de-materialize
+the storm signals to swaths** — reclaims ~3GB for free and reverts to the intended design, but needs a
+runtime swath-intersect query path built; or (b) **upgrade the Railway volume** — a cost/plan decision.
+His call. Permit signals stay queries.
 
 ## Feasibility log
 - 2026-07-16: **hail-data (#1) feasibility CONFIRMED (green light).** Free public sources exist and

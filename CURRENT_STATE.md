@@ -173,9 +173,12 @@ casitas / 587K beds+baths). Bexar's genuine remaining gap is sale-date/exemption
 - **API / backend** — live-verified tonight: `/health`, `/config`, 5-county owner lookups,
   tiles (valid MVT + cache), geocode, feature gates (402/403). No IDOR, all SQL parameterized,
   Stripe webhook signatures verified, the §7 "never a standalone $0.29 charge" rule holds.
-- **Statewide data** — 253/253 StratMap counties, 14,336,257 parcels, 10 GB of the 30 GB
-  volume; GIST index used, point lookup ~10 ms. **Caveat:** ~51 counties (~580K parcels, 4%)
-  are mis-projected and effectively invisible (see fix D1).
+- **Statewide data** — 253/253 StratMap counties, 14,336,257 parcels. **DB is 24 GB (parcels 18 GB,
+  parcel_signals 3.5 GB, permits 3 GB) — at/near the Railway volume ceiling, NOT 10 GB with headroom**
+  (corrected 2026-07-16 by the claims audit; a wind backfill already hit `mdzeroextend` disk-full).
+  Any statewide expansion (permits, storm materialization) is disk-gated. GIST index used, point
+  lookup ~10 ms. **Caveat:** ~51 counties (~580K parcels, 4%) are mis-projected and effectively
+  invisible (see fix D1).
 - **Web** — signup→OTP→Stripe-checkout flow, referral landing, partner dashboard, ToS/privacy
   drafts (all 5 mandated clauses present), config-driven data-broker notice. Deployed.
   **Redesigned + rebranded 2026-07-14 (per BRAND_AND_PRODUCT_BRIEF.md):** real TapOwner logo

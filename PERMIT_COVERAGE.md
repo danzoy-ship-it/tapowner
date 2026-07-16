@@ -34,7 +34,7 @@ The table is **vertical-generic** (no roofer-specific columns). Each permit capt
 | ✅ | **Fort Worth** | Tarrant 48439 | ArcGIS Server (self-hosted) | mapit.fortworthtexas.gov `.../CIVIC/Permits/MapServer/0` | 707,960 | 7,945 / 18,852 | spatial+addr **87%** |
 | ✅ | **Buda** | Hays 48209 | ArcGIS (MGO/MyPermitNow) | services6.arcgis.com/vXZW4vAaPRr14z2s `.../Permits/FeatureServer/0` | 137 | 1 / 0 | spatial 92% |
 
-**POC total: 3,600,637 permits; 2,945,129 matched to a homeowner parcel.** Corridor (the roofer's SA↔Austin I-35 territory: Travis/Bexar/Comal/Guadalupe/Hays) = 3.17M; Dallas = 435K bonus metro. Roofer signals unlocked: **66,480 parcels with a roof-permit date (signal #2); 38,220 parcels with a solar permit (signal #3; 6,057 since 2024)** — each a real homeowner name + address.
+**POC total: 4,308,597 permits; 3,559,041 matched to a homeowner parcel** (corrected 2026-07-16 by the claims audit — the prior "3,600,637" headline predated Fort Worth's 707,960; line 34 had it but the total never folded it in). Corridor (the roofer's SA↔Austin I-35 territory: Travis/Bexar/Comal/Guadalupe/Hays) = 3.17M; Dallas 435K + Fort Worth 708K = DFW bonus metros. Roofer signals unlocked (current): **71,782 parcels with a roof-permit date (signal #2); 52,381 parcels with a solar permit (signal #3)** — each a real homeowner name + address.
 
 **Data-accuracy pass (2026-07-16):** SA and Dallas were under-counted on first load and were re-mined.
 - **San Antonio** was 102,894 (an ArcGIS layer that only holds a rolling ~18-mo window, 2025+). Re-pulled the CKAN historical CSV (`c22b1ef2…`, 368K rows 2020-07→2024-12) via `load_csv_permits.py` → **423,293** (now correctly > NB/Seguin, matching city size).
