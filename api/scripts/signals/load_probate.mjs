@@ -331,40 +331,186 @@ async function loadSource(c, name, cfg, parseOnly) {
 // BULK/LIST access ONLY. Filled from the metro recon (see report). A --file
 // source is always available for cracked feeds that dump their list to JSON.
 
-// CONFIRMED BULK PROBATE SURFACES (metro recon 2026-07-16). All return a LIST
-// (case-type/date-filtered result set) with decedent style + case number +
-// filing date + case type -- NO login/CAPTCHA. Each still needs a discover()
-// scraper; the wrinkle noted is the only thing between it and a live pull, and
-// the proven ingestion today is `--file <cases.json> --fips NNNNN --source X`.
+// WIRED BULK PROBATE SURFACES (recon + live wiring 2026-07-16). Both return a
+// LIST (date-filtered result set) with decedent style + case number + filing
+// date + case type -- NO login/CAPTCHA. discover() functions above are live;
+// `--file <cases.json> --fips NNNNN --source X` still works for cracked feeds.
 //
 //  harris_probate  48201  https://www.cclerk.hctx.net/applications/websearch/CourtSearch.aspx?CaseType=Probate
-//      ASP.NET WebForms, File Date From/To (txtFrom/txtTo) + ddlCourt(1-5),
-//      btnSearch -> GridView, ~245 rows/week, style "IN THE ESTATE OF: NAME,
-//      DECEASED". WRINKLE: raw GET->POST returns "This Search is currently
-//      unavailable" -- the search needs in-session priming the browser does
-//      (a disclaimer/settings step) before the results bind. Browser-driven
-//      extraction works (recon proved it); unattended scraper = TODO.
-//      Footer also advertises a Data Sales / FTP bulk feed (datasales@cco.hctx.net).
-//  bexar_probate   48029  POST https://portal-txbexar.tylertech.cloud/Portal/Hearing/HearingResults/Read
-//      Tyler Odyssey "Search Hearings" JSON. Body: Location=County Clerk,
-//      HearingType=County Clerk Civil Hearings, SearchType=Courtroom,
-//      Courtroom=Probate Court 1|2|3, DateFrom/DateTo. Rows carry CaseNumber,
-//      Style (decedent), FileDate (epoch ms), CaseTypeId.Description. WRINKLE:
-//      needs a session + __RequestVerificationToken from a prior settings POST.
-//  tarrant_probate 48439  https://portal-txtarrant.tylertech.cloud/PublicAccess/Search.aspx?ID=200
-//      Tyler Odyssey Public Access WebForms, SearchBy=DateFiled(6) +
-//      DateFiledOnAfter/OnBefore, location=All Probate Courts. Style "In the
-//      Estate of NAME, Deceased". Caps at 200 rows/query -> chunk ~2wk windows.
-//  collin_probate  48085  https://portal-txcollin.tylertech.cloud/PublicAccess/Search.aspx?ID=200
-//      Same Odyssey Public Access pattern as Tarrant (PB1- estate / GA1- guardianship).
+//      ASP.NET WebForms. Real fields: File-Date txtFrom/txtTo + ddlCourt(All|1-5)
+//      + DropDownListStatus + btnSearchCase. GridView cols: Case, Court, File
+//      Date, Status, Type Desc, Subtype, Style ("IN THE ESTATE OF: NAME,
+//      DECEASED"). WRINKLE SOLVED: the "currently unavailable" gate clears when
+//      you (a) carry the session cookie from the search-page GET and (b) POST the
+//      FULL form field set (aspxFields) -- a minimal field POST is what triggers
+//      it, not a missing disclaimer step. Flow: GET form -> POST -> 302
+//      CourtSearch_R.aspx?ID=... -> GET results. Rows sort ASC + cap 200/page ->
+//      date-chunked. Footer advertises a Data Sales/FTP bulk feed (datasales@cco.hctx.net).
+//  bexar_probate   48029  Tyler Odyssey Justice Portal, anonymous, no CAPTCHA.
+//      Flow SOLVED: GET /Portal/Home/Dashboard/26 (session cookie) -> POST
+//      /Portal/Hearing/SearchHearings/HearingSearch with SearchCriteria.* (Court
+//      =County Clerk, HearingType=County Clerk Civil Hearings, SearchByType=
+//      Courtroom, SelectedCourtRoom=Probate courtroom id, DateFrom/DateTo,
+//      Search=Submit) -> that stores criteria in session & 302s to /Portal/
+//      (expected) -> POST /Portal/Hearing/HearingResults/Read (Kendo:
+//      sort=&page=1&pageSize=200&group=&filter=) -> JSON Data[]. No
+//      __RequestVerificationToken is required. Probate COURTROOM ids (distinct
+//      from the judicial-officer ids): 30044/30045/86182 = Probate Court 1/2/3.
+//      Rows: CaseNumber, Style ("NAME, DECEASED"), FileDate (/Date(ms)/),
+//      CaseTypeId.Description. Searched by HEARING date -> ACTIVE cases; ~200 cap
+//      -> date-chunked; de-duped by case across courtrooms.
 //
-// BLOCKED (skip-logged, records-request candidates):
+// BLOCKED (skip-logged 2026-07-16, records-request candidates):
+//  tarrant 48439 - portal-txtarrant .../PublicAccess/Search.aspx?ID=200 now 302s
+//      to /PublicAccess/Login.aspx (auth wall); no /Portal/ (Odyssey) deployment
+//      (404). Anonymous bulk search is gone; account creation is off-limits.
+//  collin  48085 - identical to Tarrant: PublicAccess Search.aspx -> Login.aspx,
+//      no /Portal/ (404). Auth-walled.
 //  dallas 48113 - Smart Search needs a name/case#; Search Hearings returns 0
 //      for anonymous users; probate docket .php pages mis-map to the civil docket.
 //  travis 48453 - Odyssey deployment exposes NO date-range/hearing bulk query
 //      (Bexar's /Dashboard/26 redirects to home here); only per-case name lookups.
+// ---- live discover() scrapers (bulk/list surfaces; wired 2026-07-16) --------
+// Cookie-aware session fetch: each portal gates its result set behind a session
+// cookie set on the FIRST GET -- that IS the "priming" step the recon flagged;
+// a plain per-request fetch drops it and the search comes back empty/blocked.
+// redirect:"manual" so a search POST's 302 can be read (Harris) or ignored
+// (Bexar). Lookback defaults to 60d (PROBATE_LOOKBACK_DAYS overrides).
+const LOOKBACK_DAYS = +(process.env.PROBATE_LOOKBACK_DAYS || 60);
+
+function session() {
+    const jar = new Map();
+    const put = (r) => { for (const c of (r.headers.getSetCookie?.() || [])) { const kv = c.split(";")[0], i = kv.indexOf("="); if (i > 0) jar.set(kv.slice(0, i).trim(), kv.slice(i + 1).trim()); } };
+    return async (url, opts = {}) => {
+        const headers = { "User-Agent": UA, ...(opts.headers || {}) };
+        if (jar.size) headers.Cookie = [...jar].map(([k, v]) => `${k}=${v}`).join("; ");
+        const r = await fetch(url, { method: opts.method || "GET", headers, body: opts.body, redirect: "manual", signal: AbortSignal.timeout(opts.timeout || 20000) });
+        put(r);
+        return r;
+    };
+}
+const mdy = (d) => { const p = (n) => String(n).padStart(2, "0"); return `${p(d.getMonth() + 1)}/${p(d.getDate())}/${d.getFullYear()}`; };
+const formBody = (f) => Object.entries(f).map(([k, v]) => encodeURIComponent(k) + "=" + encodeURIComponent(v ?? "")).join("&");
+// pull every posted field out of an ASP.NET WebForms page (hidden + the selected
+// value of each <select>). Posting the FULL field set is what unblocks Harris's
+// "This Search is currently unavailable" -- a minimal field set is rejected.
+function aspxFields(html) {
+    const f = {};
+    for (const m of html.matchAll(/<input\b[^>]*>/gi)) {
+        const tag = m[0], name = (tag.match(/name="([^"]+)"/i) || [])[1]; if (!name) continue;
+        const type = ((tag.match(/type="([^"]+)"/i) || [])[1] || "text").toLowerCase();
+        if (type === "submit" || type === "button" || type === "image") continue;
+        if ((type === "radio" || type === "checkbox") && !/checked/i.test(tag)) continue;
+        f[name] = (tag.match(/value="([^"]*)"/i) || [, ""])[1];
+    }
+    for (const s of html.matchAll(/<select[^>]*name="([^"]+)"[^>]*>([\s\S]*?)<\/select>/gi)) {
+        const sel = (s[2].match(/<option[^>]*selected[^>]*value="([^"]*)"/i) || s[2].match(/<option[^>]*value="([^"]*)"[^>]*selected/i) || [])[1];
+        f[s[1]] = sel != null ? sel : ((s[2].match(/<option[^>]*value="([^"]*)"/i) || [])[1] || "");
+    }
+    return f;
+}
+// adaptive date-chunker: run pull(from,to)->rows over windowDays-sized windows;
+// if a window returns >=cap rows the server truncated it -> recursively split so
+// nothing is silently dropped. Per-window errors are logged and skipped (partial
+// success beats aborting the whole metro).
+async function chunkByDate(startMs, endMs, windowDays, cap, pull, label) {
+    const out = [];
+    const split = async (a, b, depth) => {
+        let rows;
+        try { rows = await pull(new Date(a), new Date(b)); }
+        catch (e) { console.error(`  ${label} ${mdy(new Date(a))}..${mdy(new Date(b))} FAILED: ${e.message}`); return; }
+        if (rows.length >= cap && b - a > 864e5 && depth < 7) {
+            const mid = a + Math.floor((b - a) / 2 / 864e5) * 864e5;
+            await split(a, mid, depth + 1);
+            await split(mid + 864e5, b, depth + 1);
+        } else out.push(...rows);
+    };
+    for (let ws = startMs; ws <= endMs; ws += windowDays * 864e5)
+        await split(ws, Math.min(ws + (windowDays - 1) * 864e5, endMs), 0);
+    return out;
+}
+
+// Harris County Clerk CourtSearch (48201, ASP.NET WebForms). GET the probate
+// search page (sets ASP.NET_SessionId), POST the File-Date range carrying the
+// FULL form field set -> 302 to CourtSearch_R.aspx?ID=... -> GET that -> parse
+// the GridView. Rows sort ASC by file date and hard-cap at 200/page, so a wide
+// window silently truncates -> date-chunk (chunkByDate splits on the cap).
+async function harrisDiscover(lookbackDays = LOOKBACK_DAYS, windowDays = 3) {
+    const BASE = "https://www.cclerk.hctx.net/applications/websearch";
+    const FORM = BASE + "/CourtSearch.aspx?CaseType=Probate";
+    const req = session();
+    const pull = async (from, to) => {
+        const f = aspxFields(await (await req(FORM)).text());
+        f["ctl00$ContentPlaceHolder1$txtFileNo"] = "";
+        f["ctl00$ContentPlaceHolder1$txtFrom"] = mdy(from);
+        f["ctl00$ContentPlaceHolder1$txtTo"] = mdy(to);
+        f["ctl00$ContentPlaceHolder1$ddlCourt"] = "All";
+        f["ctl00$ContentPlaceHolder1$DropDownListStatus"] = "-All";
+        f["ctl00$ContentPlaceHolder1$btnSearchCase"] = "Search";
+        const p = await req(FORM, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded", Referer: FORM, Origin: "https://www.cclerk.hctx.net" }, body: formBody(f) });
+        const loc = p.headers.get("location"); const pbody = await p.text();
+        if (!loc) throw new Error(/currently unavailable/i.test(pbody) ? "search unavailable" : `no redirect (HTTP ${p.status})`);
+        const html = await (await req(new URL(loc, BASE + "/").href)).text();
+        if (/currently unavailable/i.test(html)) throw new Error("search unavailable");
+        const rows = [];
+        for (const t of html.matchAll(/<tr[^>]*>[\s\S]*?<\/tr>/gi)) {
+            // cols: Events, Case, Court, File Date, Status, Type Desc, Subtype, Style, ...
+            const c = [...t[0].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map((x) => x[1].replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim());
+            if (c.length < 8 || !c[1] || !c[7]) continue;              // skip header/pager (no case# / style)
+            const [mm, dd, yy] = (c[3] || "").split("/");
+            rows.push({ caseNo: c[1], court: c[2] || null, filingDate: yy ? `${yy}-${mm}-${dd}` : "", filingType: c[5] || "", decedentRaw: c[7] });
+        }
+        return rows;
+    };
+    const end = new Date(); end.setHours(0, 0, 0, 0);
+    const rows = await chunkByDate(end.getTime() - lookbackDays * 864e5, end.getTime(), windowDays, 200, pull, "harris");
+    const seen = new Set(), out = [];                                  // adjacent windows can't overlap, but de-dup defensively
+    for (const r of rows) { const k = r.caseNo + "|" + r.decedentRaw; if (!seen.has(k)) { seen.add(k); out.push(r); } }
+    return out;
+}
+
+// Bexar County Justice Portal (48029, Tyler Odyssey). GET Dashboard/26 (session
+// cookie), POST the hearing-search criteria per Probate courtroom + hearing-date
+// window (this stores the criteria server-side; the 302 back to /Portal/ is
+// expected, NOT a failure), then POST the Kendo results endpoint -> JSON Data[].
+// Anonymous, no CAPTCHA. Caps ~200/query -> date-chunk. Search is by HEARING
+// date, so this surfaces ACTIVE probate cases; FileDate (true filing date) is
+// kept as event_date and we de-dup by case number across the 3 courtrooms.
+async function bexarDiscover(lookbackDays = LOOKBACK_DAYS, windowDays = 10) {
+    const HOST = "https://portal-txbexar.tylertech.cloud";
+    const DASH = HOST + "/Portal/Home/Dashboard/26";
+    const COURTROOMS = { "30044": "Probate Court 1", "30045": "Probate Court 2", "86182": "Probate Court 3" };
+    const req = session();
+    let primed = false;
+    const epoch = (s) => { const m = /\/Date\((\d+)\)\//.exec(s || ""); return m ? new Date(+m[1]).toISOString().slice(0, 10) : ""; };
+    const pullCourt = (courtId) => async (from, to) => {
+        if (!primed) { await (await req(DASH)).text(); primed = true; }
+        const crit = {
+            PortletName: "HearingSearch", "Settings.CaptchaEnabled": "False", "Settings.DefaultLocation": "All Locations",
+            "SearchCriteria.SelectedCourt": "County Clerk", "SearchCriteria.SelectedHearingType": "County Clerk Civil Hearings",
+            "SearchCriteria.SearchByType": "Courtroom", "SearchCriteria.Soundex": "false",
+            "SearchCriteria.SearchValue": "", "SearchCriteria.LastNameValue": "", "SearchCriteria.FirstNameValue": "", "SearchCriteria.MiddleNameValue": "",
+            "SearchCriteria.SelectedJudicialOfficer": "", "SearchCriteria.SelectedCourtRoom": courtId,
+            "SearchCriteria.DateFrom": mdy(from), "SearchCriteria.DateTo": mdy(to), Search: "Submit",
+        };
+        const s = await req(HOST + "/Portal/Hearing/SearchHearings/HearingSearch", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded", Referer: DASH, Origin: HOST }, body: formBody(crit) });
+        await s.text();
+        const r = await req(HOST + "/Portal/Hearing/HearingResults/Read", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "X-Requested-With": "XMLHttpRequest", Referer: DASH, Origin: HOST, Accept: "application/json,*/*" }, body: "sort=&page=1&pageSize=200&group=&filter=" });
+        const j = JSON.parse(await r.text());
+        return (j.Data || []).map((x) => ({ caseNo: x.CaseNumber, court: x.CourtRoom || COURTROOMS[courtId], filingDate: epoch(x.FileDate), filingType: x.CaseTypeId?.Description || "", decedentRaw: x.Style || x.SortStyleOrDefendant || "" }));
+    };
+    const end = new Date(); end.setHours(0, 0, 0, 0);
+    const byCase = new Map();
+    for (const courtId of Object.keys(COURTROOMS)) {
+        const rows = await chunkByDate(end.getTime() - lookbackDays * 864e5, end.getTime(), windowDays, 200, pullCourt(courtId), "bexar/" + COURTROOMS[courtId]);
+        for (const r of rows) if (r.caseNo && !byCase.has(r.caseNo)) byCase.set(r.caseNo, r);
+    }
+    return [...byCase.values()];
+}
+
 const SOURCES = {
-    // discover() scrapers go here (see recipes above). Until wired, use --file.
+    harris_probate: { fips: "48201", discover: () => harrisDiscover() },
+    bexar_probate: { fips: "48029", discover: () => bexarDiscover() },
 };
 
 // --file <path>: treat a local JSON array of cases as one source. `--fips NNNNN`
