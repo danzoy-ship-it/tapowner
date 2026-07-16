@@ -246,6 +246,28 @@ const streetBody = (s) =>
         .replace(/\s+/g, " ")
         .trim();
 
+// Return-address lever (experimental, opt-in via --try-return-address): the
+// notice's "return to" address is usually the FILING TRUSTEE/LAW FIRM's office,
+// not the property -- but occasionally (self-filed / small local trustees) it
+// IS the property. Two guards before we'll trust it: (1) addressName doesn't
+// read like a business/firm, (2) the same address doesn't repeat across other
+// notices in this batch (a law office recurs; a homeowner's address doesn't).
+const BUSINESS_NAME_RE =
+    /\b(L\.?L\.?C|L\.?L\.?P|P\.?C|INC|CORP|CO\.?|COMPANY|FIRM|GROUP|LAW|ATTORNEYS?|ESQ|TRUSTEE|TITLE|MORTGAGE|BANK|SERVICING|ASSOCIATES|N\.?A\.?)\b/i;
+
+function isLikelyBusinessName(name) {
+    return !name || BUSINESS_NAME_RE.test(name);
+}
+
+// key for the batch frequency map: normalized "number+street|zip"
+function returnAddrKey(ra) {
+    if (!ra || !ra.address1) return null;
+    const num = (ra.address1.match(/^\d+/) || [])[0];
+    const body = streetBody(ra.address1);
+    if (!num || !body) return null;
+    return `${num}|${body}|${ra.zip || ""}`;
+}
+
 // Parse a legal description into {subWords[], lot, blk} for a tuple join.
 function parseLegal(s) {
     if (!s) return null;
@@ -287,7 +309,7 @@ async function censusGeocode(street, city, zip) {
 
 // ---------------------------------------------------------------- parcel join
 
-async function joinParcel(c, fips, doc) {
+async function joinParcel(c, fips, doc, opts = {}) {
     const legal = propLegal(doc);
     const ocrStreet = streetFromOcr(doc.ocrText);
 
@@ -346,6 +368,33 @@ async function joinParcel(c, fips, doc) {
             return { parcel_id: r.rows[0].id, lon: r.rows[0].lon, lat: r.rows[0].lat, method: "legal_tuple", street: ocrStreet };
     }
 
+    // (d) EXPERIMENTAL, opt-in only (--try-return-address): last-resort guess
+    // off the notice's return-to address. Tagged as its own method so it's
+    // never conflated with the vetted joins above and is easy to audit/delete
+    // (WHERE meta->>'matchMethod'='return_address_guess') if the false-positive
+    // rate turns out too high once tested against live data.
+    if (opts.tryReturnAddress && doc.returnAddress) {
+        const ra = doc.returnAddress;
+        const key = returnAddrKey(ra);
+        const freq = key && opts.returnAddrFreq ? opts.returnAddrFreq.get(key) || 0 : 99;
+        if (key && freq <= 1 && !isLikelyBusinessName(ra.addressName) && ra.city && ra.zip) {
+            const num = (ra.address1.match(/^\d+/) || [])[0];
+            const body = streetBody(ra.address1);
+            if (num && body) {
+                const r = await c.query(
+                    `SELECT id, situs_address, ST_X(ST_Centroid(geom)) lon, ST_Y(ST_Centroid(geom)) lat
+                     FROM parcels
+                     WHERE county_fips=$1 AND situs_number=$2 AND upper(situs_address) LIKE '%'||$3||'%'
+                       AND (owner_name IS NULL OR owner_name !~* '${GOV_OWNER_RE}')
+                     LIMIT 2`,
+                    [fips, num, body]
+                );
+                if (r.rows.length === 1)
+                    return { parcel_id: r.rows[0].id, lon: r.rows[0].lon, lat: r.rows[0].lat, method: "return_address_guess", street: null };
+            }
+        }
+    }
+
     return { parcel_id: null, lon: null, lat: null, method: "unmatched", street: ocrStreet };
 }
 
@@ -364,19 +413,31 @@ async function ensureSchema(c) {
     await c.query(`CREATE INDEX IF NOT EXISTS ix_parcel_signals_type ON parcel_signals(county_fips, signal_type)`);
 }
 
-async function loadCounty(c, name, cfg, days) {
+async function loadCounty(c, name, cfg, days, tryReturnAddress = false) {
     const source = `${name}_kofile`;
     console.log(`${name}: fetching FC notices (last ${days}d) from ${cfg.sub}.tx.publicsearch.us ...`);
     const notices = await fetchNotices(cfg.sub, days);
     console.log(`${name}: ${notices.length} notices pulled`);
     if (!notices.length) return;
 
-    const stats = { situs_direct: 0, geocode_spatial: 0, geocode_only: 0, legal_tuple: 0, unmatched: 0 };
+    // Pre-pass: count how often each return-address recurs in this batch --
+    // a law firm's office shows up on many notices, a homeowner's on one.
+    // Used only when --try-return-address is passed (see joinParcel strategy d).
+    let returnAddrFreq = null;
+    if (tryReturnAddress) {
+        returnAddrFreq = new Map();
+        for (const doc of notices) {
+            const key = returnAddrKey(doc.returnAddress);
+            if (key) returnAddrFreq.set(key, (returnAddrFreq.get(key) || 0) + 1);
+        }
+    }
+
+    const stats = { situs_direct: 0, geocode_spatial: 0, geocode_only: 0, legal_tuple: 0, return_address_guess: 0, unmatched: 0 };
     const rows = [];
     for (const doc of notices) {
         const ref = String(doc.docNumber || doc.documentNumber || doc.instrumentNumber || doc.docId);
         if (!ref) continue;
-        const j = await joinParcel(c, cfg.fips, doc);
+        const j = await joinParcel(c, cfg.fips, doc, { tryReturnAddress, returnAddrFreq });
         stats[j.method]++;
         rows.push({
             parcel_id: j.parcel_id,
@@ -460,6 +521,12 @@ async function main() {
     // time (>=21 days' notice required), so upcoming sales are all captured.
     const daysArg = args.find((a) => a.startsWith("--days="));
     const days = daysArg ? parseInt(daysArg.split("=")[1], 10) : 45;
+    // EXPERIMENTAL (see joinParcel strategy d): off by default so a normal run's
+    // behavior/tie-rates are unchanged. Pass to test the return-address lever on
+    // a county and compare its `return_address_guess` count in the printed
+    // match-method stats before trusting it -- audit/delete via
+    // `DELETE FROM parcel_signals WHERE source=... AND meta->>'matchMethod'='return_address_guess'`.
+    const tryReturnAddress = args.includes("--try-return-address");
     const want = args.filter((a) => !a.startsWith("--"));
     const names = want.length ? want : Object.keys(SOURCES);
 
@@ -477,7 +544,7 @@ async function main() {
             continue;
         }
         try {
-            await loadCounty(c, name, cfg, days);
+            await loadCounty(c, name, cfg, days, tryReturnAddress);
         } catch (e) {
             console.error(`${name} FAILED:`, e.message);
         }
