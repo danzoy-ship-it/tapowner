@@ -644,3 +644,13 @@ TP-token crack (Cooke) remains valuable for TP counties that DO expose a .zip ce
 
 ## 2026-07-15 — Sabine 48403 via SWData COLLECTORS export (scratchpad)
 SWData "export_collector" pipe-delimited roll (collector_* cols; collections roll, NO improvement detail but has collector_hscode + collector_exempt + collector_deeddate). NEW reusable `load_swdata_collectors.py` → sale 20,774, exempt 4,212 (join apn==collector_geoid). Applies to any SWData county posting a COLLECTORS export.
+
+## 2026-07-15 — crack fleet wave 8 (10 counties)
+### Loaded (bulk, allowed)
+- Jones 48253 + Leon 48289 — Harris-eSearch CSV (exemptions 4.9K / 4.2K). URLs keep literal '+'.
+- Fannin 48147 — BIS FS (sale 27K, year 16K). Grimes 48185 — BIS FS (sale 25K, year 3K). Both need Referer.
+### Deferred / not loaded
+- **Erath 48143** — BIS FS returns prop_ids that DON'T match our parcels key (join 161/24K → safe ABORT). load_bis_gis keys on prop_id only; needs a geo_id join variant to salvage (esearch.erath-cad.com improvements are reCAPTCHA-gated). Real domain erath-cad.com.
+- **JimWells 48249 / Burleson 48051 / Maverick 48323** — improvement detail only via PER-PROPERTY API (TP searchfulltext+/improvement for JimWells/Maverick [Maverick's is empty]; BIS eSearch GetImprovements?propertyId= for Burleson). = the mass-harvest path Frederick vetoed → DEFERRED to a sanctioned per-property pass. (Burleson/JimWells could still get deed/value bulk from their BIS FS if we extract the serverId.)
+- **Hopkins 48223 (iswdata SPA 403) / Montague 48337 (Blazor/SignalR, no COLLECTORS.zip)** — records-request.
+### Note: TP `/public/config/reports` for JimWells/Maverick = 100% PDFs (no .zip export). Confirms the TP-token bulk crack only works where a county actually posts a .zip export (Cooke did; these don't).

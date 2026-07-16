@@ -7,8 +7,8 @@ Regenerate with `python data/build_coverage_log.py` after each mining batch (ref
 ## Scoreboard (253 counties)
 
 - ☑ **Mined (has improvements/feature tags): 74** / 253
-- Full attributes (improv+dims): 43  ·  Partial: 54  ·  Geometry-only (need mining): 156  ·  Missing from DB: 0
-- Seller-signals — sale date: 83 counties  ·  exemptions (homestead/over-65/DV tenure): 117 counties  ·  **any seller-signal: 141 counties**
+- Full attributes (improv+dims): 43  ·  Partial: 56  ·  Geometry-only (need mining): 154  ·  Missing from DB: 0
+- Seller-signals — sale date: 85 counties  ·  exemptions (homestead/over-65/DV tenure): 119 counties  ·  **any seller-signal: 145 counties**
 
 Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISSING. % = share of the county's parcels with that attribute.
 
@@ -48,11 +48,11 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Wharton | 48481 | 31,888 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Upshur | 48459 | 30,293 | · | · | · | · | 73 | · | PARTIAL |
 | [ ] | Kendall | 48259 | 29,986 | · | · | · | · | 90 | · | PARTIAL |
-| [ ] | Fannin | 48147 | 29,043 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Fannin | 48147 | 29,043 | · | · | · | · | 94 | · | PARTIAL |
 | [ ] | Jimwells | 48249 | 27,944 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Jones | 48253 | 27,732 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Grimes | 48185 | 27,711 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Leon | 48289 | 27,570 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Jones | 48253 | 27,732 | · | · | · | · | · | 18 | GEOM-ONLY |
+| [ ] | Grimes | 48185 | 27,711 | · | · | · | · | 89 | · | PARTIAL |
+| [ ] | Leon | 48289 | 27,570 | · | · | · | · | · | 15 | GEOM-ONLY |
 | [ ] | Burleson | 48051 | 27,282 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Houston | 48225 | 26,611 | · | · | · | · | · | 18 | GEOM-ONLY |
 | [ ] | Maverick | 48323 | 26,048 | · | · | · | · | · | · | GEOM-ONLY |
