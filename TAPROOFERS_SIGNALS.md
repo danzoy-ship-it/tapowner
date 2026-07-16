@@ -51,3 +51,26 @@ Standing rules for this vertical
 * Ethics rule (non-negotiable): the trigger may be an insurance cliff, code violation, or claim window; the outreach educates generically and NEVER reveals the specific trigger ("Texas carriers are switching older roofs to depreciated coverage — here's what that means"), same discipline as the probate rule in TAPOWNER_BUILD.md's appendix.
 * Priority when this vertical kicks off: Family B first (5,6,7 — free on existing data, strongest pitch), then storm pipeline (1–4), then permit family (9,12–17), then grinds (11,18,21). #10 and #20 are near-free quick wins.
 * Compliance: all signals inherit the pre-launch legal gate framework (vendor addendum, ToS flow-down, TX data-broker registration). Insurance-related messaging gets its own line in the attorney review.
+
+## Clarifications: insurance facts (Family B) + FSBO/expired sourcing (#19)
+
+Insurance facts for messaging accuracy + attorney review (Family B #5/#6/#7)
+All verified against 2026 Texas-market sources. These support the pitch but MUST stay generic in user-facing copy; specifics live here for legal review.
+
+* The ACV shift is real and dated to roof age. Many Texas policies convert roof coverage from Replacement Cost (RCV) to Actual Cash Value (ACV) as the roof ages; the 15-year mark is the common trigger, and some carriers apply it as early as 10 years in high-hail Texas markets. (Sources: RoofVista "Roof Insurance Requirements by State 2026"; TexasBayCU "Did Roof Coverage Change on Your Renewal"; JRH Construction "Roof Depreciation Schedule for Texas 2026.")
+* Representative depreciation schedule (one published example of a roof payment schedule): 11–15 yrs → ~60% of replacement cost covered; 16–20 yrs → ~40%; 21+ yrs → ~20%. Carriers use proprietary tables (State Farm, Allstate, USAA, Farmers, Liberty Mutual, Travelers, Texas Farm Bureau each differ); asphalt depreciates ~4–6%/yr in Texas. Treat as illustrative, not universal. (Source: TexasBayCU; JRH Construction.)
+* Non-renewal / new-policy refusal: many Texas carriers won't write a NEW policy on roofs older than 15–20 yrs, and Farmers (among others) requires inspection on roofs over ~15–20 yrs before renewal, with non-renewal if it fails. (Sources: CBS Austin "How to Get Insurance to Pay for Roof Replacement 2026"; Winik.io "15 Year Roof Insurance Rule"; Insurance.com.)
+* Class-4 impact-resistant discount: Texas carriers offer roughly 5–30% premium discounts for UL-2218 Class 4 shingles; cumulative discount often exceeds the upgrade cost over the roof's life. (Sources: CBS Austin; GoNano 2026 guide; RoofVista.)
+* Two Texas-specific legal landmines the messaging must avoid:
+   * Tex. Insurance Code §27.02 makes it a violation for a contractor to advertise waiving/absorbing/rebating the homeowner's insurance deductible. App copy must never imply this.
+   * "Cosmetic damage" endorsements increasingly exclude hail dents that don't cause leaks (hits metal roofs hardest) — so don't promise claim payouts as automatic.
+   * §542A governs weather-claim pre-suit notice timelines — relevant to the "claim window" signal (#4); confirm exact current windows with counsel before any "your window is closing" copy ships.
+* ATTORNEY-REVIEW LINE (explicit): any insurance-related messaging in the roofer vertical must be reviewed against §27.02 (deductible), §542A (claim notice), and cosmetic-exclusion realities, and must stay educational/generic rather than making carrier-specific or payout-specific promises.
+
+FSBO / expired-listing data (#19) — BUY, don't build
+This is the one "genuinely new" signal with an access-restricted path. Resolution: it's a purchased data feed, not a scrape.
+
+* Do NOT scrape MLS (licensed) or FSBO listing sites (ToS-restricted). That's the dead-end to avoid.
+* Legitimate vendors sell FSBO + Expired/Withdrawn/Cancelled + Pre-foreclosure (Lis Pendens / Notice of Default / Notice of Trustee Sale) as daily-delivered records with owner contact info, DNC-flagged, filterable by zip/radius. Established players: REDX, Vulcan7, Landvoice, my+plus leads (Austin TX-based), ArchAgent, Mojo. Most are subscription (~$40–60/mo tiers) and several expose native API/CRM integrations.
+* Integration approach when this vertical is built: treat as a `TraceProvider`-style vendor behind the same interface pattern as BatchData — signed terms + API, matched to parcels by address. Note many of these overlap the AGENT vertical's needs (expired/FSBO/pre-foreclosure are agent signals too), so a single vendor deal could feed both products — cost amortizes across verticals, consistent with the shared-engine model.
+* Compliance note: these vendors DNC-flag their data and rely on FSBO "implied consent," but our standing outreach rule still applies — generic/educational, honor opt-outs, and this feed inherits the pre-launch legal gate.
