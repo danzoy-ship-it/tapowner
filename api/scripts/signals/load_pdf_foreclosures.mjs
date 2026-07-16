@@ -639,6 +639,204 @@ const SOURCES = {
             return out;
         },
     },
+    // Wood County clerk (CivicLive, mywoodcounty.com): /page/cc_foreclosure
+    // links one or more packets per sale month at /upload/page/0074/
+    // "<Month> <Year> Foreclosure[s] [N].pdf".
+    wood_cc: {
+        fips: "48499",
+        // sale venue: Wood County Courthouse, 100 S Main St, Quitman
+        // (number-pinned: Main St has real properties)
+        venue: /COURT\s*HOUSE|\b10[0O]\s+S(?:OUTH)?\.?\s*MAIN\b/i,
+        discover: async () => {
+            const base = "https://www.mywoodcounty.com";
+            const html = await fetchText(base + "/page/cc_foreclosure");
+            const out = [];
+            for (const m of html.matchAll(/href="(\/upload\/page\/\d+\/([A-Za-z]+)\s+(\d{4})\s+Foreclosure[^"]*\.pdf)"/gi)) {
+                const mon = MONTHS.indexOf(m[2].slice(0, 3).toUpperCase()) + 1;
+                if (!mon || !inWindow(+m[3], mon)) continue;
+                out.push({
+                    url: base + encodeURI(m[1]),
+                    year: +m[3],
+                    month: mon,
+                    name: `wood_${m[3]}-${String(mon).padStart(2, "0")}_${path.basename(m[1]).replace(/[^\w.-]+/g, "_")}`,
+                });
+            }
+            return out;
+        },
+    },
+    // Upshur County clerk (own IIS/ASP directory on records.countyofupshur.com,
+    // "Integrated Data Services" footer): /countyclerk/foreclosures/
+    // listDocs-new.asp?year=<Y> lists per-notice docs showdoc.asp?year=<Y>&
+    // docName=<YYYY-MM-DD>-foreclosure-<NN>.pdf -- the docName date IS the
+    // sale date. showdoc.asp is an HTML <object> viewer; the raw PDF lives at
+    // LinkedDir/<year>/<docName>. HTTP only (no TLS on the records host).
+    upshur_cc: {
+        fips: "48459",
+        // sale venue: Upshur County Justice Center, 405 N Titus St, Gilmer
+        venue: /JUSTICE\s*CENTER|\b4[0O]5\s+N(?:ORTH)?\.?\s*TITUS/i,
+        discover: async () => {
+            const base = "http://records.countyofupshur.com/countyclerk/foreclosures/";
+            // years covered by the discovery window (Nov/Dec runs roll into Jan)
+            const now = new Date(), years = new Set();
+            for (let d = -(+(process.env.FC_BACK || 0)); d <= 2; d++) {
+                const t = new Date(Date.UTC(now.getFullYear(), now.getMonth() + d, 1));
+                years.add(t.getUTCFullYear());
+            }
+            const out = [];
+            for (const y of years) {
+                let html;
+                try {
+                    html = await fetchText(`${base}listDocs-new.asp?year=${y}`);
+                } catch (e) {
+                    console.error(`  upshur ${y}: list fetch failed (${e.message})`);
+                    continue;
+                }
+                for (const m of html.matchAll(/href=\s*"?showdoc\.asp\?year=\d+&(?:amp;)?docName=(((\d{4})-(\d{2})-\d{2})[^"'& ]*\.pdf)/gi)) {
+                    const year = +m[3], mon = +m[4];
+                    if (!mon || mon > 12 || !inWindow(year, mon)) continue;
+                    out.push({
+                        url: `${base}LinkedDir/${y}/${m[1]}`,
+                        year,
+                        month: mon,
+                        name: `upshur_${m[1]}`,
+                    });
+                }
+            }
+            return out;
+        },
+    },
+    // Angelina County clerk (WordPress, angelinacounty.net): trustee-sale
+    // notices are calendar EVENTS (/events/notice-of-...-N/); each event page
+    // links per-notice PDFs under /files/pdf/sales/<MMDDYY>/ where the MMDDYY
+    // folder IS the sale date. Events listing shows current/upcoming sales only.
+    angelina_cc: {
+        fips: "48005",
+        // sale venue: 211 East Shepherd Ave, Lufkin (OCR: "21 I East
+        // Shepherd", "Lufldn"); number-pinned
+        venue: /COURT\s*HOUSE|\b21\s?[1Il]?\s+E(?:AST)?\.?\s*SHEPHERD/i,
+        discover: async () => {
+            const base = "https://www.angelinacounty.net";
+            const html = await fetchText(base + "/events/");
+            const evs = new Set();
+            for (const m of html.matchAll(/href="(?:https?:\/\/www\.angelinacounty\.net)?(\/events\/notice-of-[^"]*(?:trustee|foreclosure)[^"]*\/)"/gi))
+                evs.add(m[1]);
+            const out = [], seen = new Set();
+            for (const ev of evs) {
+                let page;
+                try {
+                    page = await fetchText(base + ev);
+                } catch (e) {
+                    console.error(`  angelina ${ev}: event fetch failed (${e.message})`);
+                    continue;
+                }
+                for (const f of page.matchAll(/href="(?:https?:\/\/www\.angelinacounty\.net)?(\/files\/pdf\/sales\/(\d{2})(\d{2})(\d{2})\/[^"]+\.pdf)"/gi)) {
+                    const mon = +f[2], year = 2000 + +f[4];
+                    if (!mon || mon > 12 || !inWindow(year, mon) || seen.has(f[1])) continue;
+                    seen.add(f[1]);
+                    out.push({
+                        url: base + encodeURI(f[1]),
+                        year,
+                        month: mon,
+                        name: `angelina_${year}-${String(mon).padStart(2, "0")}_${path.basename(f[1]).replace(/[^\w.-]+/g, "_")}`,
+                    });
+                }
+            }
+            return out;
+        },
+    },
+    // Van Zandt County clerk (CivicLive, vanzandtcounty.org): /page/
+    // vanzandt.Foreclosures lists YEARS of per-notice scans under
+    // /upload/page/2713/...; file/folder names are chaotic ("7.7.26_4.pdf",
+    // "august_420263.pdf") but the anchor TEXT carries the sale date
+    // ("July,7, 2026" / "September 1, 2026"). Trustee's-DEED scans (post-sale
+    // paperwork) share the list -- skip on filename.
+    vanzandt_cc: {
+        fips: "48467",
+        // sale venue: Van Zandt County Courthouse, 121 E Dallas St, Canton
+        venue: /COURT\s*HOUSE|\b12[1Il]\s+E(?:AST)?\.?\s*DALLAS\b/i,
+        discover: async () => {
+            const base = "https://www.vanzandtcounty.org";
+            const html = await fetchText(base + "/page/vanzandt.Foreclosures");
+            const out = [], seen = new Set();
+            for (const m of html.matchAll(/<a[^>]*href="(\/upload\/page\/2713\/[^"]+\.pdf)"[^>]*>(?:\s|<[^>]+>)*([A-Za-z]+)[,.\s]+\d{1,2}[,.\s]+\s*(\d{4})/gi)) {
+                const mon = MONTHS.indexOf(m[2].slice(0, 3).toUpperCase()) + 1;
+                if (!mon || !inWindow(+m[3], mon) || /deed/i.test(m[1]) || seen.has(m[1])) continue;
+                seen.add(m[1]);
+                out.push({
+                    url: base + encodeURI(m[1]),
+                    year: +m[3],
+                    month: mon,
+                    name: `vanzandt_${m[3]}-${String(mon).padStart(2, "0")}_${path.basename(m[1]).replace(/[^\w.-]+/g, "_")}`,
+                });
+            }
+            return out;
+        },
+    },
+    // Panola County clerk (CivicPlus ArchiveCenter): Archive.aspx?AMID=39
+    // ("Foreclosures") lists per-notice scans at Archive.aspx?ADID=<id>,
+    // anchor text "Trustee's Sale - July 7, 2026" / "Foreclosure Sale -
+    // May 5, 2026" (sale date WITH year).
+    panola_cc: {
+        fips: "48365",
+        // sale venue: Panola County Courthouse, 110 S Sycamore St, Carthage
+        // (OCR: "1 IO S. Sycamore"; number-pinned)
+        venue: /COURT\s*HOUSE|\b1\s?[1IL][0O]?\s+S(?:OUTH)?\.?\s*SYCAMORE/i,
+        discover: async () => {
+            const html = await fetchText("https://www.co.panola.tx.us/Archive.aspx?AMID=39");
+            const out = [];
+            for (const m of html.matchAll(/href="(Archive\.aspx\?ADID=(\d+))"[\s\S]{0,160}?(?:Trustee|Foreclosure)[^<>]{0,6}Sale\s*-\s*([A-Za-z]+)\s+\d{1,2},\s*(\d{4})/gi)) {
+                const mon = MONTHS.indexOf(m[3].slice(0, 3).toUpperCase()) + 1;
+                if (!mon || !inWindow(+m[4], mon)) continue;
+                out.push({
+                    url: new URL(m[1], "https://www.co.panola.tx.us/").href,
+                    year: +m[4],
+                    month: mon,
+                    name: `panola_${m[4]}-${String(mon).padStart(2, "0")}_ADID${m[2]}.pdf`,
+                });
+            }
+            return out;
+        },
+    },
+    // Henderson County clerk (Granicus govAccess, henderson-county.com --
+    // the Akamai front 403s curl, but plain Node fetch passes): /departments/
+    // county-clerk/county-clerk-foreclosure-sales-listings links ONE packet
+    // per sale month at /home/showpublisheddocument/<id>/<ticks>, anchor text
+    // "<Month> <Year>".
+    henderson_cc: {
+        fips: "48213",
+        // sale venue: Henderson County Courthouse, 100 E Tyler St, Athens
+        venue: /COURT\s*HOUSE|\b10[0O]\s+E(?:AST)?\.?\s*TYLER\b/i,
+        discover: async () => {
+            const base = "https://www.henderson-county.com";
+            const html = await fetchText(base + "/departments/county-clerk/county-clerk-foreclosure-sales-listings");
+            const out = [], seen = new Set();
+            for (const m of html.matchAll(/<a[^>]*href="(\/home\/showpublisheddocument\/\d+\/\d+)"[^>]*>(?:\s|<[^>]+>)*([A-Za-z]+)\s+(\d{4})/gi)) {
+                const mon = MONTHS.indexOf(m[2].slice(0, 3).toUpperCase()) + 1;
+                if (!mon || !inWindow(+m[3], mon)) continue;
+                const name = `henderson_${m[3]}-${String(mon).padStart(2, "0")}.pdf`;
+                if (seen.has(name)) continue;
+                seen.add(name);
+                out.push({ url: base + m[1], year: +m[3], month: mon, name });
+            }
+            return out;
+        },
+    },
+    // Nacogdoches County: NOT here -- the county moved to a minimal CivicPlus
+    // site (nacogdochesco.gov, re-verified 2026-07-15: sitemap has NO
+    // foreclosure page, /167/Public-Notices carries none); notices live only
+    // in nacogdoches.tx.publicsearch.us (Kofile/GovOS), the separate platform
+    // crack in FORECLOSURE_SOURCES.md.
+    // Rusk County: NOT here -- co.rusk.tx.us (CivicLive) clerk page posts only
+    // a "Designated Foreclosure Resolution" PDF + stray scans, no notice
+    // system (re-verified 2026-07-15); rusk.tx.publicsearch.us (Kofile) is up
+    // -> the separate platform crack.
+    // Harrison County: NOT here -- harrisoncountytexas.org/.gov (CivicLive)
+    // publishes NO foreclosure notices (clerk + PublicNoticeInfo pages carry
+    // only election/holiday notices, re-verified 2026-07-15); no Kofile
+    // subdomain either. Notices appear to be courthouse-posting only.
+    // Cherokee County: NOT here -- co.cherokee.tx.us is a tiny static site
+    // (commissioners-court agendas only, every path serves the homepage,
+    // re-verified 2026-07-15); no Kofile subdomain. No notices online.
     // Smith County: NOT here -- smith-county.com/298/Foreclosures (CivicPlus)
     // publishes NO notice PDFs (re-verified 2026-07: prose + one dead
     // DocumentCenter link + no trustee-sale ArchiveCenter module); notices
