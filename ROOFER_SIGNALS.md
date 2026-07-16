@@ -21,11 +21,21 @@ in the 9 non-storm months too. Hail is the flagship, not the whole product.
 ## Signal table (STRATEGY lane fills/refines; ENGINEERING lane builds)
 | # | Signal (trigger = "why they likely need a roof now") | Data source | Join method | New vs reuse | Priority | Status |
 |---|---|---|---|---|---|---|
-| 1 | **Hail/storm damage** — property sat under a recent damaging hail swath | NOAA/NWS (MRMS MESH hail-size grids, SPC storm reports, NCEI Storm Events) — free public | spatial: hail polygon/point ∩ parcel geom | NEW (weather) | flagship | ⏳ feasibility spike (this session) |
+| 1 | **Hail/storm damage** — property sat under a recent damaging hail swath | NOAA SPC daily storm reports (free/public, carries hail SIZE) — `load_hail_roof_damage.mjs` | spatial: report buffered → ∩ parcel geom (GIST index, no full scan) | NEW (weather) | flagship | ✅ **BUILT + proven** — 89,888 parcels from the 2024-05-28 event; `signal_type='roof_damage'`, no expiry, threshold(≥1")/buffer tunable. NEXT: full recent-window backfill (window = strategy call) + optional MRMS MESH GRIB2 upgrade for true swaths |
 | 2 | **Roof aging out of warranty** — asphalt shingle ~20–25yr life; homes built/re-roofed that long ago are due | `year_built` (ALREADY collected statewide) + re-roof permit date (source #4) | derived attribute, no join needed | REUSE (have year_built) | high (year-round) | ⬜ defined, not built |
 | 3 | **Solar-permit tell** — a filed solar permit means roof load/age is top-of-mind; many need a new roof first and don't know it | building-permit data (city/county permit portals) | address/parcel match | NEW (permits) | high (year-round) | ⬜ needs permit source |
 | 4 | **Probate / inherited property** — heir inheriting an older house that likely needs roof + renovation | county probate court filings | address/legal spatial join (SAME lane as foreclosures) | REUSE (court-record machinery) | high (year-round) | ⬜ defined; cheap add |
 | 5 | **[Frederick's separate chat to add more — permit-for-addition, recent-sale-of-older-home, insurance-claim proxies, neighbor-just-replaced clustering, etc.]** | | | | | ⬜ |
+
+## Lane assignments (2026-07-16)
+- **Miner / data session → BUILDING-PERMIT mining** into a NEW `permits` table (its lane, alongside
+  `parcels`). Unblocks signals #2 (re-roof permit dates) + #3 (solar permits) and is reusable across
+  remodeler/solar/pool verticals. Crack-the-system survey (Socrata/ArcGIS open-data, Accela, Tyler
+  EnerGov, CivicPlus), metros first. See its mission prompt.
+- **App / build session (me) → `parcel_signals` signals:** probate (reuses the foreclosure court-
+  record lane — cheapest first), and the hail spatial-intersect (`roof_damage`). Roof-age (#2) is
+  DERIVED from `parcels.year_built` (have) + the Miner's `permits` re-roof dates once they land.
+- No table collision: Miner writes `parcels`/`permits`; app writes `parcel_signals`.
 
 ## Notes for the engineering lane
 - **Probate is the cheapest first non-storm signal** — it's the exact `parcel_signals` + court-record
