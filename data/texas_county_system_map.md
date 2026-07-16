@@ -675,3 +675,8 @@ SWData "export_collector" pipe-delimited roll (collector_* cols; collections rol
 - **Fayette 48149** — `fayettecad.org/wp-content/uploads/2025/08/FayetteCadGISData2025.zip` → Ownership.dbf (prop_id, geo_id, livarea sqft, exemption, Deed_Date YYYYMMDD). sqft 13K, sale 20K, exempt 6.7K. (BIS-WordPress Ownership.dbf pattern — recurs; richer than the deed-only FeatureServer.)
 ### BIS FeatureServer deed-date (~105K sale): Colorado 48089, Calhoun 48057, Austin 48015, Hale 48189, Falls 48145 (fallscad.NET), Bosque 48035, Howard 48227. (Calhoun/Hale joined on geo.)
 ### Note: Howard also has a 2022 SWData COLLECTORS _Agent.zip (homestead/dv) if we want exemptions; BIS gave deed only.
+
+## 2026-07-15 — wave 10A (14 tiny counties): 10 solved
+- **BIS FS deed-date (~70K sale + 28K year):** Moore 48341, Callahan 48059, Camp 48063(geo), Kinney 48271(geo), DeafSmith 48117, Madison 48313, Zavala 48507, Wilbarger 48487.
+- **Harris-eSearch exemptions:** Morris 48343 (morriscad.com), McCulloch 48307 (mccullochcad.org), Wilbarger 48487 (wilbargerappraisal.org — DOUBLE: BIS deed + eSearch exempt). Domain caution: wilbargercad.org/.com are whoownsit placeholders.
+- **Records-request:** Goliad 48175 (eSearch PDFs only), Edwards 48137 (Wix+eSearch, no export), LaSalle 48283 (newer TP public-portal, no report GUID listing), Lipscomb 48295 (lipscombcad.com dead, SWData search-only).

@@ -7,8 +7,8 @@ Regenerate with `python data/build_coverage_log.py` after each mining batch (ref
 ## Scoreboard (253 counties)
 
 - ☑ **Mined (has improvements/feature tags): 76** / 253
-- Full attributes (improv+dims): 44  ·  Partial: 79  ·  Geometry-only (need mining): 130  ·  Missing from DB: 0
-- Seller-signals — sale date: 110 counties  ·  exemptions (homestead/over-65/DV tenure): 125 counties  ·  **any seller-signal: 172 counties**
+- Full attributes (improv+dims): 44  ·  Partial: 87  ·  Geometry-only (need mining): 122  ·  Missing from DB: 0
+- Seller-signals — sale date: 118 counties  ·  exemptions (homestead/over-65/DV tenure): 128 counties  ·  **any seller-signal: 182 counties**
 
 Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISSING. % = share of the county's parcels with that attribute.
 
@@ -110,22 +110,22 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Zapata | 48505 | 12,623 | · | · | · | · | 69 | · | PARTIAL |
 | [ ] | Refugio | 48391 | 12,478 | · | · | · | · | · | 21 | GEOM-ONLY |
 | [ ] | Rains | 48379 | 12,301 | · | · | · | · | 87 | · | PARTIAL |
-| [ ] | Moore | 48341 | 12,256 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Callahan | 48059 | 12,064 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Wilbarger | 48487 | 11,894 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Moore | 48341 | 12,256 | · | · | · | · | 84 | · | PARTIAL |
+| [ ] | Callahan | 48059 | 12,064 | · | · | · | · | 88 | · | PARTIAL |
+| [ ] | Wilbarger | 48487 | 11,894 | · | · | · | · | 66 | 22 | PARTIAL |
 | [ ] | Jack | 48237 | 11,866 | · | · | · | · | · | 18 | GEOM-ONLY |
-| [ ] | Morris | 48343 | 11,857 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Camp | 48063 | 11,652 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Morris | 48343 | 11,857 | · | · | · | · | · | 28 | GEOM-ONLY |
+| [ ] | Camp | 48063 | 11,652 | · | · | · | · | 87 | · | PARTIAL |
 | [ ] | Sansaba | 48411 | 11,591 | · | · | · | · | · | 12 | GEOM-ONLY |
 | [ ] | Lipscomb | 48295 | 11,030 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Kinney | 48271 | 11,010 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Deafsmith | 48117 | 10,901 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Mcculloch | 48307 | 10,778 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Kinney | 48271 | 11,010 | · | · | · | · | 60 | · | PARTIAL |
+| [ ] | Deafsmith | 48117 | 10,901 | · | · | · | · | 84 | · | PARTIAL |
+| [ ] | Mcculloch | 48307 | 10,778 | · | · | · | · | · | 17 | GEOM-ONLY |
 | [ ] | Lasalle | 48283 | 10,341 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Goliad | 48175 | 10,314 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Madison | 48313 | 10,307 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Madison | 48313 | 10,307 | · | · | · | · | 87 | · | PARTIAL |
 | [ ] | Edwards | 48137 | 9,948 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Zavala | 48507 | 9,744 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Zavala | 48507 | 9,744 | · | · | · | · | 74 | · | PARTIAL |
 | [ ] | Dawson | 48115 | 9,676 | · | · | · | · | · | 24 | GEOM-ONLY |
 | [ ] | Archer | 48009 | 9,653 | · | · | · | · | · | 28 | GEOM-ONLY |
 | [ ] | Motley | 48345 | 9,374 | · | · | · | · | · | · | GEOM-ONLY |
