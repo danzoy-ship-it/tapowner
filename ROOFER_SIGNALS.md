@@ -46,9 +46,15 @@ last_sale_date already loaded). Buckets:
 - **SUPPORTED ONCE PERMITS SHIP (the Miner's current mission — unlocks ~8 signals):** #4 claim-window,
   #8 refinement, #9 reroof-age, #12 fresh-reroof clustering, #13 metal-roof, #14 solar, #15 remodel/
   addition, #16 pool, #17 storm-adjacent repair. Huge leverage — one adapter, many signals.
-- **GENUINELY NEW pipeline (not scoped):** #2 high-wind (new NWS product, same pattern as hail),
-  #11 builder-grade (plat/builder data), #21 code-violations (city code-enforcement open data — a new
-  crackable source like permits).
+- **GENUINELY NEW pipeline:** #2 high-wind — actually BUILT (SPC wind, 3.04M `wind_spc` rows, 2.02M
+  parcels); #11 builder-grade (plat/builder data) still not scoped.
+- **#21 code-violations — BUILT 2026-07-16.** `signal_type='code_violation'`, `load_code_violations.mjs`.
+  Roof/structure-relevant code-enforcement cases from city open-data portals (filtered to dangerous/
+  substandard structure + deteriorated roof; open or closed ≤180d): **Austin 5,441, San Antonio 2,259,
+  Fort Worth 1,172 = 8,872 parcels tied**, 0 gov-owner leakage. One of the highest-intent signals (the
+  CITY has flagged the roof/structure). Dallas + Houston have datasets but they're STALE (frozen 2017–18,
+  same open-data discontinuation as Dallas permits) → documented as genuine absence, NOT loaded. NEXT:
+  extend to the other major TX cities to exhaust the source.
 - **VENDOR BUY, not a build (reclassified per the catalog's clarifications):** #19 expired/FSBO — it's
   a purchased daily feed (REDX/Vulcan7/Landvoice-class), integrated as a `TraceProvider`-style vendor
   (BatchData pattern: signed terms + API + address match), NOT a scrape (MLS licensed / FSBO ToS). One
