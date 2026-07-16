@@ -65,22 +65,31 @@ last_sale_date already loaded). Buckets:
    ⚠️ **REALITY CHECK (verified live 2026-07-16 — do not assume "statewide floor"):** `year_built`
    covers only **62.3% of parcels statewide; 106 of 253 counties have ZERO year_built** (2 counties
    ≥90%, 73 at 50–90%). Tier 3 is NOT a universal floor, and its holes OVERLAP the permit holes
-   (rural/unincorporated counties lack BOTH). Consequence: **tier-2 imagery is the ONLY true
-   254-county roof-age source** — its importance is higher than the catalog implied. The
-   insurance-cliff signals (#5/#6) ship on year_built ONLY in the ~147 counties that have it
-   (strongest in the metros); they are NOT statewide until imagery lands.
-   **UPDATE 2026-07-16 (Miner probed ALL 106 blind counties, live field-dumps not assumptions — my
-   earlier "CAD data-availability ceiling" call was WRONG):** the holes are mostly GATED, not a true
-   ceiling. The CAD software (PACS/TP/BIS/P&A) demonstrably STORES year_built in ~106 counties, just
-   behind a records request rather than a free export. Only **Shelby (48419)** had a free bulk source
-   → recovered (+10,477 loaded). So the imagery-only target is far SMALLER than "106 counties": it's
-   {gated → records-request/PIA, list drafted in RECORDS_REQUESTS.md} MINUS whatever a deeper free
-   crack-pass rescues, and only the genuine ceiling (likely just the tiniest ranching counties) is
-   imagery-or-nothing. This LOWERS the dependence on paid imagery — most blind counties are a free PIA
-   away, not a vendor away; it does NOT remove imagery (still the fastest 254-county fill and the only
-   option where PIAs stall). Final per-county split pending the Miner's Fable-5 fleet. **Enrichment now
-   free:** `parcels.roof_material` (~860K homes, ~50K metal) — use as a reroof-market filter
-   (asphalt/composition = reroof target; metal/tile = long-life, deprioritize) on the roof-age and
+   (rural/unincorporated counties lack BOTH). **tier-2 imagery is the fastest ZERO-human-effort
+   254-county roof-age source** — but NOT the only one (see FINAL below: the blind counties are
+   PIA-recoverable, not data-less). The insurance-cliff signals (#5/#6) ship on year_built ONLY in the
+   ~147 counties that have it (strongest in the metros); they are NOT statewide until year_built is
+   backfilled (PIA or imagery).
+   **FINAL 2026-07-16 (Miner EXHAUSTED the free-crack pass on all 106 blind counties — BIS Orion-direct,
+   True-Prodigy token, SWData webbld, StratMap, cloud+Wayback; note my earlier "statewide floor" AND
+   "CAD data-availability ceiling" calls were BOTH wrong):**
+   - **TRUE CEILING (CAD never recorded the year): 0 counties.** Every blind county's CAD demonstrably
+     HAS year_built, confirmed live per-property (BIS eSearch GetImprovements returns Year Built; TP
+     `/improvement details[]` carries actualYearBuilt). It is an ACCESS gap, not a data gap.
+   - **FREE-RECOVERABLE & loaded: Shelby (48419) only** (+10,477). The deep pass cracked 0 further free
+     bulk sources.
+   - **GATED → records-request: the remaining ~105.** year_built exists but only per-property
+     (mass-harvest is ethics-vetoed) or behind a PIA. PIA list w/ contacts + exact ask drafted for the
+     30 biggest in RECORDS_REQUESTS.md; the ~70 rural tail is impractical to PIA individually.
+   **What this means for the CAPE/ZestyAI decision:** imagery is NOT filling "data that was never
+   recorded" — it is buying BULK ACCESS to data that provably exists but has no free bulk export. So the
+   honest imagery target = the ~70 rural-tail counties where a PIA isn't practical (plus an optional
+   speed play for the 30 PIA-able ones). That is a smaller, more precise target than "106 counties," and
+   it reframes imagery as convenience/speed over free-but-manual PIAs — not the sole path to the data.
+   **One remaining free lever:** Van Zandt (48467, 43,963 parcels) advertises a weekly standalone
+   appraisal DBF — a $0 records-ask to admin@vzcad.org for that DBF is worth trying before imagery there.
+   **Enrichment now free:** `parcels.roof_material` (~860K homes, ~50K metal) — use as a reroof-market
+   filter (asphalt/composition = reroof target; metal/tile = long-life, deprioritize) on the roof-age and
    insurance-cliff signals. Rules: a reroof permit's date OVERRIDES `year_built`
    (carriers get sued for that exact error); user confirmations override LOWER tiers but NEVER silently
    overwrite permit ground truth — flag conflicts for review. user_confirmed is a compounding moat

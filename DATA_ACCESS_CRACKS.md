@@ -107,5 +107,12 @@ Distinct from the per-property TP API (rate-limited, off-limits for mass-harvest
 
 **GSA Corp CADs (records-request lever):** Smith 48423 has NO free bulk online (exhaustively probed: smithcad.org static/PDF-only, smithcountymapsite.org 500, ArcGIS Hub has no CAMA fields). But Smith runs **GSA Corp** — the SAME vendor as Johnson CAD, which DOES publish free "Certified Data Roll" zips (repo has `data/load_johnson_attributes.py` for that exact format). So the $0 open-records ask is precise: "the same certified appraisal roll export with improvement detail that GSA produces for Johnson CAD." Same lever applies to any GSA-Corp county.
 
+## year_built deep-crack pass — corrections (2026-07-16, from the Miner's exhaustive free pass; transcribed by app-session on the Miner's flag)
+These four came out of exhausting the free year_built pass on all 106 roof-age-blind counties (BIS Orion-direct / TP token / SWData webbld / StratMap / cloud+Wayback). Net result: **0 true-ceiling counties** (every blind county's CAD provably HAS year_built — it's an ACCESS gap), only **Shelby (48419)** had a free bulk source. The rest are gated → PIA (30 biggest drafted in RECORDS_REQUESTS.md).
+- **BIS "Orion-direct" richer layer = self-hosted-only** (Lubbock's `gis.{county}cad.org`). AGOL-hosted BIS counties expose NO year on ANY surface (public FeatureServer, `utility.arcgis.com` proxy, `gis.bisclient.com` config) — **do not re-hunt** it there.
+- **Van Zandt (48467) is True Prodigy, NOT BIS** — and its Data Downloads page advertises a weekly *standalone appraisal-data DBF* but only links bare geometry shapefiles. A **$0 records-ask to admin@vzcad.org** for that DBF is the one remaining free-ish lever worth trying before imagery on VZ (43,963 parcels). → surfaced to Frederick.
+- **StratMap year_built is already ingested** (`load_county.py` maps it) and is EMPTY for the blind counties — that's *why* they're blind; do not expect a StratMap batch win.
+- **Medina / Gray** "year 25K / 10.5K" in `data/texas_county_system_map.md` is NOT reproducible from the live BIS FeatureServer → **Miner to DB-re-check** (field may have been stripped since load).
+
 ---
 *Maintained by the Miner session. When a fable-5 crack lands, add its recipe here + a loader in `data/`. Verdicts + per-county status live in `data/texas_county_system_map.md`; the 254-county scoreboard in `COUNTY_COVERAGE.md`.*
