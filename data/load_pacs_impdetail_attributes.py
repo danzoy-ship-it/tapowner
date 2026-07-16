@@ -124,20 +124,20 @@ def parse_baths(value):
 # spell shapes out (Gable/Hip/Flat) and use "M" as a material code (Caldwell/Shelby).
 _ROOF_CODES = {
     "composition": {"C", "CS", "CMP", "COMP", "AS", "ASP", "ASPH", "RCCS"},
-    "metal": {"M", "MT", "ME", "MTL", "RM", "RCMT"},
+    "metal": {"M", "MT", "ME", "MTL", "RM", "RCMT", "MF", "MR"},   # MF/MR = metal flat/ribbed (Nueces)
     "wood": {"W", "WD", "WS"},
-    "tile": {"T", "TL", "CT", "CL", "CN", "RCTL"},
+    "tile": {"T", "TL", "CT", "CL", "CN", "RCTL", "CCT", "CLT"},   # CCT/CLT = concrete/clay tile (Nueces)
     "slate": {"SL"},
-    "built_up": {"BU", "BUR", "TG"},
+    "built_up": {"BU", "BUR", "TG"},                              # TG = tar & gravel
 }
 _ROOF_KEYWORDS = (
-    ("METAL", "metal"), ("STANDING SEAM", "metal"),
-    ("WOOD", "wood"), ("SHAKE", "wood"),               # before composition (WOOD SHINGLE -> wood)
+    ("METAL", "metal"), ("STANDING SEAM", "metal"), ("IRON", "metal"),   # "Sheet Iron"
+    ("WOOD", "wood"), ("SHAKE", "wood"), ("SHAK", "wood"), ("CEDAR", "wood"),   # before composition
     ("COMP", "composition"), ("ASPHALT", "composition"), ("SHINGLE", "composition"),
     ("TILE", "tile"), ("CLAY", "tile"), ("CONCRETE", "tile"),
     ("SLATE", "slate"),
     ("BUILT", "built_up"), ("GRAVEL", "built_up"), ("MEMBRANE", "built_up"),
-    ("TPO", "built_up"), ("FOAM", "built_up"),
+    ("TPO", "built_up"), ("FOAM", "built_up"), ("TAR", "built_up"),      # "B.U. - Tar"
 )
 
 
