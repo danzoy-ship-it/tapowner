@@ -108,7 +108,18 @@ NE+South-Central. ~80 deep-rural counties — expect a high "no online posting" 
 
 ## ⬜ NOT YET ATTEMPTED (the remainder after the in-flight wave)
 Roughly the deep-rural tail + a few mid counties not yet reached (~80 after this wave). A second
-parallel wave covers most of the rest. Highest-value un-attempted leverage NOT yet tried:
-**a systematic sweep of every county GIS/open-data portal for a Bexar-style ArcGIS foreclosure
-LAYER** — those are bulk + clean (97% tie) and would be real system-leverage; only Bexar found so far
-because no exhaustive sweep was done. Worth one dedicated agent.
+parallel wave covers most of the rest.
+
+### ✗ ArcGIS foreclosure-LAYER sweep — DONE 2026-07-16, came back EMPTY (Bexar is an outlier)
+The "highest-value un-attempted lever" (a Bexar-style bulk foreclosure FeatureServer) was swept
+across the ~30 most GIS-mature / populous counties (Montgomery, Denton, Cameron, Hidalgo, Nueces,
+El Paso, Brazoria, Galveston, Jefferson, Lubbock, McLennan, Smith, Grayson, Comal, Guadalupe,
+Johnson, Ellis, Kaufman, Hays, Wichita, Taylor, Tom Green, Potter, Randall, Midland, Ector, Bell,
+Brazos, Hunt, Rockwall). Method was rigorous (full ArcGIS-org enumeration up to 347 services each,
+field-level parcel-layer inspection, 4 cross-state false positives caught & ruled out: Midland MI,
+El Paso CO, Potter PA, Florence SC). **Verdict: NO county has a Bexar-style foreclosure/tax-sale
+layer** — all publish foreclosure notices only as PDF postings / RealAuction / PBFCM law-firm lists,
+and their parcel layers carry geometry+ID only (no CAUSE_NO/SALE_DATE/MIN_BID/STRUCK_OFF field).
+Bexar's `ForeclosuresProd` does not generalize; do not re-chase this lever. **One unverified
+follow-up:** El Paso CAD's own server `https://gis.epcad.org/arcgis/rest/services?f=json` was
+Cloudflare-blocked (522/403) on this IP — genuinely unverified, not cleared; retry from a clean IP.
