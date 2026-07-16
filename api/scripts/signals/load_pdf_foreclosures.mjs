@@ -1373,6 +1373,231 @@ const SOURCES = {
             return out;
         },
     },
+    // Cooke County clerk (CivicLive, co.cooke.tx.us): /page/cooke.
+    // ForeclosureNotices lists per-notice PDFs under /upload/page/3114/docs/
+    // foreclosurenotice_<Name><M-D-YYYY>.pdf -- the filename date IS the sale
+    // date (first-Tuesdays; zero-padding drifts: 8-4-2026 / 06-02-2026 /
+    // 01-6-2026). Some hrefs point at the CivicLive origin
+    // newtools.cira.state.tx.us -- the same path serves from the county host.
+    cooke_cc: {
+        fips: "48097",
+        // sale venue: Cooke County Courthouse, 101 S Dixon St, Gainesville
+        venue: /COURT\s*HOUSE|\b10[1Il]\s+S(?:OUTH)?\.?\s*DIXON\b/i,
+        discover: async () => {
+            const base = "https://www.co.cooke.tx.us";
+            const html = await fetchText(base + "/page/cooke.ForeclosureNotices");
+            const out = [], seen = new Set();
+            for (const m of html.matchAll(/href="(?:https?:\/\/[a-z.]*cira\.state\.tx\.us)?(\/upload\/page\/3114\/docs\/[^"]*foreclosurenotice[^"]*?(\d{1,2})-(\d{1,2})-(\d{4})\.pdf)"/gi)) {
+                const mon = +m[2], year = +m[4];
+                if (!mon || mon > 12 || !inWindow(year, mon)) continue;
+                let p = m[1];
+                try {
+                    if (/%[0-9A-Fa-f]{2}/.test(p)) p = decodeURIComponent(p);
+                } catch { /* malformed % -- keep raw */ }
+                if (seen.has(p)) continue;
+                seen.add(p);
+                out.push({
+                    url: base + encodeURI(p),
+                    year,
+                    month: mon,
+                    name: `cooke_${year}-${String(mon).padStart(2, "0")}_${path.basename(p).replace(/[^\w.-]+/g, "_")}`,
+                });
+            }
+            return out;
+        },
+    },
+    // Hunt County clerk (IDS/easydocs app on apps.huntcounty.net, linked
+    // "Foreclosures Archive" / "Sale Notices" from the CivicLive site's
+    // /page/trustees): /foreclosures/listDocs.asp?year=<Y> lists per-notice
+    // docs with DIRECT raw-PDF hrefs LinkedDir/<year>/<YYYY-MM-DD>-
+    // foreclosure-<NN>.pdf -- the docName date IS the sale date
+    // (first-Tuesdays), like Upshur/Bosque.
+    hunt_cc: {
+        fips: "48231",
+        // sale venue: Hunt County Courthouse, 2507 Lee St, Greenville
+        venue: /COURT\s*HOUSE|\b25[0O]7\s+LEE\b/i,
+        discover: async () => {
+            const base = "https://apps.huntcounty.net/foreclosures/";
+            const now = new Date(), years = new Set();
+            for (let d = -(+(process.env.FC_BACK || 0)); d <= 2; d++) {
+                const t = new Date(Date.UTC(now.getFullYear(), now.getMonth() + d, 1));
+                years.add(t.getUTCFullYear());
+            }
+            const out = [];
+            for (const y of years) {
+                let html;
+                try {
+                    html = await fetchText(`${base}listDocs.asp?year=${y}`);
+                } catch (e) {
+                    console.error(`  hunt ${y}: list fetch failed (${e.message})`);
+                    continue;
+                }
+                for (const m of html.matchAll(/href="LinkedDir\/\d{4}\/(((\d{4})-(\d{2})-\d{2})[^"'&<> ]*\.pdf)"/gi)) {
+                    const year = +m[3], mon = +m[4];
+                    if (!mon || mon > 12 || !inWindow(year, mon)) continue;
+                    out.push({ url: `${base}LinkedDir/${y}/${m[1]}`, year, month: mon, name: `hunt_${m[1]}` });
+                }
+            }
+            return out;
+        },
+    },
+    // Hopkins County clerk (easydocs/IDS, hopkins.easydocs.us -- plain HTTP
+    // ONLY, the https handshake fails): /foreclosure/listDocs-new.asp?year=<Y>
+    // lists showdoc.asp?docName=<YYYY-MM-DD>-foreclosure-<NNN>.pdf where the
+    // docName date IS the sale date (first-Tuesdays, Upshur semantics -- NOT
+    // Navarro's posting dates). Raw PDF at LinkedDir/<year>/<docName>.
+    // NB: 48223 parcels ship situs_address as "SUNSET ST ~ 722 ~, Hopkins
+    // County, TX" (street first, number between tildes, no situs_number) ->
+    // the shared direct-match number derivation gets nothing, and the Census
+    // geocode pass came back empty on the first run -> 0% tie for now. Lever:
+    // normalize the tilde format upstream in the parcels load, not here.
+    hopkins_cc: {
+        fips: "48223",
+        // sale venue: Hopkins County Courthouse, 118 Church St, Sulphur Springs
+        venue: /COURT\s*HOUSE|\b118\s+CHURCH\b/i,
+        discover: async () => {
+            const base = "http://hopkins.easydocs.us/foreclosure/";
+            const now = new Date(), years = new Set();
+            for (let d = -(+(process.env.FC_BACK || 0)); d <= 2; d++) {
+                const t = new Date(Date.UTC(now.getFullYear(), now.getMonth() + d, 1));
+                years.add(t.getUTCFullYear());
+            }
+            const out = [];
+            for (const y of years) {
+                let html;
+                try {
+                    html = await fetchText(`${base}listDocs-new.asp?year=${y}`);
+                } catch (e) {
+                    console.error(`  hopkins ${y}: list fetch failed (${e.message})`);
+                    continue;
+                }
+                for (const m of html.matchAll(/docName=(((\d{4})-(\d{2})-\d{2})[^"'&<> ]*\.pdf)/gi)) {
+                    const year = +m[3], mon = +m[4];
+                    if (!mon || mon > 12 || !inWindow(year, mon)) continue;
+                    out.push({ url: `${base}LinkedDir/${y}/${m[1]}`, year, month: mon, name: `hopkins_${m[1]}` });
+                }
+            }
+            return out;
+        },
+    },
+    // Palo Pinto County clerk (CivicLive, co.palo-pinto.tx.us): /page/
+    // ForeclosureNotices links ONE consolidated packet per sale month at
+    // /page/open/1127/0/<Month>%20<Year>%20Foreclosures[.pdf] (href arrives
+    // pre-encoded; month AND year in the name; the trailing ".pdf" drifts).
+    palopinto_cc: {
+        fips: "48363",
+        // sale venue: Palo Pinto County Courthouse, 520 Oak St, Palo Pinto
+        venue: /COURT\s*HOUSE|\b52[0O]\s+OAK\b/i,
+        discover: async () => {
+            const base = "https://www.co.palo-pinto.tx.us";
+            const html = await fetchText(base + "/page/ForeclosureNotices");
+            const out = [], seen = new Set();
+            for (const m of html.matchAll(/href="(\/page\/open\/1127\/0\/([A-Za-z]+)(?:%20|\s)(\d{4})(?:%20|\s)Foreclosures[^"]*)"/gi)) {
+                const mon = MONTHS.indexOf(m[2].slice(0, 3).toUpperCase()) + 1;
+                const year = +m[3];
+                if (!mon || !inWindow(year, mon)) continue;
+                const name = `palopinto_${year}-${String(mon).padStart(2, "0")}.pdf`;
+                if (seen.has(name)) continue;
+                seen.add(name);
+                out.push({ url: base + m[1], year, month: mon, name });
+            }
+            return out;
+        },
+    },
+    // Erath County clerk (CivicPlus): /158/Foreclosure-Postings holds twelve
+    // MONTH child pages (/159/January .. /170/December, page id = 158+month)
+    // that recycle yearly with NO year anywhere -- prior years' per-notice
+    // DocumentCenter PDFs stay listed beside the fresh ones (and Last-Modified
+    // is a useless CDN stamp). Doc ids are monotonic, so gate on an id floor:
+    // desc-sort all ids across the window's pages and chain while the gap to
+    // the next stays < 400 (year cohorts sit ~900 apart); the current month is
+    // always posted, so the newest cohort is this year's crop. "NO-SALE ...
+    // (RESOLVED)" slugs are cancelled sales -> skipped.
+    erath_cc: {
+        fips: "48143",
+        // sale venue: south door, Erath County Courthouse, 100 W Washington
+        // St, Stephenville (number-pinned)
+        venue: /COURT\s*HOUSE|\b10[0O]\s+W(?:EST)?\.?\s*WASHINGTON\b/i,
+        discover: async () => {
+            const base = "https://www.co.erath.tx.us";
+            const FULL = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const now = new Date(), cands = [];
+            for (let d = -(+(process.env.FC_BACK || 0)); d <= 2; d++) {
+                const t = new Date(Date.UTC(now.getFullYear(), now.getMonth() + d, 1));
+                const year = t.getUTCFullYear(), mon = t.getUTCMonth() + 1;
+                let html;
+                try {
+                    html = await fetchText(`${base}/${158 + mon}/${FULL[mon - 1]}`);
+                } catch (e) {
+                    console.error(`  erath ${FULL[mon - 1]}: page fetch failed (${e.message})`);
+                    continue;
+                }
+                for (const m of html.matchAll(/href="(\/DocumentCenter\/View\/(\d+)\/([^"]*))"/gi)) {
+                    if (/NO-?SALE|RESOLVED|CANCEL/i.test(m[3])) continue;
+                    cands.push({ id: +m[2], url: base + m[1], year, month: mon });
+                }
+            }
+            const ids = [...new Set(cands.map((c) => c.id))].sort((a, b) => b - a);
+            let floor = ids[0] || 0;
+            for (let i = 1; i < ids.length && ids[i - 1] - ids[i] < 400; i++) floor = ids[i];
+            const seen = new Set();
+            return cands
+                .filter((c) => c.id >= floor && !seen.has(c.id) && seen.add(c.id))
+                .map((c) => ({
+                    url: c.url,
+                    year: c.year,
+                    month: c.month,
+                    name: `erath_${c.year}-${String(c.month).padStart(2, "0")}_${c.id}.pdf`,
+                }));
+        },
+    },
+    // Fannin County clerk: notices do NOT live on the CivicLive county site
+    // (the clerk + fannin.Public.Notices pages carry only forms and orders) --
+    // they're filed as "Foreclosure"-type entries in the county's AgendaSuite
+    // portal ("County Clerk Postings" link): agendasuite.org/iip/fannin/
+    // ordinance/list is a plain HTML table, one row per posting: type |
+    // grantor name | SALE date (M/D/YYYY, first-Tuesdays) | per-notice PDF at
+    // /iip/fannin/file/getfile/<id>. Full history on one page; inWindow gates.
+    fannin_cc: {
+        fips: "48147",
+        // sale venue: Fannin County Courthouse, 101 E Sam Rayburn Dr, Bonham
+        // (OCR: "Raybum" -- rn/m confusion -> match the stem)
+        venue: /COURT\s*HOUSE|\b10[1Il]\s+E(?:AST)?\.?\s*SAM\s*RAYBU\w*/i,
+        discover: async () => {
+            const base = "https://agendasuite.org";
+            const html = await fetchText(base + "/iip/fannin/ordinance/list");
+            const out = [], seen = new Set();
+            for (const m of html.matchAll(/Foreclosure\s*<\/td>[\s\S]{0,400}?>\s*(\d{1,2})\/\d{1,2}\/(\d{4})\s*<\/td>[\s\S]{0,300}?href="(\/iip\/fannin\/file\/getfile\/(\d+))"/gi)) {
+                const mon = +m[1], year = +m[2];
+                if (!mon || mon > 12 || !inWindow(year, mon) || seen.has(m[4])) continue;
+                seen.add(m[4]);
+                out.push({
+                    url: base + m[3],
+                    year,
+                    month: mon,
+                    name: `fannin_${year}-${String(mon).padStart(2, "0")}_${m[4]}.pdf`,
+                });
+            }
+            return out;
+        },
+    },
+    // Hood County: NOT here -- hoodcounty.texas.gov (Revize; the legacy
+    // co.hood.tx.us host connection-times-out entirely) links its foreclosure
+    // notices ONLY to hoodcountytx.documents-on-demand.com (third-party
+    // search portal, no scrapeable list; re-verified 2026-07-15). Skip.
+    // Somervell County: NOT here -- somervell.co (CivicPlus) files notices in
+    // a REACT DocumentCenter (/DocumentCenter/Index/91 "Foreclosure Notices",
+    // client-rendered; the Document_AjaxBinding replay hits the same
+    // antiforgery wall as Parker, returns the admin login page). Would need
+    // Parker-style pinned URLs from a live browser; tiny county -- parked
+    // (verified 2026-07-15).
+    // Jack County: NOT here -- www.jackcounty.org WAF-403s every headless
+    // client tried (curl + Node fetch, full browser headers); alternate
+    // domain jackcountytexas.com is just a promo video iframe (2026-07-15).
+    // Wichita County: NOT here -- wichitacountytx.com (WordPress; 403s Node
+    // fetch, curl passes) publishes NO notice PDFs on the clerk pages; county
+    // records live on Tyler Eagle (wichitacountytx-recorder.tylerhost.net),
+    // the paywalled platform. Skip (verified 2026-07-15).
     // Kendall County: NOT here -- co.kendall.tx.us (CivicPlus) posts NO notice
     // PDFs: the clerk page's "Foreclosures / Trustee's Sales Search" links
     // straight to kendall.tx.publicsearch.us (Kofile/GovOS PublicSearch), the
