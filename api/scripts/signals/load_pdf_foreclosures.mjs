@@ -1581,6 +1581,186 @@ const SOURCES = {
             return out;
         },
     },
+    // Jackson County clerk (CivicLive, co.jackson.tx.us): /page/
+    // ForeclosureNotice lists per-notice scans under /upload/page/0089/docs/
+    // Public Notice/Foreclosure Sale/<YEAR>/ -- the folder carries the year,
+    // the chaotic filenames carry the sale month as a month NAME ("Notice of
+    // Trustee Sale July 7th", "2026 Feb Notice", "Foreclosure Sale September
+    // 1") or as a scanner stamp ("Scan2026-07-09_161209" = posting date ->
+    // saleMonthAfter). Undatable files ("Substitute Trustee Sale.pdf") are
+    // skipped. Rural, low volume.
+    jackson_cc: {
+        fips: "48239",
+        // sale venue: Jackson County Courthouse, 115 W Main St, Edna
+        venue: /COURT\s*HOUSE|\b115\s+W(?:EST)?\.?\s*MAIN\b/i,
+        discover: async () => {
+            const base = "https://www.co.jackson.tx.us";
+            const html = await fetchText(base + "/page/ForeclosureNotice");
+            const out = [], seen = new Set();
+            for (const m of html.matchAll(/href="(?:https?:\/\/[a-z.]*cira\.state\.tx\.us)?(\/upload\/page\/0089\/docs\/Public(?:%20|\s)Notice\/Foreclosure(?:%20|\s)Sale\/(\d{4})\/([^"]+\.pdf))"/gi)) {
+                const dirYear = +m[2];
+                let fn = m[3];
+                try {
+                    if (/%[0-9A-Fa-f]{2}/.test(fn)) fn = decodeURIComponent(fn);
+                } catch { /* keep raw */ }
+                if (/deed/i.test(fn)) continue; // post-sale trustee-deed scans
+                let year = dirYear, mon = 0;
+                const nm = fn.match(/January|February|March|April|May|June|July|August|September|October|November|December|\b(?:Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sept?|Oct|Nov|Dec)\b/i);
+                if (nm) mon = MONTHS.indexOf(nm[0].slice(0, 3).toUpperCase()) + 1;
+                else {
+                    const sc = fn.match(/Scan(\d{4})-(\d{2})-(\d{2})/i);
+                    if (sc) ({ year, month: mon } = saleMonthAfter(+sc[1], +sc[2], +sc[3]));
+                }
+                if (!mon || !inWindow(year, mon)) continue;
+                let p = m[1];
+                try {
+                    if (/%[0-9A-Fa-f]{2}/.test(p)) p = decodeURIComponent(p);
+                } catch { /* malformed % -- keep raw */ }
+                if (seen.has(p)) continue;
+                seen.add(p);
+                out.push({
+                    url: base + encodeURI(p),
+                    year,
+                    month: mon,
+                    name: `jackson_${year}-${String(mon).padStart(2, "0")}_${path.basename(p).replace(/[^\w.-]+/g, "_")}`,
+                });
+            }
+            return out;
+        },
+    },
+    // Victoria County clerk (CivicLive, vctx.org): /page/county.clerk.
+    // foreclosures links ONE consolidated packet per sale date at /page/open/
+    // <pid>/0/<Month>[ ]<D>.pdf ("January 6.pdf", "Sept5.pdf") -- each pid is
+    // one calendar YEAR of first-Tuesday sale dates but NO year text sits near
+    // the links, so each pid's year is inferred by majority-voting its
+    // month+day pairs against saleDate() (clerk drift tolerated: the 2026 set
+    // writes May 7/June 5 for the May 5/Jun 2 sales). All 12 months are
+    // pre-linked before posting -- fetchPdf failures on future months are
+    // expected and logged, not fatal.
+    victoria_cc: {
+        fips: "48469",
+        // sale venue: Victoria County Courthouse, 101 N Bridge St, Victoria
+        venue: /COURT\s*HOUSE|\b10[1Il]\s+N(?:ORTH)?\.?\s*BRIDGE\b/i,
+        discover: async () => {
+            const base = "https://www.vctx.org";
+            const html = await fetchText(base + "/page/county.clerk.foreclosures");
+            const cands = [];
+            for (const m of html.matchAll(/href="(\/page\/open\/(\d+)\/0\/([A-Za-z]+)\.?(?:%20|\s)?(\d{1,2})\.pdf)"/gi)) {
+                const mon = MONTHS.indexOf(m[3].slice(0, 3).toUpperCase()) + 1;
+                if (mon) cands.push({ pid: m[2], url: m[1], mon, day: +m[4] });
+            }
+            const yr = new Date().getFullYear();
+            const pidYear = new Map();
+            for (const pid of new Set(cands.map((c) => c.pid))) {
+                const files = cands.filter((c) => c.pid === pid);
+                let best = null, bestHits = 0;
+                for (const y of [yr - 1, yr, yr + 1]) {
+                    const hits = files.filter((f) => saleDate(y, f.mon).endsWith(`-${String(f.day).padStart(2, "0")}`)).length;
+                    if (hits > bestHits) {
+                        bestHits = hits;
+                        best = y;
+                    }
+                }
+                if (best && (bestHits >= 6 || bestHits > files.length / 2)) pidYear.set(pid, best);
+            }
+            const out = [], seen = new Set();
+            for (const c of cands) {
+                const year = pidYear.get(c.pid);
+                if (!year || !inWindow(year, c.mon)) continue;
+                const name = `victoria_${year}-${String(c.mon).padStart(2, "0")}.pdf`;
+                if (seen.has(name)) continue;
+                seen.add(name);
+                out.push({ url: base + c.url, year, month: c.mon, name });
+            }
+            return out;
+        },
+    },
+    // Goliad County clerk (CivicLive, co.goliad.tx.us): /page/goliad.
+    // CountyandDistrictClerkPublicNotices ("Trustee/Foreclosure Sales") lists
+    // per-notice scans under /upload/page/2540/ (chaotic filenames, some
+    // hrefs point at the CivicLive origin newtools.cira.state.tx.us); the
+    // anchor TEXT carries the sale date WITH year ("July 7th, 2026",
+    // "May 06,2025"). Tiny county; tax sales share the list (subtype comes
+    // from the notice text).
+    goliad_cc: {
+        fips: "48175",
+        // sale venue: Goliad County Courthouse, 127 N Courthouse Square
+        venue: /COURT\s*HOUSE/i,
+        discover: async () => {
+            const base = "https://www.co.goliad.tx.us";
+            const html = await fetchText(base + "/page/goliad.CountyandDistrictClerkPublicNotices");
+            const out = [], seen = new Set();
+            for (const m of html.matchAll(/<a[^>]*href="(?:https?:\/\/[a-z.]*cira\.state\.tx\.us)?(\/upload\/page\/2540\/[^"]+\.pdf)"[^>]*>(?:\s|<[^>]+>|&nbsp;)*([A-Za-z]+)\.?\s+\d{1,2}(?:st|nd|rd|th)?\s*,?\s*(\d{4})/gi)) {
+                const mon = MONTHS.indexOf(m[2].slice(0, 3).toUpperCase()) + 1;
+                if (!mon || !inWindow(+m[3], mon)) continue;
+                let p = m[1];
+                try {
+                    if (/%[0-9A-Fa-f]{2}/.test(p)) p = decodeURIComponent(p);
+                } catch { /* malformed % -- keep raw */ }
+                if (seen.has(p)) continue;
+                seen.add(p);
+                out.push({
+                    url: base + encodeURI(p),
+                    year: +m[3],
+                    month: mon,
+                    name: `goliad_${m[3]}-${String(mon).padStart(2, "0")}_${path.basename(p).replace(/[^\w.-]+/g, "_")}`,
+                });
+            }
+            return out;
+        },
+    },
+    // Wharton County clerk (CivicLive, co.wharton.tx.us): /page/wharton.
+    // County.Clerk links ONE consolidated packet for the CURRENT sale month
+    // ("click here") at /upload/page/6991/docs/County Clerk/Foreclosures/
+    // <YYYY><MM> FORECLOSURES.pdf -- the filename prefix IS the sale month;
+    // prior months drop off the page (no archive). The Sheriff CivilNotices
+    // page carries only tax-sale bid sheets, not trustee notices.
+    wharton_cc: {
+        fips: "48481",
+        // sale venue: Wharton County Courthouse, 100 S Fulton St, Wharton
+        venue: /COURT\s*HOUSE|\b10[0O]\s+S(?:OUTH)?\.?\s*FULTON\b/i,
+        discover: async () => {
+            const base = "https://www.co.wharton.tx.us";
+            const html = await fetchText(base + "/page/wharton.County.Clerk");
+            const out = [], seen = new Set();
+            for (const m of html.matchAll(/href="(?:https?:\/\/[a-z.]*cira\.state\.tx\.us)?(\/upload\/page\/6991\/docs\/County(?:%20|\s)Clerk\/Foreclosures\/(\d{4})(\d{2})[^"]*\.pdf)"/gi)) {
+                const year = +m[2], mon = +m[3];
+                if (!mon || mon > 12 || !inWindow(year, mon)) continue;
+                let p = m[1];
+                try {
+                    if (/%[0-9A-Fa-f]{2}/.test(p)) p = decodeURIComponent(p);
+                } catch { /* malformed % -- keep raw */ }
+                const name = `wharton_${year}-${String(mon).padStart(2, "0")}.pdf`;
+                if (seen.has(name)) continue;
+                seen.add(name);
+                out.push({ url: base + encodeURI(p), year, month: mon, name });
+            }
+            return out;
+        },
+    },
+    // Brazoria County: NOT here -- brazoriacountytx.gov (Granicus) publishes
+    // NO foreclosure/trustee pages at all (sitemap swept 2026-07-15: zero
+    // hits); clerk records sit behind portal-txbrazoria.tylertech.cloud
+    // (Tyler, login-gated per the metro survey). Skip.
+    // Matagorda County: NOT here -- matagordatx.gov (CivicLive) clerk page
+    // posts only post-hoc ANNUAL "Foreclosure List <year>" PDFs, stale at
+    // 2021-2024 with nothing for 2025/2026; no current notices (2026-07-15).
+    // Calhoun County: NOT here -- the clerk's own site (calhouncoclerk.org,
+    // GoDaddy builder; the county WordPress site just links out) has a
+    // /foreclosures page whose Downloads section says "Files coming soon" --
+    // no notices online (2026-07-15).
+    // Aransas County: NOT here -- aransascountytx.gov/clerk/forcnotices.php
+    // points only at aransascountytx-web.tylerhost.net DOCSEARCH519S1 ("Search
+    // Public Notices & Notice of Foreclosures") = Tyler Eagle, the paywalled/
+    // search-only platform. Skip (2026-07-15).
+    // San Patricio County: NOT here -- sanpatriciocountytx.gov (CivicLive)
+    // /page/county.clerk.foreclosures is STALE: monthly packets end at
+    // February 2023 (pids 1110-1115 = 2023..2018). sanpatricio.tx.
+    // publicsearch.us (Kofile) is up -> the separate platform crack
+    // (verified 2026-07-15).
+    // Refugio County: NOT here -- co.refugio.tx.us (CivicLive) /page/
+    // refugio.RealEstateNotices is STALE (newest notice 2018); PublicNotices
+    // carries none. No notices online (2026-07-15).
     // Hood County: NOT here -- hoodcounty.texas.gov (Revize; the legacy
     // co.hood.tx.us host connection-times-out entirely) links its foreclosure
     // notices ONLY to hoodcountytx.documents-on-demand.com (third-party
