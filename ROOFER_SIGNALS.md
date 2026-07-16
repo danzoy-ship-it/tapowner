@@ -56,10 +56,17 @@ last_sale_date already loaded). Buckets:
   signals too) → cost amortizes.
 
 ### ⚠️ Engineering invariants (from TAPROOFERS_SIGNALS.md clarifications — bake these in)
-1. **Roof age ≠ build year when a reroof permit exists.** For the ACV-cliff/aging signals (#5/#6/#8),
-   a reroof permit's date MUST OVERRIDE `year_built` when computing roof age. Carriers get sued for
-   exactly this error — so the roof-age derivation is: `roof_age = today − COALESCE(latest_reroof_
-   permit_date, year_built_as_date)`. (Needs the Miner's `permits` reroof rows + dates.)
+1. **Roof age is a SOURCE-TIERED field, never one number** (upgraded 2026-07-16 per TAPROOFERS
+   roof-age strategy). Schema when built: `roof_age_year`, `roof_age_source` enum
+   (`permit` | `imagery_api` | `year_built_proxy` | `user_confirmed`), `roof_age_confidence`. The UI
+   MUST show which tier it's displaying (e.g. year_built = "estimated — original roof assumed").
+   Tier precedence (best→floor): **permit history > imagery API (CAPE/ZestyAI, vendor-pending) >
+   year_built proxy > user_confirmed override**. Rules: a reroof permit's date OVERRIDES `year_built`
+   (carriers get sued for that exact error); user confirmations override LOWER tiers but NEVER silently
+   overwrite permit ground truth — flag conflicts for review. user_confirmed is a compounding moat
+   (banked at the door, same pattern as the trace cache). Do NOT let any future schema assume roof age
+   is a single authoritative value. Vendor tier-2 (imagery) ships only if a vendor lands <~$2/lookup
+   with redistribution terms (Frederick's ZestyAI + CAPE inquiries sent 2026-07-16, awaiting reply).
 2. **Never hardcode carrier-specific claims or depreciation %s into app copy.** Messaging stays
    generic/educational ("many Texas carriers now depreciate older roofs"); the sourced specifics live
    in TAPROOFERS_SIGNALS.md for the attorney. Insurance copy is gated on review vs. Tex. Ins. Code
