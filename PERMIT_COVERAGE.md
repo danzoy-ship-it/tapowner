@@ -31,6 +31,7 @@ The table is **vertical-generic** (no roofer-specific columns). Each permit capt
 | ✅ | **New Braunfels** | Comal 48091 | ArcGIS (Accela+Cityworks) | gismaps.newbraunfels.gov `.../PlanningZoning/MapServer/10` | 184,664 | 6,455 / 2,959 | spatial **53%** (rest lack coords / in ETJ) |
 | ✅ | **Seguin** | Guadalupe 48187 | ArcGIS (Tyler EnerGov mirror) | gis.seguintexas.gov `.../Permits/Permits/FeatureServer/0` | 141,389 | 6,317 / 627 | spatial **99%** |
 | ✅ | **San Marcos** | Hays 48209 | ArcGIS (MyPermitNow) | smgis.sanmarcostx.gov `.../CoSM_BuildingPermits/FeatureServer/0` | 50,288 | 1,619 / 811 | spatial **93%** |
+| ✅ | **Fort Worth** | Tarrant 48439 | ArcGIS Server (self-hosted) | mapit.fortworthtexas.gov `.../CIVIC/Permits/MapServer/0` | 707,960 | 7,945 / 18,852 | spatial+addr **87%** |
 | ✅ | **Buda** | Hays 48209 | ArcGIS (MGO/MyPermitNow) | services6.arcgis.com/vXZW4vAaPRr14z2s `.../Permits/FeatureServer/0` | 137 | 1 / 0 | spatial 92% |
 
 **POC total: 3,600,637 permits; 2,945,129 matched to a homeowner parcel.** Corridor (the roofer's SA↔Austin I-35 territory: Travis/Bexar/Comal/Guadalupe/Hays) = 3.17M; Dallas = 435K bonus metro. Roofer signals unlocked: **66,480 parcels with a roof-permit date (signal #2); 38,220 parcels with a solar permit (signal #3; 6,057 since 2024)** — each a real homeowner name + address.
@@ -38,6 +39,45 @@ The table is **vertical-generic** (no roofer-specific columns). Each permit capt
 **Data-accuracy pass (2026-07-16):** SA and Dallas were under-counted on first load and were re-mined.
 - **San Antonio** was 102,894 (an ArcGIS layer that only holds a rolling ~18-mo window, 2025+). Re-pulled the CKAN historical CSV (`c22b1ef2…`, 368K rows 2020-07→2024-12) via `load_csv_permits.py` → **423,293** (now correctly > NB/Seguin, matching city size).
 - **Dallas** was 126,840 (only the rich 2018-2020 `e7gq` file). Loaded the 4 fiscal-year files (FY2011-12 → FY2017-18) → **435,311** (full contiguous 2010→Aug-2020 history). ⚠️ **Dallas publishes no free building-permit data after Aug 2020** — the open-data feed was discontinued; this is a source limit, not a capture gap, and is why Dallas (10-yr window) trails Austin (100-yr history) despite being a bigger city.
+
+## ★ Roof-age model — the roofer's flagship scheme (`data/roof_age_model.py`)
+Homeowners insurers drop/limit coverage on a roof around **15 years** old, so a roof older than ~15 yr is a live re-roof lead. We estimate each parcel's **current roof age** as:
+
+> `last_roof_date = GREATEST(year_built (Jan 1), latest re-roof permit issued_date)` → **EXPIRED (lead)** if `last_roof_date < today − 15 years`.
+
+- **`parcels.year_built`** (from the CAD load) = the **original** roof date (baseline).
+- a **`permit_category='roof'` permit** = a **re-roof** that resets the clock (the correction layer).
+- This is exactly why permit **DEPTH matters more than recency**: to trust an "old roof" flag we must be able to see a re-roof going back ~20 yr. Where permits are shallow, a pre-window re-roof is invisible and a year_built-only "expired" flag risks a **false positive** (roof was actually replaced, we just can't see it).
+
+**Corridor quantification (2026-07-16), 15-yr threshold:**
+| County | parcels | estimable | has re-roof pmt | **EXPIRED (leads)** | pmt-saved | yb-only |
+|---|---|---|---|---|---|---|
+| Travis/Austin | 828,773 | 344,223 | 22,167 | **256,770** | 6,071 | 243,066 |
+| Bexar/San Antonio | 709,541 | 625,370 | 26,474 | **465,843** | 25,109 | 465,843 |
+| Comal/New Braunfels | 103,537 | 4,244 | 4,244 | **0** ⚠️ | 0 | 0 |
+| Guadalupe/Seguin | 95,571 | 71,155 | 4,390 | **42,669** | 1,747 | 40,351 |
+| Hays/San Marcos | 117,427 | 94,251 | 1,204 | **38,481** | 715 | 38,481 |
+| **TOTAL** | 1,854,849 | 1,139,243 | 58,479 | **803,763** | **33,642** | — |
+
+- **EXPIRED = the lead pool (803,763 corridor homes** with a >15-yr roof).
+- **pmt-saved (33,642)** = homes whose age says "old roof" but a re-roof permit proves it's fresh — **false positives the permit layer already prevented.** This grows with permit depth; it's the concrete ROI of mining permits.
+- **yb-only** = expired on year_built alone (no roof permit) → higher false-pos risk where permit history is shallow. Bexar/Hays are 100% yb-only because their permits only start 2020/2013 (any roof permit there is <15 yr = fresh, so it can't appear in the expired set).
+
+**Roof-history DEPTH per jurisdiction (the number that governs false-positive rate):**
+| Jurisdiction | roof permits back to | verdict |
+|---|---|---|
+| Austin (Travis) | **1978** | ✅ 48 yr — excellent |
+| Seguin (Guadalupe) | **1994** | ✅ 32 yr |
+| New Braunfels (Comal) | 2013 | ⚠️ 13 yr |
+| San Marcos (Hays) | 2013 | ⚠️ 13 yr |
+| San Antonio (Bexar) | **2020** | ❌ 6 yr — no free pre-2020 source (rely on year_built; records-request could add 2005-2019) |
+| Dallas | 2018 | ❌ roofs only 2018-2020 (pre-2018 files are type-only, roofs unidentifiable) |
+
+**Two data gaps this exposes (being worked):**
+1. **Comal/New Braunfels has ZERO `year_built`** (parcels loaded from a GIS/ownership source without building detail) → the model is blind on the roofer's home turf (only 4% estimable). **Fix in flight:** cracking Comal Appraisal District's improvement roll to backfill year_built.
+2. **San Antonio's 6-yr permit depth** means its 465K "expired" flags rest on year_built alone. year_built (88% coverage) is a sound baseline, but a City-of-SA records request for 2005-2019 re-roof permits would sharpen it (removes false positives from mid-2010s re-roofs).
+
+**Handoff:** the canonical CTE lives in `data/roof_age_model.py` (`MODEL_SQL`). Writing the signal into `parcel_signals` is the **app session's lane** (miner lane owns `parcels`+`permits`); this doc + that query are the handoff.
 
 **Perf note:** the spatial join MUST scope parcels to the county in a temp table + fresh GIST — a correlated `county_fips` filter forces a per-permit BitmapAnd over the whole county (New Braunfels: >5min → 6s after the fix).
 
@@ -49,11 +89,18 @@ Closed permit portals (EnerGov-CSS / CityView / MyGovernmentOnline) with no publ
 - **Cibolo** (Guadalupe) — MyGovernmentOnline; ArcGIS has only subdivision/plat tracking.
 - **Hays County / Guadalupe County unincorporated** — no county-wide permit dataset (TX counties have little building-permit authority outside city limits; both open-data catalogs confirmed zero permit layers). Buda is thin (137, rolling ~6-mo window) — re-pull periodically to accumulate history.
 
-## Not-yet-mined metros (next targets)
-- **Houston** (Harris 48201) — no Socrata; ArcGIS/Accela mirror to survey.
-- **Fort Worth** (Tarrant 48439) — Socrata entry is a dead legacy Hub; live ArcGIS/Accela to survey.
-- **El Paso** (El Paso 48141) — no Socrata; survey.
+## Next metros — surveyed 2026-07-16
+- ✅ **Fort Worth** (Tarrant 48439) — **CRACKED + LOADED.** Self-hosted ArcGIS Server `mapit.fortworthtexas.gov/ags/rest/services/CIVIC/Permits/MapServer/0` — **707,960 permits, 2016→2026** (live), WGS84 lat/lon pre-supplied → **spatial+addr join 87% (613,912)**. roof 7,945 / solar 18,852 (solar verified real — descriptions are "SOLAR ROOFTOP"/"roof-mounted PV"). OID field is `CAPID` (not OBJECTID; loader now takes a per-city `oid`). (Socrata `quz7-xnsy` is a dead Hub ghost — ignore.) NOTE depth is 2016 (10 yr) — short of the 20-yr roof-scheme ideal.
+- ❌ **Houston** (Harris 48201) — **no free bulk source** (verified exhaustively: CKAN has only monthly-aggregate xlsx; the ArcGIS "SF_BuildingPermits" items are 88-row analyst extracts, not feeds; public UI is a rolling 3-yr window). → **records request** (TPIA, 832-394-8800; their retention is residential 1988→present, commercial 1972→present — ask for a bulk CSV export filtered to roof/re-roof).
+- ⚠️ **El Paso** (El Paso 48141) — free open data (`gis.elpasotexas.gov` NewResidential/NewCommercial) is **new-construction only** (1994-2026, 0 roof rows). The full permit universe (incl. re-roofs) is on **CivicData.com** (Accela mirror, `BuildingPermitsV2`/`PermitsV4`) but **login-gated** — needs a free CivicData.com account (a Frederick task; I can't create accounts). Once in: `datastore_search` the resource, filter roof/reroof, verify min/max issued_date (Accela depth = usually only back to the city's system-migration date, so 20-yr not guaranteed).
 - + suburbs (Plano, Arlington, Frisco, Round Rock, Sugar Land …) — mostly ArcGIS/CivicPlus/EnerGov.
+
+## Permit records-requests / gated sources (need Frederick — roofer lane)
+| Metro | What / how |
+|---|---|
+| **Houston** (Harris 48201) | TPIA request, City of Houston Permitting Center Open Records — 832-394-8800 / houstontx.gov/publicinformation. Ask: bulk digital (CSV/Excel) export of residential+commercial building permits filtered to type/description ROOF/RE-ROOF/REROOF, full retained range (residential 1988→present). |
+| **El Paso** (El Paso 48141) | Register free at civicdata.com → pull `BuildingPermitsV2` (pkg `15eadb61-877d-41b0-b4a3-67f14b12a48c`) via `datastore_search`; filter roof/reroof; check depth. |
+| **San Antonio pre-2020** (Bexar 48029) | Optional depth-booster: City of SA records request for 2005-2019 re-roof permits, to reduce roof-age false positives (free source only reaches 2020). |
 
 ## Notes / caveats
 - **New Braunfels & San Marcos** carry `Contractor_Name` (+ NB has `Contractor_Regnbr` license #) — bonus roofer-competitor intel (who's already working which streets).

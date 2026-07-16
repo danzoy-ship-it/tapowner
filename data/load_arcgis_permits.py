@@ -111,6 +111,28 @@ CITIES = {
             "parcel_key": None,
         },
     },
+    "fort_worth": {
+        "county_fips": "48439",   # Tarrant (DFW bonus metro; self-hosted ArcGIS Server)
+        "featureserver": "https://mapit.fortworthtexas.gov/ags/rest/services/CIVIC/Permits/MapServer/0",
+        "referer": None,
+        "oid": "CAPID",           # this layer's OID field is CAPID, not OBJECTID
+        "geom_mode": False,       # Latitude/Longitude fields already WGS84
+        "fields": {
+            "permit_number": "Permit_No",
+            "type_desc": "Permit_Type",
+            "work_class": "Permit_SubType",
+            "permit_class": "Permit_Category",   # includes an explicit 'ReRoof' value
+            "description": "B1_WORK_DESC",
+            "issued_date": "File_Date",          # epoch ms
+            "address": "Address",
+            "city": None,
+            "zip": "Zip_Code",
+            "lat": "Latitude",
+            "lon": "Longitude",
+            "valuation": "JobValue",
+            "parcel_key": None,
+        },
+    },
     "buda": {
         "county_fips": "48209",   # Hays (small rolling-window dataset)
         "featureserver": "https://services6.arcgis.com/vXZW4vAaPRr14z2s/arcgis/rest/services/Permits/FeatureServer/0",
@@ -171,10 +193,10 @@ def to_num(v):
         return None
 
 
-def fetch(base, fields, offset, referer, geom_mode):
+def fetch(base, fields, offset, referer, geom_mode, oid="OBJECTID"):
     params = {"where": "1=1", "outFields": ",".join(fields),
               "returnGeometry": "true" if geom_mode else "false",
-              "orderByFields": "OBJECTID", "resultOffset": str(offset),
+              "orderByFields": oid, "resultOffset": str(offset),
               "resultRecordCount": str(PAGE), "f": "json"}
     if geom_mode:
         params["outSR"] = "4326"
@@ -202,7 +224,8 @@ def main():
     referer = cfg.get("referer")
     if "--referer" in sys.argv:
         referer = sys.argv[sys.argv.index("--referer") + 1]
-    src_cols = ["OBJECTID"] + [v for v in fm.values() if v]
+    oid = cfg.get("oid", "OBJECTID")
+    src_cols = [oid] + [v for v in fm.values() if v]
 
     conn = psycopg2.connect(os.environ["DATABASE_URL"], keepalives=1, keepalives_idle=30,
                             keepalives_interval=10, keepalives_count=10, connect_timeout=20)
@@ -216,7 +239,7 @@ def main():
     upserted, offset = 0, 0
     t0 = time.time()
     while True:
-        data = fetch(cfg["featureserver"], sorted(set(src_cols)), offset, referer, geom_mode)
+        data = fetch(cfg["featureserver"], sorted(set(src_cols)), offset, referer, geom_mode, oid)
         feats = data.get("features", [])
         if not feats:
             break
