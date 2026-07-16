@@ -92,9 +92,15 @@ Denton / Montgomery / McLennan / Johnson are data-session (bulk/PIA). Details in
 
 1. **Keep mining counties** (standing order): El Paso, Galveston, Brazoria, Bell, McLennan,
    Nueces, Lubbock, Smith next; the recipe is in Task #11 and the loaders in `data/`.
-2. **Pending county arrivals:** BCAD (Bexar beds/baths/pool/casita — Frederick's PIA sent
-   2026-07-14, due ≤10 business days) · Tarrant PIA + Travis code-legend (drafts given) ·
-   Comal + Guadalupe PIA (texts given, Frederick sending).
+2. **Pending county arrivals:** ~~BCAD (Bexar beds/baths/pool/casita)~~ **SUPERSEDED
+   2026-07-15** — a SARA regional ArcGIS republication of BCAD's own data delivered
+   beds/baths/pools/casitas for all of Bexar for free the day after this line was
+   written; the PIA was never needed for this data (verified live 2026-07-16: 41,162
+   pools / 13,269 casitas / 587K beds+baths county-wide; Frederick's own house confirms
+   pool+spa+garage). What Bexar STILL genuinely lacks: sale-date and exemption signals
+   (0% coverage, verified live) — the seller-signals retrofit hasn't reached it yet.
+   Also pending: Tarrant PIA + Travis code-legend (drafts given) · Comal + Guadalupe PIA
+   (texts given, Frederick sending).
 3. **Business chain (Frederick, reminder running):** LLC → EIN → bank → Stripe live mode;
    legal gate (attorney ToS review, TX Data Broker reg, insurance, BatchData addendum).
 4. **Then:** App Store submission (demo account + review notes ready; builds proven).
@@ -128,9 +134,12 @@ Tarrant (beds/baths — confirmed policy-withheld), Collin (feature-tag segments
 counties confirmed structurally gated in the 2026-07-16 pass: Anderson, Wharton, Hopkins,
 Montague, Goliad, Palo Pinto, Floyd, Red River, Lipscomb, Winkler. **Standing order:**
 no PAID records requests; even $0-fee electronic PIAs are parked pending the
-`parcel_viewed` felt-gap checkpoint (~2026-07-28). **Bexar's BCAD PIA** (sent 2026-07-14,
-statutory ≤10 business days, due ~2026-07-28) **has not landed yet** — Bexar currently has
-sqft/beds/baths (SARA ArcGIS layer) but no pool/casita and no sale-date/exemption signal.
+`parcel_viewed` felt-gap checkpoint (~2026-07-28). **Bexar's BCAD PIA was SUPERSEDED
+2026-07-15** — a free SARA regional ArcGIS republication of BCAD's own data delivered
+beds/baths/pools/casitas for essentially all of Bexar the day after the PIA was sent; the
+PIA was never needed for this data (verified live 2026-07-16: 41,162 pools / 13,269
+casitas / 587K beds+baths). Bexar's genuine remaining gap is sale-date/exemption signal
+(0% coverage, verified live) — the seller-signals retrofit hasn't reached Bexar yet.
 
 ---
 
