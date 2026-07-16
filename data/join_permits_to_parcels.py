@@ -55,14 +55,19 @@ def main():
             print(f"  key match ({keycol}): +{cur.rowcount:,} ({time.time()-t0:.0f}s)", flush=True)
             conn.commit()
 
-    # ---- Pass 2: spatial fallback.
+    # ---- Pass 2: spatial fallback via a county-scoped temp table + fresh GIST.
+    # (A correlated county filter forces a per-permit BitmapAnd over the whole
+    # county — pathologically slow; scoping parcels once fixes it.)
     cur.execute("SELECT count(*) FROM permits WHERE jurisdiction=%s AND parcel_id IS NULL AND geom IS NOT NULL", (juris,))
     if cur.fetchone()[0]:
         t0 = time.time()
-        cur.execute("""UPDATE permits pm SET parcel_id = p.id FROM parcels p
+        cur.execute("DROP TABLE IF EXISTS cp")
+        cur.execute("CREATE TEMP TABLE cp AS SELECT id, geom FROM parcels WHERE county_fips=%s AND geom IS NOT NULL", (fips,))
+        cur.execute("CREATE INDEX cp_gix ON cp USING GIST (geom)")
+        cur.execute("ANALYZE cp")
+        cur.execute("""UPDATE permits pm SET parcel_id = cp.id FROM cp
                        WHERE pm.jurisdiction=%s AND pm.parcel_id IS NULL AND pm.geom IS NOT NULL
-                         AND p.county_fips = pm.county_fips AND p.geom IS NOT NULL
-                         AND ST_Contains(p.geom, pm.geom)""", (juris,))
+                         AND ST_Contains(cp.geom, pm.geom)""", (juris,))
         print(f"  spatial match: +{cur.rowcount:,} ({time.time()-t0:.0f}s)", flush=True)
         conn.commit()
 

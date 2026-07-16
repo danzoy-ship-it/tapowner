@@ -18,15 +18,17 @@
 ## Jurisdiction coverage log
 | ☑ | Jurisdiction | County | System | Source | Permits | roof / solar | Join |
 |---|---|---|---|---|---|---|---|
-| ✅ | **Austin** | Travis 48453 | Socrata | data.austintexas.gov `3syk-w9eu` | 2,365,555 | 30,607 / 26,940 | tcad_id→apn key |
-| ✅ | **San Antonio** | Bexar 48029 | ArcGIS (Accela mirror) | services.arcgis.com/g1fRTDLeMgspWrYp `Permits_Issued` | 116,958 | 9,519 / 1,573 | spatial + address |
-| ✅ | **Dallas** | Dallas 48113 | Socrata | www.dallasopendata.com `e7gq-4sah` | 126,840 | 11,178 / 3,465 | address |
-| ✅ | **New Braunfels** | Comal 48091 | ArcGIS (Accela+Cityworks) | gismaps.newbraunfels.gov `.../PlanningZoning/MapServer/10` | 204,301 | 6,324 / 2,959 | spatial + address |
-| ✅ | **San Marcos** | Hays 48209 | ArcGIS (MyPermitNow) | smgis.sanmarcostx.gov `.../CoSM_BuildingPermits/FeatureServer/0` | 50,600 | 1,568 / 811 | spatial + address |
-| ✅ | **Seguin** | Guadalupe 48187 | ArcGIS (Tyler EnerGov mirror) | gis.seguintexas.gov `.../Permits/Permits/FeatureServer/0` | 143,557 | 4,269 / 627 | spatial + address |
-| ✅ | **Buda** | Hays 48209 | ArcGIS (MGO/MyPermitNow) | services6.arcgis.com/vXZW4vAaPRr14z2s `.../Permits/FeatureServer/0` | 137 | 1 / 0 | spatial + address |
+| ✅ | **Austin** | Travis 48453 | Socrata | data.austintexas.gov `3syk-w9eu` | 2,365,555 | 30,607 / 26,940 | key+spatial **93% (2.20M)** |
+| ✅ | **San Antonio** | Bexar 48029 | ArcGIS (Accela mirror) | services.arcgis.com/g1fRTDLeMgspWrYp `Permits_Issued` | 102,894 | 9,519 / 1,573 | spatial **99%** |
+| ✅ | **Dallas** | Dallas 48113 | Socrata | www.dallasopendata.com `e7gq-4sah` | 126,840 | 11,178 / 3,465 | address **0%** — needs `6ik7-4gqj` Permit-Points coords (bonus, not corridor) |
+| ✅ | **New Braunfels** | Comal 48091 | ArcGIS (Accela+Cityworks) | gismaps.newbraunfels.gov `.../PlanningZoning/MapServer/10` | 184,664 | 6,324 / 2,959 | spatial **53%** (rest lack coords / in ETJ) |
+| ✅ | **San Marcos** | Hays 48209 | ArcGIS (MyPermitNow) | smgis.sanmarcostx.gov `.../CoSM_BuildingPermits/FeatureServer/0` | 50,288 | 1,568 / 811 | spatial **93%** |
+| ✅ | **Seguin** | Guadalupe 48187 | ArcGIS (Tyler EnerGov mirror) | gis.seguintexas.gov `.../Permits/Permits/FeatureServer/0` | 141,389 | 4,269 / 627 | spatial **99%** |
+| ✅ | **Buda** | Hays 48209 | ArcGIS (MGO/MyPermitNow) | services6.arcgis.com/vXZW4vAaPRr14z2s `.../Permits/FeatureServer/0` | 137 | 1 / 0 | spatial 92% |
 
-**POC total: ~3.0M permits across the San Antonio↔Austin I-35 corridor** (the exact territory the New-Braunfels roofer covers — Travis/Comal/Bexar/Hays/Guadalupe + Dallas bonus). Roofer-priority: **~63,000 roof + ~36,400 solar** permits.
+**POC total: ~3.07M permits across the SA↔Austin I-35 corridor** (Travis/Comal/Bexar/Hays/Guadalupe + Dallas bonus); **2.58M matched to a homeowner parcel.** Roofer signals unlocked: **34,692 parcels with a roof-permit date (signal #2); 22,742 parcels with a solar permit (signal #3; 4,355 since 2024).**
+
+**Perf note:** the spatial join MUST scope parcels to the county in a temp table + fresh GIST — a correlated `county_fips` filter forces a per-permit BitmapAnd over the whole county (New Braunfels: >5min → 6s after the fix).
 
 ## Corridor cities with NO free bulk source (records-request only, verified 2026-07-16)
 Closed permit portals (EnerGov-CSS / CityView / MyGovernmentOnline) with no published ArcGIS/Socrata/CKAN mirror after full org-directory enumeration:
