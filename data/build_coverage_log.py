@@ -33,7 +33,8 @@ for fips, name in by_fips.items():
     if not c or tot == 0:
         rows.append((name, fips, 0, {}, "MISSING", False))
         continue
-    m = {k: int(c[k]) for k in ("sqft", "beds", "baths", "improv", "sale", "exempt")}
+    m = {k: int(c.get(k, 0)) for k in ("sqft", "beds", "baths", "improv", "sale",
+                                       "exempt", "yr", "eyr", "anyyear")}
     p = {k: pct(v, tot) for k, v in m.items()}
     # status rollup
     has_improv = p["improv"] >= 25
@@ -67,6 +68,13 @@ n_mined = sum(1 for r in rows if r[5])
 n_signals = sum(1 for r in rows if r[3] and r[3].get("sale", 0) > 0)
 n_exempt = sum(1 for r in rows if r[3] and r[3].get("exempt", 0) > 0)
 n_any_signal = sum(1 for r in rows if r[3] and (r[3].get("sale", 0) > 0 or r[3].get("exempt", 0) > 0))
+# Year signal (roof-age): year_built OR effective_year_built present. The roofer
+# insurance-cliff signals can't run without it, so a zero-year county is roof-age-blind.
+n_year = sum(1 for r in rows if r[3] and r[3].get("yr", 0) > 0)
+n_effyr = sum(1 for r in rows if r[3] and r[3].get("eyr", 0) > 0)
+n_anyyear = sum(1 for r in rows if r[3] and r[3].get("anyyear", 0) > 0)
+n_zeroyear = sum(1 for r in rows if r[2] > 0 and not (r[3] and r[3].get("anyyear", 0) > 0))
+parc_zeroyear = sum(r[2] for r in rows if r[2] > 0 and not (r[3] and r[3].get("anyyear", 0) > 0))
 
 out = []
 out.append("# Texas County Coverage — the check-off log\n")
@@ -81,21 +89,27 @@ out.append(f"- Full attributes (improv+dims): {n_full}  ·  Partial: {n_partial}
            f"·  Geometry-only (need mining): {n_geom}  ·  Missing from DB: {n_missing}")
 out.append(f"- Seller-signals — sale date: {n_signals} counties  ·  "
            f"exemptions (homestead/over-65/DV tenure): {n_exempt} counties  ·  "
-           f"**any seller-signal: {n_any_signal} counties**\n")
+           f"**any seller-signal: {n_any_signal} counties**")
+out.append(f"- **Roof-age signal — year_built: {n_year} counties · effective_year_built: {n_effyr} · "
+           f"any-year: {n_anyyear} counties.** ⚠️ **{n_zeroyear} counties ({parc_zeroyear:,} parcels) "
+           f"have ZERO year signal** → roof-age-blind (can't run the insurance-cliff signal until filled "
+           f"free-recoverable, records-request, or imagery).\n")
 out.append("Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISSING. "
-           "% = share of the county's parcels with that attribute.\n")
-out.append("| ☑ | County | FIPS | Parcels | sqft% | beds% | baths% | improv% | sale% | exempt% | Status |")
-out.append("|---|--------|------|--------:|------:|------:|-------:|--------:|------:|--------:|--------|")
+           "% = share of the county's parcels with that attribute. `yr%` = year_built, "
+           "`eyr%` = effective_year_built (roof-age proxy); a blank on BOTH = roof-age-blind.\n")
+out.append("| ☑ | County | FIPS | Parcels | sqft% | beds% | baths% | yr% | eyr% | improv% | sale% | exempt% | Status |")
+out.append("|---|--------|------|--------:|------:|------:|-------:|----:|-----:|--------:|------:|--------:|--------|")
 for name, fips, tot, m, status, mined in rows:
     box = "x" if mined else " "
     if tot == 0:
-        out.append(f"| [{box}] | {name.title()} | {fips} | 0 | – | – | – | – | – | – | {status} |")
+        out.append(f"| [{box}] | {name.title()} | {fips} | 0 | – | – | – | – | – | – | – | – | {status} |")
         continue
     def pc(k):
         v = pct(m.get(k, 0), tot)
         return f"{v:.0f}" if v >= 0.5 else "·"
     out.append(f"| [{box}] | {name.title()} | {fips} | {tot:,} | {pc('sqft')} | {pc('beds')} | "
-               f"{pc('baths')} | {pc('improv')} | {pc('sale')} | {pc('exempt')} | {status} |")
+               f"{pc('baths')} | {pc('yr')} | {pc('eyr')} | {pc('improv')} | {pc('sale')} | "
+               f"{pc('exempt')} | {status} |")
 
 # ---- Known bulk-data gaps / blockers (the "log what we can't get yet" list,
 # per the 100%-coverage mandate). Update as attempts are exhausted; details +

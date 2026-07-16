@@ -6,267 +6,268 @@ Regenerate with `python data/build_coverage_log.py` after each mining batch (ref
 
 ## Scoreboard (253 counties)
 
-- ☑ **Mined (has improvements/feature tags): 79** / 253
+- ☑ **Mined (has improvements/feature tags): 80** / 253
 - Full attributes (improv+dims): 44  ·  Partial: 115  ·  Geometry-only (need mining): 94  ·  Missing from DB: 0
-- Seller-signals — sale date: 149 counties  ·  exemptions (homestead/over-65/DV tenure): 137 counties  ·  **any seller-signal: 216 counties**
+- Seller-signals — sale date: 149 counties  ·  exemptions (homestead/over-65/DV tenure): 138 counties  ·  **any seller-signal: 216 counties**
+- **Roof-age signal — year_built: 147 counties · effective_year_built: 23 · any-year: 147 counties.** ⚠️ **106 counties (1,768,418 parcels) have ZERO year signal** → roof-age-blind (can't run the insurance-cliff signal until filled free-recoverable, records-request, or imagery).
 
-Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISSING. % = share of the county's parcels with that attribute.
+Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISSING. % = share of the county's parcels with that attribute. `yr%` = year_built, `eyr%` = effective_year_built (roof-age proxy); a blank on BOTH = roof-age-blind.
 
-| ☑ | County | FIPS | Parcels | sqft% | beds% | baths% | improv% | sale% | exempt% | Status |
-|---|--------|------|--------:|------:|------:|-------:|--------:|------:|--------:|--------|
-| [ ] | Hidalgo | 48215 | 328,322 | 81 | · | · | · | 93 | 47 | PARTIAL |
-| [ ] | Smith | 48423 | 140,245 | 55 | · | · | · | · | 13 | GEOM-ONLY |
-| [ ] | Lubbock | 48303 | 135,112 | 78 | · | · | · | 95 | · | PARTIAL |
-| [ ] | Henderson | 48213 | 106,708 | · | · | · | · | 24 | · | GEOM-ONLY |
-| [ ] | Comal | 48091 | 103,537 | · | · | · | · | 95 | · | PARTIAL |
-| [ ] | Parker | 48367 | 100,548 | · | · | · | · | 92 | · | PARTIAL |
-| [ ] | Ector | 48135 | 75,891 | 77 | · | · | 20 | 68 | 42 | PARTIAL |
-| [ ] | Hunt | 48231 | 69,728 | · | · | · | · | 89 | · | PARTIAL |
-| [ ] | Tomgreen | 48451 | 58,686 | · | · | · | · | 98 | · | PARTIAL |
-| [ ] | Bowie | 48037 | 53,212 | · | · | · | · | 50 | 41 | PARTIAL |
-| [ ] | Burnet | 48053 | 50,138 | · | · | · | · | 92 | · | PARTIAL |
-| [ ] | Waller | 48473 | 48,136 | · | · | · | · | 88 | · | PARTIAL |
-| [ ] | Nacogdoches | 48347 | 48,003 | · | · | · | · | 17 | 38 | GEOM-ONLY |
-| [ ] | Cherokee | 48073 | 46,761 | · | · | · | · | 90 | · | PARTIAL |
-| [ ] | Navarro | 48349 | 46,167 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Medina | 48325 | 44,330 | · | · | · | · | 88 | · | PARTIAL |
-| [ ] | Vanzandt | 48467 | 43,963 | · | · | · | · | 93 | · | PARTIAL |
-| [ ] | Anderson | 48001 | 43,894 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Hill | 48217 | 39,355 | · | · | · | · | 33 | · | PARTIAL |
-| [ ] | Llano | 48299 | 38,879 | · | · | · | · | 87 | · | PARTIAL |
-| [ ] | Palopinto | 48363 | 38,698 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Starr | 48427 | 38,571 | · | · | · | · | 56 | · | PARTIAL |
-| [ ] | Rusk | 48401 | 37,967 | · | · | · | · | · | 9 | GEOM-ONLY |
-| [ ] | Chambers | 48071 | 37,510 | · | · | · | · | · | 38 | GEOM-ONLY |
-| [ ] | Matagorda | 48321 | 37,211 | · | · | · | · | 81 | · | PARTIAL |
-| [ ] | Atascosa | 48013 | 36,791 | · | · | · | · | 71 | · | PARTIAL |
-| [ ] | Walker | 48471 | 35,582 | · | · | · | · | 85 | · | PARTIAL |
-| [ ] | Cass | 48067 | 34,816 | · | · | · | · | 77 | · | PARTIAL |
-| [ ] | Tyler | 48457 | 33,043 | · | · | · | · | 84 | · | PARTIAL |
-| [ ] | Wharton | 48481 | 31,888 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Upshur | 48459 | 30,293 | · | · | · | · | 73 | · | PARTIAL |
-| [ ] | Kendall | 48259 | 29,986 | · | · | · | · | 90 | · | PARTIAL |
-| [ ] | Fannin | 48147 | 29,043 | · | · | · | · | 94 | · | PARTIAL |
-| [ ] | Jimwells | 48249 | 27,944 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Jones | 48253 | 27,732 | · | · | · | · | · | 18 | GEOM-ONLY |
-| [ ] | Grimes | 48185 | 27,711 | · | · | · | · | 89 | · | PARTIAL |
-| [ ] | Leon | 48289 | 27,570 | · | · | · | · | · | 15 | GEOM-ONLY |
-| [ ] | Burleson | 48051 | 27,282 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Houston | 48225 | 26,611 | · | · | · | · | · | 18 | GEOM-ONLY |
-| [ ] | Maverick | 48323 | 26,048 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Hopkins | 48223 | 25,149 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Montague | 48337 | 24,836 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Erath | 48143 | 24,656 | · | · | · | · | 96 | · | PARTIAL |
-| [ ] | Freestone | 48161 | 23,979 | · | · | · | · | · | 20 | GEOM-ONLY |
-| [ ] | Hudspeth | 48229 | 23,954 | 5 | · | · | 5 | 23 | 2 | GEOM-ONLY |
-| [ ] | Fayette | 48149 | 23,882 | 55 | · | · | · | 82 | 28 | PARTIAL |
-| [ ] | Sabine | 48403 | 23,352 | · | · | · | · | 89 | 18 | PARTIAL |
-| [ ] | Colorado | 48089 | 22,756 | · | · | · | · | 76 | · | PARTIAL |
-| [ ] | Calhoun | 48057 | 22,678 | · | · | · | · | 87 | · | PARTIAL |
-| [ ] | Austin | 48015 | 22,581 | · | · | · | · | 95 | · | PARTIAL |
-| [ ] | Uvalde | 48463 | 21,722 | · | · | · | · | 94 | · | PARTIAL |
-| [ ] | Eastland | 48133 | 21,448 | · | · | · | · | · | 22 | GEOM-ONLY |
-| [ ] | Shelby | 48419 | 21,378 | · | · | · | · | 82 | · | PARTIAL |
-| [ ] | Dewitt | 48123 | 20,802 | · | · | · | · | · | 20 | GEOM-ONLY |
-| [ ] | Howard | 48227 | 20,654 | · | · | · | · | 16 | · | GEOM-ONLY |
-| [ ] | Gonzales | 48177 | 20,420 | · | · | · | · | · | 18 | GEOM-ONLY |
-| [ ] | Brewster | 48043 | 20,287 | 25 | · | · | 25 | 83 | 11 | PARTIAL |
-| [ ] | Bosque | 48035 | 19,975 | · | · | · | · | 98 | · | PARTIAL |
-| [ ] | Marion | 48315 | 19,841 | · | · | · | · | · | 15 | GEOM-ONLY |
-| [ ] | Hale | 48189 | 19,108 | · | · | · | · | 75 | · | PARTIAL |
-| [ ] | Hutchinson | 48233 | 18,938 | · | · | · | · | · | 28 | GEOM-ONLY |
-| [ ] | Panola | 48365 | 18,812 | · | · | · | · | · | 24 | GEOM-ONLY |
-| [ ] | Falls | 48145 | 18,581 | · | · | · | · | 53 | · | PARTIAL |
-| [ ] | Jackson | 48239 | 18,453 | · | · | · | · | 82 | · | PARTIAL |
-| [ ] | Presidio | 48377 | 18,436 | · | · | · | · | 85 | · | PARTIAL |
-| [ ] | Robertson | 48395 | 16,935 | · | · | · | · | 54 | · | PARTIAL |
-| [ ] | Liveoak | 48297 | 16,839 | · | · | · | · | · | 16 | GEOM-ONLY |
-| [ ] | Lampasas | 48281 | 16,541 | · | · | · | · | 20 | · | GEOM-ONLY |
-| [ ] | Franklin | 48159 | 16,540 | · | · | · | · | · | 19 | GEOM-ONLY |
-| [ ] | Young | 48503 | 16,353 | · | · | · | · | 80 | · | PARTIAL |
-| [ ] | Gray | 48179 | 16,251 | · | · | · | · | 82 | · | PARTIAL |
-| [ ] | Lee | 48287 | 16,090 | · | · | · | · | 85 | · | PARTIAL |
-| [ ] | Ward | 48475 | 15,174 | · | · | · | · | · | 15 | GEOM-ONLY |
-| [ ] | Runnels | 48399 | 15,008 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Kleberg | 48273 | 14,909 | · | · | · | · | 82 | · | PARTIAL |
-| [ ] | Duval | 48131 | 14,772 | · | · | · | · | 66 | · | PARTIAL |
-| [ ] | Pecos | 48371 | 14,720 | · | · | · | · | · | 19 | GEOM-ONLY |
-| [ ] | Karnes | 48255 | 14,436 | · | · | · | · | · | 17 | GEOM-ONLY |
-| [ ] | Blanco | 48031 | 14,269 | · | · | · | · | 82 | · | PARTIAL |
-| [ ] | Hamilton | 48193 | 14,253 | · | · | · | · | 84 | · | PARTIAL |
-| [ ] | Willacy | 48489 | 13,989 | · | · | · | · | 63 | · | PARTIAL |
-| [ ] | Lamb | 48279 | 13,871 | · | · | · | · | 82 | · | PARTIAL |
-| [ ] | Redriver | 48387 | 13,728 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Clay | 48077 | 13,501 | · | · | · | · | · | 23 | GEOM-ONLY |
-| [ ] | Culberson | 48109 | 13,327 | · | · | · | · | · | 3 | GEOM-ONLY |
-| [ ] | Floyd | 48153 | 13,217 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Nolan | 48353 | 13,216 | · | · | · | · | · | 25 | GEOM-ONLY |
-| [ ] | Frio | 48163 | 13,213 | · | · | · | · | · | 18 | GEOM-ONLY |
-| [ ] | Coleman | 48083 | 12,839 | · | · | · | · | · | 18 | GEOM-ONLY |
-| [ ] | Sanaugustine | 48405 | 12,722 | · | · | · | · | · | 10 | GEOM-ONLY |
-| [ ] | Stephens | 48429 | 12,647 | · | · | · | · | 84 | · | PARTIAL |
-| [ ] | Zapata | 48505 | 12,623 | · | · | · | · | 69 | · | PARTIAL |
-| [ ] | Refugio | 48391 | 12,478 | · | · | · | · | · | 21 | GEOM-ONLY |
-| [ ] | Rains | 48379 | 12,301 | · | · | · | · | 87 | · | PARTIAL |
-| [ ] | Moore | 48341 | 12,256 | · | · | · | · | 84 | · | PARTIAL |
-| [ ] | Callahan | 48059 | 12,064 | · | · | · | · | 88 | · | PARTIAL |
-| [ ] | Wilbarger | 48487 | 11,894 | · | · | · | · | 66 | 22 | PARTIAL |
-| [ ] | Jack | 48237 | 11,866 | · | · | · | · | · | 18 | GEOM-ONLY |
-| [ ] | Morris | 48343 | 11,857 | · | · | · | · | · | 28 | GEOM-ONLY |
-| [ ] | Camp | 48063 | 11,652 | · | · | · | · | 87 | · | PARTIAL |
-| [ ] | Sansaba | 48411 | 11,591 | · | · | · | · | · | 12 | GEOM-ONLY |
-| [ ] | Lipscomb | 48295 | 11,030 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Kinney | 48271 | 11,010 | · | · | · | · | 60 | · | PARTIAL |
-| [ ] | Deafsmith | 48117 | 10,901 | · | · | · | · | 84 | · | PARTIAL |
-| [ ] | Mcculloch | 48307 | 10,778 | · | · | · | · | · | 17 | GEOM-ONLY |
-| [ ] | Goliad | 48175 | 10,314 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Madison | 48313 | 10,307 | · | · | · | · | 87 | · | PARTIAL |
-| [ ] | Edwards | 48137 | 9,948 | · | · | · | · | 80 | · | PARTIAL |
-| [ ] | Zavala | 48507 | 9,744 | · | · | · | · | 74 | · | PARTIAL |
-| [ ] | Dawson | 48115 | 9,676 | · | · | · | · | · | 24 | GEOM-ONLY |
-| [ ] | Archer | 48009 | 9,653 | · | · | · | · | · | 28 | GEOM-ONLY |
-| [ ] | Motley | 48345 | 9,374 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Haskell | 48207 | 9,370 | · | · | · | · | · | 16 | GEOM-ONLY |
-| [ ] | Crockett | 48105 | 9,113 | · | · | · | · | · | 8 | GEOM-ONLY |
-| [ ] | Terry | 48445 | 9,113 | · | · | · | · | 76 | · | PARTIAL |
-| [ ] | Mason | 48319 | 9,096 | · | · | · | · | 19 | · | GEOM-ONLY |
-| [ ] | Mills | 48333 | 9,025 | · | · | · | · | 95 | · | PARTIAL |
-| [ ] | Real | 48385 | 8,272 | · | · | · | · | 83 | · | PARTIAL |
-| [ ] | Coke | 48081 | 8,271 | · | · | · | · | · | 11 | GEOM-ONLY |
-| [ ] | Concho | 48095 | 8,034 | · | · | · | · | 97 | · | PARTIAL |
-| [ ] | Upton | 48461 | 7,846 | · | · | · | · | · | 16 | GEOM-ONLY |
-| [ ] | Wheeler | 48483 | 7,676 | · | · | · | · | · | 15 | GEOM-ONLY |
-| [ ] | Lynn | 48305 | 7,324 | · | · | · | · | · | 22 | GEOM-ONLY |
-| [ ] | Martin | 48317 | 7,255 | · | · | · | · | · | 15 | GEOM-ONLY |
-| [ ] | Winkler | 48495 | 7,234 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Jeffdavis | 48243 | 7,175 | · | · | · | · | · | 6 | GEOM-ONLY |
-| [ ] | Hardeman | 48197 | 6,958 | · | · | · | · | · | 13 | GEOM-ONLY |
-| [ ] | Crane | 48103 | 6,913 | · | · | · | · | · | 14 | GEOM-ONLY |
-| [ ] | Somervell | 48425 | 6,823 | · | · | · | · | 95 | · | PARTIAL |
-| [ ] | Fisher | 48151 | 6,817 | · | · | · | · | · | 15 | GEOM-ONLY |
-| [ ] | Carson | 48065 | 6,710 | · | · | · | · | · | 25 | GEOM-ONLY |
-| [ ] | Crosby | 48107 | 6,670 | · | · | · | · | · | 16 | GEOM-ONLY |
-| [ ] | Swisher | 48437 | 6,657 | · | · | · | · | 84 | · | PARTIAL |
-| [ ] | Parmer | 48369 | 6,606 | · | · | · | · | 64 | · | PARTIAL |
-| [ ] | Garza | 48169 | 6,583 | · | · | · | · | 65 | · | PARTIAL |
-| [ ] | Schleicher | 48413 | 6,559 | · | · | · | · | 76 | · | PARTIAL |
-| [ ] | Ochiltree | 48357 | 6,521 | · | · | · | · | · | 28 | GEOM-ONLY |
-| [ ] | Castro | 48069 | 6,466 | · | · | · | · | 56 | 23 | PARTIAL |
-| [ ] | Knox | 48275 | 6,408 | · | · | · | · | 80 | · | PARTIAL |
-| [ ] | Baylor | 48023 | 6,349 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Hall | 48191 | 6,347 | · | · | · | · | · | 12 | GEOM-ONLY |
-| [ ] | Dallam | 48111 | 6,271 | · | · | · | · | 86 | · | PARTIAL |
-| [ ] | Bailey | 48017 | 6,044 | · | · | · | · | 76 | · | PARTIAL |
-| [ ] | Childress | 48075 | 6,030 | · | · | · | · | · | 22 | GEOM-ONLY |
-| [ ] | Sutton | 48435 | 5,905 | · | · | · | · | 82 | · | PARTIAL |
-| [ ] | Hansford | 48195 | 5,867 | · | · | · | · | · | 21 | GEOM-ONLY |
-| [ ] | Brooks | 48047 | 5,739 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Cochran | 48079 | 5,735 | · | · | · | · | 62 | · | PARTIAL |
-| [ ] | Collingsworth | 48087 | 5,735 | · | · | · | · | · | 11 | GEOM-ONLY |
-| [ ] | Menard | 48327 | 5,708 | · | · | · | · | · | 10 | GEOM-ONLY |
-| [ ] | Hartley | 48205 | 5,645 | · | · | · | · | 97 | · | PARTIAL |
-| [ ] | Terrell | 48443 | 5,562 | · | · | · | · | 62 | · | PARTIAL |
-| [ ] | Shackelford | 48417 | 5,542 | · | · | · | · | · | 17 | GEOM-ONLY |
-| [ ] | Foard | 48155 | 5,393 | · | · | · | · | · | 6 | GEOM-ONLY |
-| [ ] | Stonewall | 48433 | 5,203 | · | · | · | · | · | 9 | GEOM-ONLY |
-| [ ] | Dickens | 48125 | 4,744 | · | · | · | · | · | 10 | GEOM-ONLY |
-| [ ] | Hemphill | 48211 | 4,685 | · | · | · | · | · | 17 | GEOM-ONLY |
-| [ ] | Throckmorton | 48447 | 4,664 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Reagan | 48383 | 4,606 | · | · | · | · | · | 22 | GEOM-ONLY |
-| [ ] | Jimhogg | 48247 | 4,441 | · | · | · | · | · | 23 | GEOM-ONLY |
-| [ ] | Cottle | 48101 | 4,373 | · | · | · | · | · | 8 | GEOM-ONLY |
-| [ ] | Mcmullen | 48311 | 4,188 | · | · | · | · | 47 | · | PARTIAL |
-| [ ] | Oldham | 48359 | 4,162 | · | · | · | · | 86 | · | PARTIAL |
-| [ ] | Briscoe | 48045 | 4,091 | · | · | · | · | · | 8 | GEOM-ONLY |
-| [ ] | Armstrong | 48011 | 4,058 | · | · | · | · | · | 15 | GEOM-ONLY |
-| [ ] | Borden | 48033 | 3,752 | · | · | · | · | · | 2 | GEOM-ONLY |
-| [ ] | Irion | 48235 | 3,615 | · | · | · | · | · | 12 | GEOM-ONLY |
-| [ ] | Kent | 48263 | 3,598 | · | · | · | · | · | 5 | GEOM-ONLY |
-| [ ] | Sherman | 48421 | 3,531 | · | · | · | · | · | 16 | GEOM-ONLY |
-| [ ] | Glasscock | 48173 | 2,988 | · | · | · | · | · | 6 | GEOM-ONLY |
-| [ ] | Roberts | 48393 | 2,574 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Sterling | 48431 | 2,364 | · | · | · | · | · | 13 | GEOM-ONLY |
-| [ ] | King | 48269 | 2,313 | · | · | · | · | · | 1 | GEOM-ONLY |
-| [ ] | Loving | 48301 | 1,914 | · | · | · | · | · | 1 | GEOM-ONLY |
-| [x] | Harris | 48201 | 1,523,641 | 82 | 82 | 82 | 41 | · | · | FULL |
-| [x] | Travis | 48453 | 828,773 | 41 | 12 | 37 | 41 | · | · | FULL |
-| [x] | Tarrant | 48439 | 757,161 | 91 | · | · | 91 | 98 | 55 | PARTIAL |
-| [x] | Bexar | 48029 | 709,541 | 87 | 83 | 83 | 88 | · | · | FULL |
-| [x] | Dallas | 48113 | 694,160 | 85 | 83 | 85 | 77 | · | · | FULL |
-| [x] | Elpaso | 48141 | 407,130 | 64 | 38 | 58 | 64 | · | · | FULL |
-| [x] | Collin | 48085 | 387,737 | 91 | 74 | 78 | · | 97 | 67 | PARTIAL |
-| [x] | Fortbend | 48157 | 375,097 | 83 | 50 | 52 | 75 | · | · | FULL |
-| [x] | Denton | 48121 | 353,631 | 89 | 75 | 81 | 88 | 96 | 62 | FULL+SIGNALS |
-| [x] | Montgomery | 48339 | 320,915 | 77 | · | 67 | 74 | 91 | 54 | FULL+SIGNALS |
-| [x] | Williamson | 48491 | 282,983 | 82 | 24 | 78 | 87 | 82 | · | FULL+SIGNALS |
-| [x] | Brazoria | 48039 | 275,131 | 62 | · | · | 62 | 78 | 40 | PARTIAL |
-| [x] | Galveston | 48167 | 188,695 | 78 | 1 | 61 | 78 | 86 | 45 | FULL+SIGNALS |
-| [x] | Cameron | 48061 | 185,062 | 69 | 20 | 21 | 75 | 95 | 39 | FULL+SIGNALS |
-| [x] | Bell | 48027 | 167,412 | 73 | 11 | 34 | 78 | · | · | FULL |
-| [x] | Liberty | 48291 | 162,275 | 24 | 3 | · | 34 | · | · | PARTIAL |
-| [x] | Nueces | 48355 | 157,198 | 71 | 6 | 1 | 79 | 90 | 46 | PARTIAL |
-| [x] | Jefferson | 48245 | 122,202 | 63 | · | · | 71 | · | · | PARTIAL |
-| [x] | Hays | 48209 | 117,427 | 84 | 13 | · | 74 | · | · | PARTIAL |
-| [x] | Mclennan | 48309 | 115,362 | 77 | · | 65 | 77 | 84 | 42 | FULL+SIGNALS |
-| [x] | Johnson | 48251 | 101,847 | 68 | · | · | 72 | · | · | PARTIAL |
-| [x] | Ellis | 48139 | 98,803 | 81 | · | · | 81 | 95 | 53 | PARTIAL |
-| [x] | Webb | 48479 | 98,291 | 82 | · | · | 82 | 90 | 43 | PARTIAL |
-| [x] | Guadalupe | 48187 | 95,571 | 72 | 37 | 43 | 78 | 93 | 48 | FULL+SIGNALS |
-| [x] | Kaufman | 48257 | 94,650 | 78 | 4 | 8 | 78 | 91 | 50 | PARTIAL |
-| [x] | Grayson | 48181 | 89,348 | 59 | · | 7 | 68 | · | · | PARTIAL |
-| [x] | Gregg | 48183 | 77,816 | 71 | 16 | 59 | 74 | · | · | FULL |
-| [x] | Midland | 48329 | 75,645 | 80 | · | · | 75 | 88 | 46 | PARTIAL |
-| [x] | Brazos | 48041 | 74,666 | 85 | 51 | 52 | 86 | · | · | FULL |
-| [x] | Taylor | 48441 | 70,598 | 73 | 29 | 63 | 74 | · | · | FULL |
-| [x] | Randall | 48381 | 64,824 | 81 | 75 | 76 | 85 | 100 | 53 | FULL+SIGNALS |
-| [x] | Bastrop | 48021 | 63,357 | 51 | · | · | 66 | 92 | 38 | PARTIAL |
-| [x] | Angelina | 48005 | 60,693 | 60 | · | · | 63 | 94 | 36 | PARTIAL |
-| [x] | Polk | 48373 | 60,178 | 35 | 30 | 34 | 44 | 94 | 19 | FULL+SIGNALS |
-| [x] | Wichita | 48485 | 58,742 | 80 | 68 | 68 | 80 | 95 | 44 | FULL+SIGNALS |
-| [x] | Potter | 48375 | 53,490 | 74 | 63 | 65 | 80 | 100 | 35 | FULL+SIGNALS |
-| [x] | Rockwall | 48397 | 52,739 | 84 | 49 | 66 | 87 | 97 | 63 | FULL+SIGNALS |
-| [x] | Sanpatricio | 48409 | 51,385 | 64 | · | · | 64 | 57 | 36 | PARTIAL |
-| [x] | Hood | 48221 | 51,275 | 60 | · | · | 65 | 93 | 39 | PARTIAL |
-| [x] | Harrison | 48203 | 50,995 | 57 | · | · | 57 | 3 | 33 | PARTIAL |
-| [x] | Orange | 48361 | 50,337 | 43 | · | · | 47 | · | · | PARTIAL |
-| [x] | Wise | 48497 | 48,705 | 54 | · | 38 | 67 | 49 | · | FULL+SIGNALS |
-| [x] | Victoria | 48469 | 45,104 | 76 | 58 | · | 76 | 86 | 42 | FULL+SIGNALS |
-| [x] | Wood | 48499 | 44,576 | 54 | · | · | 54 | 87 | 32 | PARTIAL |
-| [x] | Hardin | 48199 | 41,635 | 52 | · | 13 | 53 | 19 | 39 | PARTIAL |
-| [x] | Jasper | 48241 | 37,136 | 41 | · | · | 41 | 38 | 21 | PARTIAL |
-| [x] | Kerr | 48265 | 36,913 | 61 | 22 | 47 | 61 | 88 | · | FULL+SIGNALS |
-| [x] | Sanjacinto | 48407 | 36,346 | 44 | 4 | · | 44 | 83 | 22 | PARTIAL |
-| [x] | Lamar | 48277 | 36,246 | 52 | 6 | 49 | 65 | 81 | 33 | FULL+SIGNALS |
-| [x] | Bandera | 48019 | 33,261 | 44 | · | · | 44 | 74 | 19 | PARTIAL |
-| [x] | Cooke | 48097 | 33,170 | 64 | 49 | 49 | 65 | 86 | 32 | FULL+SIGNALS |
-| [x] | Gillespie | 48171 | 32,351 | 54 | 1 | · | 65 | 84 | 25 | PARTIAL |
-| [x] | Coryell | 48099 | 31,711 | 68 | 7 | 65 | 77 | 86 | 44 | FULL+SIGNALS |
-| [x] | Valverde | 48465 | 31,635 | 59 | · | 46 | 59 | 90 | 31 | FULL+SIGNALS |
-| [x] | Brown | 48049 | 31,411 | 68 | 15 | 40 | 68 | 83 | 30 | FULL+SIGNALS |
-| [x] | Wilson | 48493 | 28,827 | 70 | 3 | 18 | 70 | 84 | 45 | FULL+SIGNALS |
-| [x] | Aransas | 48007 | 26,690 | 60 | 29 | 35 | 61 | 85 | 25 | FULL+SIGNALS |
-| [x] | Caldwell | 48055 | 26,155 | 59 | 34 | 34 | 75 | 88 | 33 | FULL+SIGNALS |
-| [x] | Trinity | 48455 | 25,952 | 30 | 1 | 7 | 31 | 55 | 14 | PARTIAL |
-| [x] | Bee | 48025 | 23,864 | 38 | · | 21 | 57 | · | · | FULL |
-| [x] | Washington | 48477 | 23,475 | 65 | 36 | 38 | 74 | 17 | 41 | FULL |
-| [x] | Newton | 48351 | 23,278 | 41 | 29 | 30 | 42 | 64 | 19 | FULL+SIGNALS |
-| [x] | Limestone | 48293 | 21,727 | 57 | · | 36 | 57 | 86 | 23 | FULL+SIGNALS |
-| [x] | Milam | 48331 | 20,992 | 61 | 3 | 3 | 61 | 83 | 31 | PARTIAL |
-| [x] | Titus | 48449 | 20,833 | 53 | 1 | 1 | 65 | 82 | 33 | PARTIAL |
-| [x] | Lavaca | 48285 | 19,767 | 52 | · | 46 | 65 | 90 | 28 | FULL+SIGNALS |
-| [x] | Comanche | 48093 | 17,580 | 39 | 9 | 35 | 53 | 84 | 23 | FULL+SIGNALS |
-| [x] | Hockley | 48219 | 17,242 | 46 | · | 32 | 60 | 64 | 28 | FULL+SIGNALS |
-| [x] | Gaines | 48165 | 16,576 | 38 | · | 34 | 58 | 89 | 24 | FULL+SIGNALS |
-| [x] | Dimmit | 48127 | 15,542 | 23 | 2 | 13 | 26 | 55 | 10 | PARTIAL |
-| [x] | Reeves | 48389 | 14,975 | 35 | · | · | 35 | 17 | 14 | PARTIAL |
-| [x] | Scurry | 48415 | 13,849 | 56 | 22 | 29 | 56 | 80 | 27 | FULL+SIGNALS |
-| [x] | Andrews | 48003 | 10,522 | 55 | 3 | 50 | 69 | 81 | 37 | FULL+SIGNALS |
-| [x] | Lasalle | 48283 | 10,341 | 33 | · | · | 33 | 59 | 8 | PARTIAL |
-| [x] | Kimble | 48267 | 9,556 | 32 | · | · | 41 | 89 | 15 | PARTIAL |
-| [x] | Mitchell | 48335 | 8,743 | 39 | 2 | 2 | 50 | 83 | 21 | PARTIAL |
-| [x] | Yoakum | 48501 | 7,291 | 38 | · | 11 | 49 | 59 | 22 | PARTIAL |
-| [x] | Delta | 48119 | 6,461 | 41 | · | 27 | 49 | 87 | 22 | FULL+SIGNALS |
-| [x] | Kenedy | 48261 | 538 | 34 | 2 | 14 | 34 | 46 | 8 | PARTIAL |
+| ☑ | County | FIPS | Parcels | sqft% | beds% | baths% | yr% | eyr% | improv% | sale% | exempt% | Status |
+|---|--------|------|--------:|------:|------:|-------:|----:|-----:|--------:|------:|--------:|--------|
+| [ ] | Hidalgo | 48215 | 328,322 | 81 | · | · | 83 | · | · | 93 | 47 | PARTIAL |
+| [ ] | Smith | 48423 | 140,245 | 55 | · | · | 64 | · | · | · | 13 | GEOM-ONLY |
+| [ ] | Lubbock | 48303 | 135,112 | 78 | · | · | 80 | · | · | 95 | · | PARTIAL |
+| [ ] | Henderson | 48213 | 106,708 | · | · | · | · | · | · | 24 | · | GEOM-ONLY |
+| [ ] | Comal | 48091 | 103,537 | · | · | · | · | · | · | 95 | · | PARTIAL |
+| [ ] | Parker | 48367 | 100,548 | · | · | · | · | · | · | 92 | · | PARTIAL |
+| [ ] | Ector | 48135 | 75,891 | 77 | · | · | 77 | · | 20 | 68 | 42 | PARTIAL |
+| [ ] | Hunt | 48231 | 69,728 | · | · | · | 69 | · | · | 89 | · | PARTIAL |
+| [ ] | Tomgreen | 48451 | 58,686 | · | · | · | · | · | · | 98 | · | PARTIAL |
+| [ ] | Bowie | 48037 | 53,212 | · | · | · | 36 | · | · | 50 | 41 | PARTIAL |
+| [ ] | Burnet | 48053 | 50,138 | · | · | · | 49 | · | · | 92 | · | PARTIAL |
+| [ ] | Waller | 48473 | 48,136 | · | · | · | 59 | · | · | 88 | · | PARTIAL |
+| [ ] | Nacogdoches | 48347 | 48,003 | · | · | · | · | · | · | 17 | 38 | GEOM-ONLY |
+| [ ] | Cherokee | 48073 | 46,761 | · | · | · | 34 | · | · | 90 | · | PARTIAL |
+| [ ] | Navarro | 48349 | 46,167 | · | · | · | 51 | · | · | · | · | GEOM-ONLY |
+| [ ] | Medina | 48325 | 44,330 | · | · | · | 55 | · | · | 88 | · | PARTIAL |
+| [ ] | Vanzandt | 48467 | 43,963 | · | · | · | · | · | · | 93 | · | PARTIAL |
+| [ ] | Anderson | 48001 | 43,894 | · | · | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Hill | 48217 | 39,355 | · | · | · | 31 | · | · | 33 | · | PARTIAL |
+| [ ] | Llano | 48299 | 38,879 | · | · | · | 46 | · | · | 87 | · | PARTIAL |
+| [ ] | Palopinto | 48363 | 38,698 | · | · | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Starr | 48427 | 38,571 | · | · | · | 22 | · | · | 56 | · | PARTIAL |
+| [ ] | Rusk | 48401 | 37,967 | · | · | · | · | · | · | · | 9 | GEOM-ONLY |
+| [ ] | Chambers | 48071 | 37,510 | · | · | · | · | · | · | · | 38 | GEOM-ONLY |
+| [ ] | Matagorda | 48321 | 37,211 | · | · | · | · | · | · | 81 | · | PARTIAL |
+| [ ] | Atascosa | 48013 | 36,791 | · | · | · | 56 | · | · | 71 | · | PARTIAL |
+| [ ] | Walker | 48471 | 35,582 | · | · | · | 43 | · | · | 85 | · | PARTIAL |
+| [ ] | Cass | 48067 | 34,816 | · | · | · | 47 | · | · | 77 | · | PARTIAL |
+| [ ] | Tyler | 48457 | 33,043 | · | · | · | 28 | · | · | 84 | · | PARTIAL |
+| [ ] | Wharton | 48481 | 31,888 | · | · | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Upshur | 48459 | 30,293 | · | · | · | 50 | · | · | 73 | · | PARTIAL |
+| [ ] | Kendall | 48259 | 29,986 | · | · | · | 64 | · | · | 90 | · | PARTIAL |
+| [ ] | Fannin | 48147 | 29,043 | · | · | · | 54 | · | · | 94 | · | PARTIAL |
+| [ ] | Jimwells | 48249 | 27,944 | · | · | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Jones | 48253 | 27,732 | · | · | · | · | · | · | · | 18 | GEOM-ONLY |
+| [ ] | Grimes | 48185 | 27,711 | · | · | · | 11 | · | · | 89 | · | PARTIAL |
+| [ ] | Leon | 48289 | 27,570 | · | · | · | · | · | · | · | 15 | GEOM-ONLY |
+| [ ] | Burleson | 48051 | 27,282 | · | · | · | 49 | · | · | · | · | GEOM-ONLY |
+| [ ] | Houston | 48225 | 26,611 | · | · | · | · | · | · | · | 18 | GEOM-ONLY |
+| [ ] | Maverick | 48323 | 26,048 | · | · | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Hopkins | 48223 | 25,149 | · | · | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Montague | 48337 | 24,836 | · | · | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Erath | 48143 | 24,656 | · | · | · | · | · | · | 96 | · | PARTIAL |
+| [ ] | Freestone | 48161 | 23,979 | · | · | · | · | · | · | · | 20 | GEOM-ONLY |
+| [ ] | Hudspeth | 48229 | 23,954 | 5 | · | · | 5 | · | 5 | 23 | 2 | GEOM-ONLY |
+| [ ] | Fayette | 48149 | 23,882 | 55 | · | · | 52 | · | · | 82 | 28 | PARTIAL |
+| [ ] | Sabine | 48403 | 23,352 | · | · | · | · | · | · | 89 | 18 | PARTIAL |
+| [ ] | Colorado | 48089 | 22,756 | · | · | · | · | · | · | 76 | · | PARTIAL |
+| [ ] | Calhoun | 48057 | 22,678 | · | · | · | · | · | · | 87 | · | PARTIAL |
+| [ ] | Austin | 48015 | 22,581 | · | · | · | 64 | · | · | 95 | · | PARTIAL |
+| [ ] | Uvalde | 48463 | 21,722 | · | · | · | 50 | · | · | 94 | · | PARTIAL |
+| [ ] | Eastland | 48133 | 21,448 | · | · | · | · | · | · | · | 22 | GEOM-ONLY |
+| [ ] | Dewitt | 48123 | 20,802 | · | · | · | · | · | · | · | 20 | GEOM-ONLY |
+| [ ] | Howard | 48227 | 20,654 | · | · | · | 66 | · | · | 16 | · | GEOM-ONLY |
+| [ ] | Gonzales | 48177 | 20,420 | · | · | · | · | · | · | · | 18 | GEOM-ONLY |
+| [ ] | Brewster | 48043 | 20,287 | 25 | · | · | 21 | 19 | 25 | 83 | 11 | PARTIAL |
+| [ ] | Bosque | 48035 | 19,975 | · | · | · | · | · | · | 98 | · | PARTIAL |
+| [ ] | Marion | 48315 | 19,841 | · | · | · | 32 | · | · | · | 15 | GEOM-ONLY |
+| [ ] | Hale | 48189 | 19,108 | · | · | · | 41 | · | · | 75 | · | PARTIAL |
+| [ ] | Hutchinson | 48233 | 18,938 | · | · | · | · | · | · | · | 28 | GEOM-ONLY |
+| [ ] | Panola | 48365 | 18,812 | · | · | · | · | · | · | · | 24 | GEOM-ONLY |
+| [ ] | Falls | 48145 | 18,581 | · | · | · | 15 | · | · | 53 | · | PARTIAL |
+| [ ] | Jackson | 48239 | 18,453 | · | · | · | · | · | · | 82 | · | PARTIAL |
+| [ ] | Presidio | 48377 | 18,436 | · | · | · | 21 | · | · | 85 | · | PARTIAL |
+| [ ] | Robertson | 48395 | 16,935 | · | · | · | · | · | · | 54 | · | PARTIAL |
+| [ ] | Liveoak | 48297 | 16,839 | · | · | · | 17 | · | · | · | 16 | GEOM-ONLY |
+| [ ] | Lampasas | 48281 | 16,541 | · | · | · | 39 | · | · | 20 | · | GEOM-ONLY |
+| [ ] | Franklin | 48159 | 16,540 | · | · | · | 34 | · | · | · | 19 | GEOM-ONLY |
+| [ ] | Young | 48503 | 16,353 | · | · | · | 58 | · | · | 80 | · | PARTIAL |
+| [ ] | Gray | 48179 | 16,251 | · | · | · | 65 | · | · | 82 | · | PARTIAL |
+| [ ] | Lee | 48287 | 16,090 | · | · | · | 54 | · | · | 85 | · | PARTIAL |
+| [ ] | Ward | 48475 | 15,174 | · | · | · | · | · | · | · | 15 | GEOM-ONLY |
+| [ ] | Runnels | 48399 | 15,008 | · | · | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Kleberg | 48273 | 14,909 | · | · | · | · | · | · | 82 | · | PARTIAL |
+| [ ] | Duval | 48131 | 14,772 | · | · | · | 4 | · | · | 66 | · | PARTIAL |
+| [ ] | Pecos | 48371 | 14,720 | · | · | · | · | · | · | · | 19 | GEOM-ONLY |
+| [ ] | Karnes | 48255 | 14,436 | · | · | · | · | · | · | · | 17 | GEOM-ONLY |
+| [ ] | Blanco | 48031 | 14,269 | · | · | · | · | · | · | 82 | · | PARTIAL |
+| [ ] | Hamilton | 48193 | 14,253 | · | · | · | 45 | · | · | 84 | · | PARTIAL |
+| [ ] | Willacy | 48489 | 13,989 | · | · | · | · | · | · | 63 | · | PARTIAL |
+| [ ] | Lamb | 48279 | 13,871 | · | · | · | · | · | · | 82 | · | PARTIAL |
+| [ ] | Redriver | 48387 | 13,728 | · | · | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Clay | 48077 | 13,501 | · | · | · | · | · | · | · | 23 | GEOM-ONLY |
+| [ ] | Culberson | 48109 | 13,327 | · | · | · | · | · | · | · | 3 | GEOM-ONLY |
+| [ ] | Floyd | 48153 | 13,217 | · | · | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Nolan | 48353 | 13,216 | · | · | · | · | · | · | · | 25 | GEOM-ONLY |
+| [ ] | Frio | 48163 | 13,213 | · | · | · | · | · | · | · | 18 | GEOM-ONLY |
+| [ ] | Coleman | 48083 | 12,839 | · | · | · | · | · | · | · | 18 | GEOM-ONLY |
+| [ ] | Sanaugustine | 48405 | 12,722 | · | · | · | · | · | · | · | 10 | GEOM-ONLY |
+| [ ] | Stephens | 48429 | 12,647 | · | · | · | · | · | · | 84 | · | PARTIAL |
+| [ ] | Zapata | 48505 | 12,623 | · | · | · | 49 | · | · | 69 | · | PARTIAL |
+| [ ] | Refugio | 48391 | 12,478 | · | · | · | · | · | · | · | 21 | GEOM-ONLY |
+| [ ] | Rains | 48379 | 12,301 | · | · | · | 55 | · | · | 87 | · | PARTIAL |
+| [ ] | Moore | 48341 | 12,256 | · | · | · | 35 | · | · | 84 | · | PARTIAL |
+| [ ] | Callahan | 48059 | 12,064 | · | · | · | · | · | · | 88 | · | PARTIAL |
+| [ ] | Wilbarger | 48487 | 11,894 | · | · | · | 44 | · | · | 66 | 22 | PARTIAL |
+| [ ] | Jack | 48237 | 11,866 | · | · | · | · | · | · | · | 18 | GEOM-ONLY |
+| [ ] | Morris | 48343 | 11,857 | · | · | · | · | · | · | · | 28 | GEOM-ONLY |
+| [ ] | Camp | 48063 | 11,652 | · | · | · | 49 | · | · | 87 | · | PARTIAL |
+| [ ] | Sansaba | 48411 | 11,591 | · | · | · | · | · | · | · | 12 | GEOM-ONLY |
+| [ ] | Lipscomb | 48295 | 11,030 | · | · | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Kinney | 48271 | 11,010 | · | · | · | 13 | · | · | 60 | · | PARTIAL |
+| [ ] | Deafsmith | 48117 | 10,901 | · | · | · | 28 | · | · | 84 | · | PARTIAL |
+| [ ] | Mcculloch | 48307 | 10,778 | · | · | · | · | · | · | · | 17 | GEOM-ONLY |
+| [ ] | Goliad | 48175 | 10,314 | · | · | · | 30 | · | · | · | · | GEOM-ONLY |
+| [ ] | Madison | 48313 | 10,307 | · | · | · | 38 | · | · | 87 | · | PARTIAL |
+| [ ] | Edwards | 48137 | 9,948 | · | · | · | 38 | · | · | 80 | · | PARTIAL |
+| [ ] | Zavala | 48507 | 9,744 | · | · | · | 42 | · | · | 74 | · | PARTIAL |
+| [ ] | Dawson | 48115 | 9,676 | · | · | · | · | · | · | · | 24 | GEOM-ONLY |
+| [ ] | Archer | 48009 | 9,653 | · | · | · | · | · | · | · | 28 | GEOM-ONLY |
+| [ ] | Motley | 48345 | 9,374 | · | · | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Haskell | 48207 | 9,370 | · | · | · | · | · | · | · | 16 | GEOM-ONLY |
+| [ ] | Crockett | 48105 | 9,113 | · | · | · | · | · | · | · | 8 | GEOM-ONLY |
+| [ ] | Terry | 48445 | 9,113 | · | · | · | · | · | · | 76 | · | PARTIAL |
+| [ ] | Mason | 48319 | 9,096 | · | · | · | · | · | · | 19 | · | GEOM-ONLY |
+| [ ] | Mills | 48333 | 9,025 | · | · | · | · | · | · | 95 | · | PARTIAL |
+| [ ] | Real | 48385 | 8,272 | · | · | · | 5 | · | · | 83 | · | PARTIAL |
+| [ ] | Coke | 48081 | 8,271 | · | · | · | 21 | · | · | · | 11 | GEOM-ONLY |
+| [ ] | Concho | 48095 | 8,034 | · | · | · | · | · | · | 97 | · | PARTIAL |
+| [ ] | Upton | 48461 | 7,846 | · | · | · | · | · | · | · | 16 | GEOM-ONLY |
+| [ ] | Wheeler | 48483 | 7,676 | · | · | · | · | · | · | · | 15 | GEOM-ONLY |
+| [ ] | Lynn | 48305 | 7,324 | · | · | · | · | · | · | · | 22 | GEOM-ONLY |
+| [ ] | Martin | 48317 | 7,255 | · | · | · | · | · | · | · | 15 | GEOM-ONLY |
+| [ ] | Winkler | 48495 | 7,234 | · | · | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Jeffdavis | 48243 | 7,175 | · | · | · | · | · | · | · | 6 | GEOM-ONLY |
+| [ ] | Hardeman | 48197 | 6,958 | · | · | · | · | · | · | · | 13 | GEOM-ONLY |
+| [ ] | Crane | 48103 | 6,913 | · | · | · | · | · | · | · | 14 | GEOM-ONLY |
+| [ ] | Somervell | 48425 | 6,823 | · | · | · | · | · | · | 95 | · | PARTIAL |
+| [ ] | Fisher | 48151 | 6,817 | · | · | · | · | · | · | · | 15 | GEOM-ONLY |
+| [ ] | Carson | 48065 | 6,710 | · | · | · | · | · | · | · | 25 | GEOM-ONLY |
+| [ ] | Crosby | 48107 | 6,670 | · | · | · | · | · | · | · | 16 | GEOM-ONLY |
+| [ ] | Swisher | 48437 | 6,657 | · | · | · | 34 | · | · | 84 | · | PARTIAL |
+| [ ] | Parmer | 48369 | 6,606 | · | · | · | 36 | · | · | 64 | · | PARTIAL |
+| [ ] | Garza | 48169 | 6,583 | · | · | · | 17 | · | · | 65 | · | PARTIAL |
+| [ ] | Schleicher | 48413 | 6,559 | · | · | · | 29 | · | · | 76 | · | PARTIAL |
+| [ ] | Ochiltree | 48357 | 6,521 | · | · | · | · | · | · | · | 28 | GEOM-ONLY |
+| [ ] | Castro | 48069 | 6,466 | · | · | · | 9 | · | · | 56 | 23 | PARTIAL |
+| [ ] | Knox | 48275 | 6,408 | · | · | · | · | · | · | 80 | · | PARTIAL |
+| [ ] | Baylor | 48023 | 6,349 | · | · | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Hall | 48191 | 6,347 | · | · | · | · | · | · | · | 12 | GEOM-ONLY |
+| [ ] | Dallam | 48111 | 6,271 | · | · | · | 18 | · | · | 86 | · | PARTIAL |
+| [ ] | Bailey | 48017 | 6,044 | · | · | · | 15 | · | · | 76 | · | PARTIAL |
+| [ ] | Childress | 48075 | 6,030 | · | · | · | · | · | · | · | 22 | GEOM-ONLY |
+| [ ] | Sutton | 48435 | 5,905 | · | · | · | · | · | · | 82 | · | PARTIAL |
+| [ ] | Hansford | 48195 | 5,867 | · | · | · | · | · | · | · | 21 | GEOM-ONLY |
+| [ ] | Brooks | 48047 | 5,739 | · | · | · | 4 | · | · | · | · | GEOM-ONLY |
+| [ ] | Cochran | 48079 | 5,735 | · | · | · | 4 | · | · | 62 | · | PARTIAL |
+| [ ] | Collingsworth | 48087 | 5,735 | · | · | · | · | · | · | · | 11 | GEOM-ONLY |
+| [ ] | Menard | 48327 | 5,708 | · | · | · | · | · | · | · | 10 | GEOM-ONLY |
+| [ ] | Hartley | 48205 | 5,645 | · | · | · | · | · | · | 97 | · | PARTIAL |
+| [ ] | Terrell | 48443 | 5,562 | · | · | · | · | · | · | 62 | · | PARTIAL |
+| [ ] | Shackelford | 48417 | 5,542 | · | · | · | 33 | · | · | · | 17 | GEOM-ONLY |
+| [ ] | Foard | 48155 | 5,393 | · | · | · | · | · | · | · | 6 | GEOM-ONLY |
+| [ ] | Stonewall | 48433 | 5,203 | · | · | · | · | · | · | · | 9 | GEOM-ONLY |
+| [ ] | Dickens | 48125 | 4,744 | · | · | · | · | · | · | · | 10 | GEOM-ONLY |
+| [ ] | Hemphill | 48211 | 4,685 | · | · | · | · | · | · | · | 17 | GEOM-ONLY |
+| [ ] | Throckmorton | 48447 | 4,664 | · | · | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Reagan | 48383 | 4,606 | · | · | · | · | · | · | · | 22 | GEOM-ONLY |
+| [ ] | Jimhogg | 48247 | 4,441 | · | · | · | · | · | · | · | 23 | GEOM-ONLY |
+| [ ] | Cottle | 48101 | 4,373 | · | · | · | · | · | · | · | 8 | GEOM-ONLY |
+| [ ] | Mcmullen | 48311 | 4,188 | · | · | · | 1 | · | · | 47 | · | PARTIAL |
+| [ ] | Oldham | 48359 | 4,162 | · | · | · | · | · | · | 86 | · | PARTIAL |
+| [ ] | Briscoe | 48045 | 4,091 | · | · | · | · | · | · | · | 8 | GEOM-ONLY |
+| [ ] | Armstrong | 48011 | 4,058 | · | · | · | · | · | · | · | 15 | GEOM-ONLY |
+| [ ] | Borden | 48033 | 3,752 | · | · | · | 3 | · | · | · | 2 | GEOM-ONLY |
+| [ ] | Irion | 48235 | 3,615 | · | · | · | · | · | · | · | 12 | GEOM-ONLY |
+| [ ] | Kent | 48263 | 3,598 | · | · | · | · | · | · | · | 5 | GEOM-ONLY |
+| [ ] | Sherman | 48421 | 3,531 | · | · | · | · | · | · | · | 16 | GEOM-ONLY |
+| [ ] | Glasscock | 48173 | 2,988 | · | · | · | 12 | · | · | · | 6 | GEOM-ONLY |
+| [ ] | Roberts | 48393 | 2,574 | · | · | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Sterling | 48431 | 2,364 | · | · | · | · | · | · | · | 13 | GEOM-ONLY |
+| [ ] | King | 48269 | 2,313 | · | · | · | · | · | · | · | 1 | GEOM-ONLY |
+| [ ] | Loving | 48301 | 1,914 | · | · | · | · | · | · | · | 1 | GEOM-ONLY |
+| [x] | Harris | 48201 | 1,523,641 | 82 | 82 | 82 | 88 | · | 41 | · | · | FULL |
+| [x] | Travis | 48453 | 828,773 | 41 | 12 | 37 | 41 | · | 41 | · | · | FULL |
+| [x] | Tarrant | 48439 | 757,161 | 91 | · | · | 92 | · | 91 | 98 | 55 | PARTIAL |
+| [x] | Bexar | 48029 | 709,541 | 87 | 83 | 83 | 88 | · | 88 | · | · | FULL |
+| [x] | Dallas | 48113 | 694,160 | 85 | 83 | 85 | 85 | · | 77 | · | · | FULL |
+| [x] | Elpaso | 48141 | 407,130 | 64 | 38 | 58 | 64 | · | 64 | · | · | FULL |
+| [x] | Collin | 48085 | 387,737 | 91 | 74 | 78 | 91 | · | · | 97 | 67 | PARTIAL |
+| [x] | Fortbend | 48157 | 375,097 | 83 | 50 | 52 | 83 | · | 75 | · | · | FULL |
+| [x] | Denton | 48121 | 353,631 | 89 | 75 | 81 | 89 | 87 | 88 | 96 | 62 | FULL+SIGNALS |
+| [x] | Montgomery | 48339 | 320,915 | 77 | · | 67 | 77 | · | 74 | 91 | 54 | FULL+SIGNALS |
+| [x] | Williamson | 48491 | 282,983 | 82 | 24 | 78 | 81 | · | 87 | 82 | · | FULL+SIGNALS |
+| [x] | Brazoria | 48039 | 275,131 | 62 | · | · | 62 | 54 | 62 | 78 | 40 | PARTIAL |
+| [x] | Galveston | 48167 | 188,695 | 78 | 1 | 61 | 72 | 18 | 78 | 86 | 45 | FULL+SIGNALS |
+| [x] | Cameron | 48061 | 185,062 | 69 | 20 | 21 | 70 | 69 | 75 | 95 | 39 | FULL+SIGNALS |
+| [x] | Bell | 48027 | 167,412 | 73 | 11 | 34 | 77 | 69 | 78 | · | · | FULL |
+| [x] | Liberty | 48291 | 162,275 | 24 | 3 | · | 34 | 24 | 34 | · | · | PARTIAL |
+| [x] | Nueces | 48355 | 157,198 | 71 | 6 | 1 | 77 | 71 | 79 | 90 | 46 | PARTIAL |
+| [x] | Jefferson | 48245 | 122,202 | 63 | · | · | 69 | 63 | 71 | · | · | PARTIAL |
+| [x] | Hays | 48209 | 117,427 | 84 | 13 | · | 80 | · | 74 | · | · | PARTIAL |
+| [x] | Mclennan | 48309 | 115,362 | 77 | · | 65 | 80 | · | 77 | 84 | 42 | FULL+SIGNALS |
+| [x] | Johnson | 48251 | 101,847 | 68 | · | · | 65 | · | 72 | · | · | PARTIAL |
+| [x] | Ellis | 48139 | 98,803 | 81 | · | · | 81 | · | 81 | 95 | 53 | PARTIAL |
+| [x] | Webb | 48479 | 98,291 | 82 | · | · | 82 | · | 82 | 90 | 43 | PARTIAL |
+| [x] | Guadalupe | 48187 | 95,571 | 74 | 37 | 43 | 74 | 63 | 78 | 93 | 48 | FULL+SIGNALS |
+| [x] | Kaufman | 48257 | 94,650 | 78 | 4 | 8 | 77 | 70 | 78 | 91 | 50 | PARTIAL |
+| [x] | Grayson | 48181 | 89,348 | 59 | · | 7 | 59 | · | 68 | · | · | PARTIAL |
+| [x] | Gregg | 48183 | 77,816 | 71 | 16 | 59 | 72 | · | 74 | · | · | FULL |
+| [x] | Midland | 48329 | 75,645 | 80 | · | · | 80 | · | 75 | 88 | 46 | PARTIAL |
+| [x] | Brazos | 48041 | 74,666 | 85 | 51 | 52 | 85 | · | 86 | · | · | FULL |
+| [x] | Taylor | 48441 | 70,598 | 73 | 29 | 63 | 73 | · | 74 | · | · | FULL |
+| [x] | Randall | 48381 | 64,824 | 81 | 75 | 76 | 81 | 81 | 85 | 100 | 53 | FULL+SIGNALS |
+| [x] | Bastrop | 48021 | 63,357 | 51 | · | · | 66 | 51 | 66 | 92 | 38 | PARTIAL |
+| [x] | Angelina | 48005 | 60,693 | 60 | · | · | 62 | 58 | 63 | 94 | 36 | PARTIAL |
+| [x] | Polk | 48373 | 60,178 | 35 | 30 | 34 | 44 | · | 44 | 94 | 19 | FULL+SIGNALS |
+| [x] | Wichita | 48485 | 58,742 | 80 | 68 | 68 | 80 | · | 80 | 95 | 44 | FULL+SIGNALS |
+| [x] | Potter | 48375 | 53,490 | 74 | 63 | 65 | 74 | 74 | 80 | 100 | 35 | FULL+SIGNALS |
+| [x] | Rockwall | 48397 | 52,739 | 84 | 49 | 66 | 84 | 84 | 87 | 97 | 63 | FULL+SIGNALS |
+| [x] | Sanpatricio | 48409 | 51,385 | 64 | · | · | 65 | · | 64 | 57 | 36 | PARTIAL |
+| [x] | Hood | 48221 | 51,275 | 60 | · | · | 61 | · | 65 | 93 | 39 | PARTIAL |
+| [x] | Harrison | 48203 | 50,995 | 57 | · | · | 57 | · | 57 | 3 | 33 | PARTIAL |
+| [x] | Orange | 48361 | 50,337 | 43 | · | · | 54 | · | 47 | · | · | PARTIAL |
+| [x] | Wise | 48497 | 48,705 | 54 | · | 38 | 52 | · | 67 | 49 | · | FULL+SIGNALS |
+| [x] | Victoria | 48469 | 45,104 | 76 | 58 | · | 76 | · | 76 | 86 | 42 | FULL+SIGNALS |
+| [x] | Wood | 48499 | 44,576 | 54 | · | · | 48 | · | 54 | 87 | 32 | PARTIAL |
+| [x] | Hardin | 48199 | 41,635 | 52 | · | 13 | 51 | · | 53 | 19 | 39 | PARTIAL |
+| [x] | Jasper | 48241 | 37,136 | 41 | · | · | 20 | · | 41 | 38 | 21 | PARTIAL |
+| [x] | Kerr | 48265 | 36,913 | 61 | 22 | 47 | 46 | · | 61 | 88 | · | FULL+SIGNALS |
+| [x] | Sanjacinto | 48407 | 36,346 | 44 | 4 | · | 46 | · | 44 | 83 | 22 | PARTIAL |
+| [x] | Lamar | 48277 | 36,246 | 52 | 6 | 49 | 47 | · | 65 | 81 | 33 | FULL+SIGNALS |
+| [x] | Bandera | 48019 | 33,261 | 44 | · | · | 34 | · | 44 | 74 | 19 | PARTIAL |
+| [x] | Cooke | 48097 | 33,170 | 65 | 53 | 53 | 58 | 8 | 68 | 86 | 32 | FULL+SIGNALS |
+| [x] | Gillespie | 48171 | 32,351 | 54 | 1 | · | 54 | · | 65 | 84 | 25 | PARTIAL |
+| [x] | Coryell | 48099 | 31,711 | 68 | 7 | 65 | 78 | 60 | 77 | 86 | 44 | FULL+SIGNALS |
+| [x] | Valverde | 48465 | 31,635 | 59 | · | 46 | 54 | · | 59 | 90 | 31 | FULL+SIGNALS |
+| [x] | Brown | 48049 | 31,411 | 68 | 15 | 40 | 42 | 13 | 68 | 83 | 30 | FULL+SIGNALS |
+| [x] | Wilson | 48493 | 28,827 | 70 | 3 | 18 | 50 | 31 | 70 | 84 | 45 | FULL+SIGNALS |
+| [x] | Aransas | 48007 | 26,690 | 60 | 29 | 35 | 63 | · | 61 | 85 | 25 | FULL+SIGNALS |
+| [x] | Caldwell | 48055 | 26,155 | 59 | 34 | 34 | 69 | 58 | 75 | 88 | 33 | FULL+SIGNALS |
+| [x] | Trinity | 48455 | 25,952 | 30 | 1 | 7 | 26 | · | 31 | 55 | 14 | PARTIAL |
+| [x] | Bee | 48025 | 23,864 | 38 | · | 21 | 56 | · | 57 | · | · | FULL |
+| [x] | Washington | 48477 | 23,475 | 65 | 36 | 38 | 68 | · | 74 | 17 | 41 | FULL |
+| [x] | Newton | 48351 | 23,278 | 41 | 29 | 30 | 42 | · | 42 | 64 | 19 | FULL+SIGNALS |
+| [x] | Limestone | 48293 | 21,727 | 57 | · | 36 | 45 | · | 57 | 86 | 23 | FULL+SIGNALS |
+| [x] | Shelby | 48419 | 21,378 | 53 | · | · | 51 | 48 | 53 | 87 | 26 | PARTIAL |
+| [x] | Milam | 48331 | 20,992 | 61 | 3 | 3 | 48 | · | 61 | 83 | 31 | PARTIAL |
+| [x] | Titus | 48449 | 20,833 | 53 | 1 | 1 | 64 | · | 65 | 82 | 33 | PARTIAL |
+| [x] | Lavaca | 48285 | 19,767 | 52 | · | 46 | 46 | · | 65 | 90 | 28 | FULL+SIGNALS |
+| [x] | Comanche | 48093 | 17,580 | 39 | 9 | 35 | 50 | · | 53 | 84 | 23 | FULL+SIGNALS |
+| [x] | Hockley | 48219 | 17,242 | 46 | · | 32 | 40 | · | 60 | 64 | 28 | FULL+SIGNALS |
+| [x] | Gaines | 48165 | 16,576 | 38 | · | 34 | 44 | · | 58 | 89 | 24 | FULL+SIGNALS |
+| [x] | Dimmit | 48127 | 15,542 | 23 | 2 | 13 | 19 | · | 26 | 55 | 10 | PARTIAL |
+| [x] | Reeves | 48389 | 14,975 | 35 | · | · | 34 | · | 35 | 17 | 14 | PARTIAL |
+| [x] | Scurry | 48415 | 13,849 | 56 | 22 | 29 | 55 | · | 56 | 80 | 27 | FULL+SIGNALS |
+| [x] | Andrews | 48003 | 10,522 | 55 | 3 | 50 | 67 | · | 69 | 81 | 37 | FULL+SIGNALS |
+| [x] | Lasalle | 48283 | 10,341 | 33 | · | · | 10 | · | 33 | 59 | 8 | PARTIAL |
+| [x] | Kimble | 48267 | 9,556 | 32 | · | · | 32 | · | 41 | 89 | 15 | PARTIAL |
+| [x] | Mitchell | 48335 | 8,743 | 39 | 2 | 2 | 50 | · | 50 | 83 | 21 | PARTIAL |
+| [x] | Yoakum | 48501 | 7,291 | 38 | · | 11 | 8 | · | 49 | 59 | 22 | PARTIAL |
+| [x] | Delta | 48119 | 6,461 | 41 | · | 27 | 38 | 37 | 49 | 87 | 22 | FULL+SIGNALS |
+| [x] | Kenedy | 48261 | 538 | 34 | 2 | 14 | 10 | · | 34 | 46 | 8 | PARTIAL |
 
 ## Known bulk-data gaps / blockers (exhausted attempts → circle back later)
 
