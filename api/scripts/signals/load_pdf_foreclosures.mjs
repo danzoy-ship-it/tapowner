@@ -2050,6 +2050,272 @@ const SOURCES = {
     // is dead since June 2019; current notices moved to Kofile/GovOS
     // PublicSearch (midland.tx.publicsearch.us), the separate platform crack
     // in FORECLOSURE_SOURCES.md.
+
+    // ---- West TX / Panhandle / South Plains wave (2026-07-16) --------------
+    // fips corrections vs the candidate list: Coke County is 48081, NOT 48079
+    // (48079 is Cochran County); Scurry County is 48415, NOT 48227 (48227 is
+    // Howard County -- Howard's own fips WAS correct despite the flag).
+
+    // Tom Green County clerk (custom static site, deptpages.co.tom-green.tx.us
+    // -- the modern tomgreencountytx.gov Telerik/.NET site just links out):
+    // County Clerk > "Tax Properties & Trustee sales" > "current list of
+    // sales" leads to an Excel-published static table, TrusteeSalesNotices.htm,
+    // whose hrefs are per-notice PDFs at <YYYY>/<M-D-YY>/NTS <NN>.pdf -- the
+    // date SUBFOLDER is the sale date. Directory listing itself 403s (IIS) but
+    // this specific page doesn't. Good embedded text layer.
+    tom_green_cc: {
+        fips: "48451",
+        // sale venue (verified against actual notice text, NOT the county's
+        // own web copy which says "112"): Edd B. Keyes Building,
+        // 113 W Beauregard Ave, San Angelo
+        venue: /COURT\s*HOUSE|KEYES\s+BUILDING|\b113\s+W(?:EST)?\.?\s*BEAUREGARD\b/i,
+        discover: async () => {
+            const base = "http://deptpages.co.tom-green.tx.us/countyClerk/TrusteeSales/";
+            const html = await fetchText(base + "TrusteeSalesNotices.htm");
+            const out = [], seen = new Set();
+            for (const m of html.matchAll(/href="((\d{4})\/(\d{1,2})-\d{1,2}-\d{2,4}\/[^"]+\.pdf)"/gi)) {
+                const year = +m[2], mon = +m[3];
+                if (!mon || mon > 12 || !inWindow(year, mon) || seen.has(m[1])) continue;
+                seen.add(m[1]);
+                out.push({
+                    url: base + m[1],
+                    year,
+                    month: mon,
+                    name: `tom_green_${year}-${String(mon).padStart(2, "0")}_${path.basename(decodeURIComponent(m[1])).replace(/[^\w.-]+/g, "_")}`,
+                });
+            }
+            return out;
+        },
+    },
+    // Nolan County clerk (CivicLive, co.nolan.tx.us): the notices sit on the
+    // CLERK page itself (/page/nolan.county.clerk), per-notice PDFs mixed in
+    // with fee-schedule boilerplate under /upload/page/0491/; anchor TEXT
+    // carries "<Grantor(s)> MM/DD/YYYY" (sale date WITH slashes). A rare
+    // truncated anchor ("Dawson/Staatz 01/07/202") is skipped (no 4-digit year).
+    nolan_cc: {
+        fips: "48353",
+        // sale venue: Nolan County Courthouse, 100 E 3rd St, Sweetwater
+        venue: /COURT\s*HOUSE|\b10[0O]\s+E(?:AST)?\.?\s*3RD\b/i,
+        discover: async () => {
+            const base = "https://www.co.nolan.tx.us";
+            const html = await fetchText(base + "/page/nolan.county.clerk");
+            const out = [], seen = new Set();
+            for (const m of html.matchAll(/<a[^>]*href="(?:https?:\/\/[a-z.]*cira\.state\.tx\.us)?(\/upload\/page\/0491\/[^"]+\.pdf)"[^>]*>[^<]{0,100}?(\d{1,2})\/(\d{1,2})\/(\d{4})/gi)) {
+                const mon = +m[2], year = +m[4];
+                if (!mon || mon > 12 || !inWindow(year, mon)) continue;
+                let p = m[1];
+                try {
+                    if (/%[0-9A-Fa-f]{2}/.test(p)) p = decodeURIComponent(p);
+                } catch { /* malformed % -- keep raw */ }
+                if (seen.has(p)) continue;
+                seen.add(p);
+                out.push({
+                    url: base + encodeURI(p),
+                    year,
+                    month: mon,
+                    name: `nolan_${year}-${String(mon).padStart(2, "0")}_${path.basename(p).replace(/[^\w.-]+/g, "_")}`,
+                });
+            }
+            return out;
+        },
+    },
+    // Concho County clerk (CivicLive, co.concho.tx.us -- the intuitive
+    // "foreclosures-trustee sales" slug 403s at the IIS level; the real slug
+    // swaps the dash for a dot: "concho.foreclosures.tax.trustee sales"):
+    // per-notice PDFs sit directly on the page under /upload/page/6115/;
+    // anchor text carries the sale date ("TRUSTEE'S SALE- MM/DD/YYYY"). A
+    // sibling "TAX SALE" entry (delinquent tax auction, not a mortgage
+    // trustee notice) is excluded by requiring "TRUSTEE" in the anchor text.
+    // Tiny county, very low volume.
+    concho_cc: {
+        fips: "48095",
+        // sale venue: Concho County Courthouse, 152 N Roberts Ave, Paint Rock
+        venue: /COURT\s*HOUSE|\b152\s+N(?:ORTH)?\.?\s*ROBERTS\b/i,
+        discover: async () => {
+            const base = "https://www.co.concho.tx.us";
+            const html = await fetchText(base + "/page/concho.foreclosures.tax.trustee%20sales");
+            const out = [], seen = new Set();
+            for (const m of html.matchAll(/<a[^>]*href="(\/upload\/page\/6115\/[^"]+\.pdf)"[^>]*>([^<]*)<\/a>/gi)) {
+                if (!/TRUSTEE/i.test(m[2])) continue;
+                const d = m[2].match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+                if (!d) continue;
+                const mon = +d[1], year = +d[3];
+                if (!inWindow(year, mon) || seen.has(m[1])) continue;
+                seen.add(m[1]);
+                out.push({
+                    url: base + encodeURI(m[1]),
+                    year,
+                    month: mon,
+                    name: `concho_${year}-${String(mon).padStart(2, "0")}_${path.basename(m[1]).replace(/[^\w.-]+/g, "_")}`,
+                });
+            }
+            return out;
+        },
+    },
+    // Coke County clerk (CivicLive, co.coke.tx.us): the notices sit on the
+    // CLERK page itself (/page/coke.County.Clerk), per-notice PDFs under
+    // /upload/page/0168/; anchor TEXT carries "NOTICE OF [SUBSTITUTE]
+    // TRUSTEE'S SALE|FORECLOSURE SALE #<case> <Month> <D>, <YYYY>" (sale date
+    // WITH year). Tiny county, very low volume.
+    coke_cc: {
+        fips: "48081",
+        // sale venue: Coke County Courthouse, 13 E 7th St, Robert Lee
+        venue: /COURT\s*HOUSE|\b13\s+E(?:AST)?\.?\s*7TH\b/i,
+        discover: async () => {
+            const base = "https://www.co.coke.tx.us";
+            const html = await fetchText(base + "/page/coke.County.Clerk");
+            const out = [], seen = new Set();
+            for (const m of html.matchAll(/<a[^>]*href="(\/upload\/page\/0168\/[^"]+\.pdf)"[^>]*>([^<]*)<\/a>/gi)) {
+                if (!/NOTICE\s+OF/i.test(m[2])) continue;
+                const d = m[2].match(/([A-Za-z]+)\s+(\d{1,2}),?\s*(\d{4})/);
+                if (!d) continue;
+                const mon = MONTHS.indexOf(d[1].slice(0, 3).toUpperCase()) + 1;
+                if (!mon || !inWindow(+d[3], mon) || seen.has(m[1])) continue;
+                seen.add(m[1]);
+                out.push({
+                    url: base + encodeURI(m[1]),
+                    year: +d[3],
+                    month: mon,
+                    name: `coke_${d[3]}-${String(mon).padStart(2, "0")}_${path.basename(m[1]).replace(/[^\w.-]+/g, "_")}`,
+                });
+            }
+            return out;
+        },
+    },
+    // Runnels County clerk (CivicLive, runnelscounty.org -- the county
+    // migrated OFF co.runnels.tx.us): /page/runnels.ForeclosureNotices lists
+    // per-notice PDFs under /upload/page/8479/ (a sibling /5972/ folder holds
+    // unrelated clerk-history boilerplate, excluded by path); anchor text
+    // carries "<Month> <D>, <YYYY>-<seq>" (spacing/comma drift, and one
+    // "uly 1, 2025" typo missing the J -- skipped, no month match).
+    runnels_cc: {
+        fips: "48399",
+        // sale venue: Runnels County Courthouse, 613 Hutchings Ave, Ballinger
+        venue: /COURT\s*HOUSE|\b613\s+HUTCHINGS\b/i,
+        discover: async () => {
+            const base = "https://www.runnelscounty.org";
+            const html = await fetchText(base + "/page/runnels.ForeclosureNotices");
+            const out = [], seen = new Set();
+            for (const m of html.matchAll(/<a[^>]*href="(\/upload\/page\/8479\/[^"]+\.pdf)"[^>]*>[^<]{0,60}?([A-Za-z]+)\.?\s+\d{1,2},?\s*(\d{4})/gi)) {
+                const mon = MONTHS.indexOf(m[2].slice(0, 3).toUpperCase()) + 1;
+                const year = +m[3];
+                if (!mon || !inWindow(year, mon) || seen.has(m[1])) continue;
+                seen.add(m[1]);
+                out.push({
+                    url: base + encodeURI(m[1]),
+                    year,
+                    month: mon,
+                    name: `runnels_${year}-${String(mon).padStart(2, "0")}_${path.basename(m[1]).replace(/[^\w.-]+/g, "_")}`,
+                });
+            }
+            return out;
+        },
+    },
+    // Scurry County clerk (CivicLive, co.scurry.tx.us): /page/coclerk.Foreclosure
+    // holds bare sale-date headings ("<Month> <D>, <YYYY>", bold/no anchor)
+    // each followed by that sale's per-notice PDFs under /upload/page/0094/
+    // (a sibling /0114/ folder holds an unrelated conflict-of-interest form,
+    // excluded by path); anchor text is the LEGAL DESCRIPTION, not an address
+    // or date -- some filenames carry a real street address instead
+    // ("217 35TH.pdf" -> 217 35th St, Snyder), a bonus for the direct-match
+    // pass. Sequential heading->links scan like Hill/Medina/Burnet.
+    scurry_cc: {
+        fips: "48415",
+        // sale venue: Scurry County Courthouse, 1806 25th St, Snyder
+        venue: /COURT\s*HOUSE|\b1806\s+25TH\b/i,
+        discover: async () => {
+            const base = "https://www.co.scurry.tx.us";
+            const html = await fetchText(base + "/page/coclerk.Foreclosure");
+            const re = /<strong>\s*([A-Za-z]+)\s+(\d{1,2}),\s*(\d{4})\s*<\/strong>|href="(\/upload\/page\/0094\/[^"]+\.pdf)"/gi;
+            const out = [], seen = new Set();
+            let cur = null, m;
+            while ((m = re.exec(html))) {
+                if (m[1]) {
+                    const mon = MONTHS.indexOf(m[1].slice(0, 3).toUpperCase()) + 1;
+                    cur = mon ? { year: +m[3], month: mon } : null;
+                } else if (cur && inWindow(cur.year, cur.month) && !seen.has(m[4])) {
+                    seen.add(m[4]);
+                    out.push({
+                        url: base + encodeURI(m[4]),
+                        year: cur.year,
+                        month: cur.month,
+                        name: `scurry_${cur.year}-${String(cur.month).padStart(2, "0")}_${path.basename(m[4]).replace(/[^\w.-]+/g, "_")}`,
+                    });
+                }
+            }
+            return out;
+        },
+    },
+    // Howard County clerk (CivicPlus DocumentCenter, co.howard.tx.us):
+    // /1209/Foreclosure-Notices lists ~440 per-notice PDFs going back years;
+    // slugs mostly read "<Month>-<D>-<YYYY>-at-<time>[-<name>][-<seq>]-PDF"
+    // but drift wildly after the date (a handful of 2021/22-era docs use a
+    // different "Grantor---Name---Date-of-sale---M-D-YYYY" slug with no
+    // leading date -- out of window anyway, skipped). Matching only the
+    // leading Month-D-YYYY (not anchoring the rest of the slug) survives the
+    // drift. Good embedded text layer.
+    howard_cc: {
+        fips: "48227",
+        // sale venue: Howard County Courthouse, 300 S Main St, Big Spring
+        venue: /COURT\s*HOUSE|\b3[0O][0O]\s+S(?:OUTH)?\.?\s*MAIN\b/i,
+        discover: async () => {
+            const base = "https://www.co.howard.tx.us";
+            const html = await fetchText(base + "/1209/Foreclosure-Notices");
+            const out = [], seen = new Set();
+            for (const m of html.matchAll(/href="(\/DocumentCenter\/View\/(\d+)\/([A-Za-z]+)-(\d{1,2})-(\d{4})[^"]*)"/gi)) {
+                const mon = MONTHS.indexOf(m[3].slice(0, 3).toUpperCase()) + 1;
+                const year = +m[5];
+                if (!mon || mon > 12 || !inWindow(year, mon) || seen.has(m[2])) continue;
+                seen.add(m[2]);
+                out.push({
+                    url: base + m[1],
+                    year,
+                    month: mon,
+                    name: `howard_${year}-${String(mon).padStart(2, "0")}_${m[2]}.pdf`,
+                });
+            }
+            return out;
+        },
+    },
+    // Dawson County clerk (CivicLive, co.dawson.tx.us): /page/dawsonTrustee.Sales
+    // lists per-notice PDFs under /upload/page/1708/ (+ per-year subfolders);
+    // anchor text carries "M/D/YYYY" (sale date, zero-padding drifts), a few
+    // with a trailing grantor name or "#2" for a same-day re-posting.
+    dawson_cc: {
+        fips: "48115",
+        // sale venue: Dawson County Courthouse, 400 S 1st St, Lamesa
+        venue: /COURT\s*HOUSE|\b4[0O][0O]\s+S(?:OUTH)?\.?\s*1ST\b/i,
+        discover: async () => {
+            const base = "https://www.co.dawson.tx.us";
+            const html = await fetchText(base + "/page/dawsonTrustee.Sales");
+            const out = [], seen = new Set();
+            for (const m of html.matchAll(/<a[^>]*href="(\/upload\/page\/1708\/[^"]+\.pdf)"[^>]*>[^<]{0,60}?(\d{1,2})\/(\d{1,2})\/(\d{2,4})/gi)) {
+                const mon = +m[2];
+                let year = +m[4];
+                if (year < 100) year += 2000;
+                if (!mon || mon > 12 || !inWindow(year, mon) || seen.has(m[1])) continue;
+                seen.add(m[1]);
+                out.push({
+                    url: base + encodeURI(m[1]),
+                    year,
+                    month: mon,
+                    name: `dawson_${year}-${String(mon).padStart(2, "0")}_${path.basename(m[1]).replace(/[^\w.-]+/g, "_")}`,
+                });
+            }
+            return out;
+        },
+    },
+    // Callahan County: NOT here -- callahancounty.org's nav has a "Foreclosure,
+    // Notices & News" menu HEADER, but it's just a category label (children:
+    // Public Calendar / County News / Court Appointed Attorneys) with no
+    // dedicated notices page; both child pages carry 0 foreclosure/trustee
+    // PDFs. No Kofile subdomain either (callahan.tx.publicsearch.us: DNS
+    // NXDOMAIN). No notice system online (verified 2026-07-16).
+    // Sterling County: NOT here -- co.sterling.tx.us 302-redirects to a new
+    // domain (sterlingcotx.gov); /page/ForeclosureNotice there IS real (CivicLive,
+    // /upload/page/0089/) but STALE -- only 5 notices total, newest Aug 5,
+    // 2025 (~11 months old), nothing in the current window. Skip per the
+    // >6mo staleness rule (verified 2026-07-16).
 };
 
 // sale-month window for discovery on archive-style pages that list years of
