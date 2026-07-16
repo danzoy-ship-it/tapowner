@@ -23,8 +23,18 @@
 | ✅ | **Dallas** | Dallas 48113 | Socrata | www.dallasopendata.com `e7gq-4sah` | 126,840 | 11,178 / 3,465 | address |
 | ✅ | **New Braunfels** | Comal 48091 | ArcGIS (Accela+Cityworks) | gismaps.newbraunfels.gov `.../PlanningZoning/MapServer/10` | 204,301 | 6,324 / 2,959 | spatial + address |
 | ✅ | **San Marcos** | Hays 48209 | ArcGIS (MyPermitNow) | smgis.sanmarcostx.gov `.../CoSM_BuildingPermits/FeatureServer/0` | 50,600 | 1,568 / 811 | spatial + address |
+| ✅ | **Seguin** | Guadalupe 48187 | ArcGIS (Tyler EnerGov mirror) | gis.seguintexas.gov `.../Permits/Permits/FeatureServer/0` | 143,557 | 4,269 / 627 | spatial + address |
+| ✅ | **Buda** | Hays 48209 | ArcGIS (MGO/MyPermitNow) | services6.arcgis.com/vXZW4vAaPRr14z2s `.../Permits/FeatureServer/0` | 137 | 1 / 0 | spatial + address |
 
-**POC total: ~2.86M permits across the San Antonio↔Austin I-35 corridor** (the exact territory the New-Braunfels roofer covers). Roofer-priority: **~59,000 roof + ~35,700 solar** permits.
+**POC total: ~3.0M permits across the San Antonio↔Austin I-35 corridor** (the exact territory the New-Braunfels roofer covers — Travis/Comal/Bexar/Hays/Guadalupe + Dallas bonus). Roofer-priority: **~63,000 roof + ~36,400 solar** permits.
+
+## Corridor cities with NO free bulk source (records-request only, verified 2026-07-16)
+Closed permit portals (EnerGov-CSS / CityView / MyGovernmentOnline) with no published ArcGIS/Socrata/CKAN mirror after full org-directory enumeration:
+- **Kyle** (Hays) — Tyler EnerGov CSS; ArcGIS org has only geocoding reference layers, no permit table.
+- **Dripping Springs** (Hays) — MyGovernmentOnline; city ArcGIS has only zoning/parcels.
+- **Schertz** (Guadalupe) — CityView Portal (per-property search only); ArcGIS has only CityView basemap layers.
+- **Cibolo** (Guadalupe) — MyGovernmentOnline; ArcGIS has only subdivision/plat tracking.
+- **Hays County / Guadalupe County unincorporated** — no county-wide permit dataset (TX counties have little building-permit authority outside city limits; both open-data catalogs confirmed zero permit layers). Buda is thin (137, rolling ~6-mo window) — re-pull periodically to accumulate history.
 
 ## Not-yet-mined metros (next targets)
 - **Houston** (Harris 48201) — no Socrata; ArcGIS/Accela mirror to survey.

@@ -90,6 +90,48 @@ CITIES = {
             "parcel_key": None,
         },
     },
+    "seguin": {
+        "county_fips": "48187",   # Guadalupe
+        "featureserver": "https://gis.seguintexas.gov/arcgis/rest/services/Permits/Permits/FeatureServer/0",
+        "referer": None,
+        "geom_mode": True,
+        "fields": {
+            "permit_number": "USER_PERMITNUMBER",
+            "type_desc": "USER_NAME",
+            "work_class": None,
+            "permit_class": None,
+            "description": "USER_DESCRIPTION1",
+            "issued_date": "USER_DATEISSUED",   # string 'M/D/YYYY h:mm:ss AM'
+            "address": "USER_Address",
+            "city": None,
+            "zip": None,
+            "lat": None,
+            "lon": None,
+            "valuation": None,
+            "parcel_key": None,
+        },
+    },
+    "buda": {
+        "county_fips": "48209",   # Hays (small rolling-window dataset)
+        "featureserver": "https://services6.arcgis.com/vXZW4vAaPRr14z2s/arcgis/rest/services/Permits/FeatureServer/0",
+        "referer": None,
+        "geom_mode": True,
+        "fields": {
+            "permit_number": "PermitNumber",
+            "type_desc": "PermitType",
+            "work_class": "WorkType",
+            "permit_class": None,
+            "description": "Description",
+            "issued_date": "IssuedDate",        # string M/D/YYYY
+            "address": "OriginalAddress",        # NB: 'address' field is the contractor's, do not use
+            "city": None,
+            "zip": None,
+            "lat": None,
+            "lon": None,
+            "valuation": None,
+            "parcel_key": None,
+        },
+    },
 }
 
 
@@ -102,10 +144,12 @@ def parse_epoch_or_date(v):
         return d if 1900 <= d.year <= date.today().year + 1 else None
     except (ValueError, TypeError, OverflowError, OSError):
         pass
-    s = str(v)
-    for fmt in ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%d", "%m/%d/%Y"):
+    s = str(v).strip()
+    tok = s.split()[0] if s else ""   # 'M/D/YYYY h:mm:ss AM' -> 'M/D/YYYY'
+    for cand, fmt in ((s[:19] if "T" in s else s[:10], "%Y-%m-%dT%H:%M:%S"),
+                      (s[:10], "%Y-%m-%d"), (tok, "%m/%d/%Y")):
         try:
-            d = datetime.strptime(s[:19] if "T" in s else s[:10], fmt).date()
+            d = datetime.strptime(cand, fmt).date()
             return d if 1900 <= d.year <= date.today().year + 1 else None
         except ValueError:
             continue
@@ -183,7 +227,9 @@ def main():
             pnum = str(col(r, "permit_number") or "").strip()
             if not pnum:
                 continue
-            type_raw = " / ".join(str(col(r, k)) for k in ("type_desc", "work_class", "permit_class") if col(r, k))
+            def clean(x):
+                return str(x or "").replace("\t", " ").replace("\r", " ").replace("\n", " ").replace("\\", " ").strip()
+            type_raw = " / ".join(clean(col(r, k)) for k in ("type_desc", "work_class", "permit_class") if col(r, k))
             cat = categorize(col(r, "type_desc"), col(r, "work_class"), col(r, "permit_class"), col(r, "description"))
             dt = parse_epoch_or_date(col(r, "issued_date"))
             if geom_mode:
@@ -192,8 +238,8 @@ def main():
             else:
                 lat, lon = to_float(col(r, "lat")), to_float(col(r, "lon"))
             val = to_num(col(r, "valuation"))
-            desc = str(col(r, "description") or "").replace("\t", " ").replace("\n", " ").replace("\\", " ")
-            addr = str(col(r, "address") or "").replace("\t", " ").replace("\\", " ")
+            desc = clean(col(r, "description"))
+            addr = clean(col(r, "address"))
 
             def f(x):
                 return r"\N" if x is None or x == "" else str(x)
