@@ -18,7 +18,19 @@ define a uniform URL/recipe, so each county still needs its own `discover()`; an
 (one WS protocol → ~46 counties, paywall-capped). So this campaign is closer to per-county work —
 the platform knowledge accelerates discovery but doesn't eliminate it.
 
-## STATUS: 130 / 254 counties have a foreclosure signal · 2,100 tied to parcels (as of 2026-07-16)
+## STATUS: 142 / 254 counties have a foreclosure signal · 2,131 tied to parcels (as of 2026-07-16)
+
+**Re-scrub pass (6 region agents over the 123 no-signal counties) added +12 counties / +31 ties.**
+Rescue wins: Chambers 12, Galveston 9 (WAF-to-curl but Node fetch passes), Hockley 4, Mitchell 3
+(OCR-in-discover), Carson + Wheeler. Most other no-signal counties re-verified as HIGH-CONFIDENCE
+genuine absence (checked the right pages/canonical hosts) or confirmed-blocked (Kofile / Tyler /
+uslandrecords / CAPTCHA). **Clean-IP / infra retry candidates:** Clay + Harrison (TLS/TCP block on
+this IP), Childress (site 500s ~half the time — real content), Orange (legacy AS400 grid, owner-name-
+only, needs POST-emulation). **Shared-parser gap (not a source gap):** Karnes/La Salle/Brooks/Newton/
+Falls have legible OCR now but Tract-/Lot-only legal descriptions with no street address (+ a Karnes
+near-miss where a real address sits outside a recognized cue phrase) → a future shared-parser tweak
+could rescue these. **Need-a-run:** Marion/Rains/Leon/Sabine have working loaders but 0 rows.
+
 
 **All 254 counties have now been ATTEMPTED** — each is loaded, Kofile-parked, or skip-logged with a
 concrete reason. Two parallel waves (12 region agents) swept the rural tail 2026-07-16. The
