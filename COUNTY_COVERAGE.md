@@ -7,8 +7,8 @@ Regenerate with `python data/build_coverage_log.py` after each mining batch (ref
 ## Scoreboard (253 counties)
 
 - ☑ **Mined (has improvements/feature tags): 76** / 253
-- Full attributes (improv+dims): 44  ·  Partial: 87  ·  Geometry-only (need mining): 122  ·  Missing from DB: 0
-- Seller-signals — sale date: 118 counties  ·  exemptions (homestead/over-65/DV tenure): 128 counties  ·  **any seller-signal: 182 counties**
+- Full attributes (improv+dims): 44  ·  Partial: 97  ·  Geometry-only (need mining): 112  ·  Missing from DB: 0
+- Seller-signals — sale date: 129 counties  ·  exemptions (homestead/over-65/DV tenure): 130 counties  ·  **any seller-signal: 194 counties**
 
 Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISSING. % = share of the county's parcels with that attribute.
 
@@ -131,12 +131,12 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Motley | 48345 | 9,374 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Haskell | 48207 | 9,370 | · | · | · | · | · | 16 | GEOM-ONLY |
 | [ ] | Crockett | 48105 | 9,113 | · | · | · | · | · | 8 | GEOM-ONLY |
-| [ ] | Terry | 48445 | 9,113 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Mason | 48319 | 9,096 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Mills | 48333 | 9,025 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Real | 48385 | 8,272 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Terry | 48445 | 9,113 | · | · | · | · | 76 | · | PARTIAL |
+| [ ] | Mason | 48319 | 9,096 | · | · | · | · | 19 | · | GEOM-ONLY |
+| [ ] | Mills | 48333 | 9,025 | · | · | · | · | 95 | · | PARTIAL |
+| [ ] | Real | 48385 | 8,272 | · | · | · | · | 83 | · | PARTIAL |
 | [ ] | Coke | 48081 | 8,271 | · | · | · | · | · | 11 | GEOM-ONLY |
-| [ ] | Concho | 48095 | 8,034 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Concho | 48095 | 8,034 | · | · | · | · | 97 | · | PARTIAL |
 | [ ] | Upton | 48461 | 7,846 | · | · | · | · | · | 16 | GEOM-ONLY |
 | [ ] | Wheeler | 48483 | 7,676 | · | · | · | · | · | 15 | GEOM-ONLY |
 | [ ] | Lynn | 48305 | 7,324 | · | · | · | · | · | 22 | GEOM-ONLY |
@@ -148,14 +148,14 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Somervell | 48425 | 6,823 | · | · | · | · | 95 | · | PARTIAL |
 | [ ] | Fisher | 48151 | 6,817 | · | · | · | · | · | 15 | GEOM-ONLY |
 | [ ] | Carson | 48065 | 6,710 | · | · | · | · | · | 25 | GEOM-ONLY |
-| [ ] | Crosby | 48107 | 6,670 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Swisher | 48437 | 6,657 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Parmer | 48369 | 6,606 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Garza | 48169 | 6,583 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Schleicher | 48413 | 6,559 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Crosby | 48107 | 6,670 | · | · | · | · | · | 16 | GEOM-ONLY |
+| [ ] | Swisher | 48437 | 6,657 | · | · | · | · | 84 | · | PARTIAL |
+| [ ] | Parmer | 48369 | 6,606 | · | · | · | · | 64 | · | PARTIAL |
+| [ ] | Garza | 48169 | 6,583 | · | · | · | · | 65 | · | PARTIAL |
+| [ ] | Schleicher | 48413 | 6,559 | · | · | · | · | 76 | · | PARTIAL |
 | [ ] | Ochiltree | 48357 | 6,521 | · | · | · | · | · | 28 | GEOM-ONLY |
-| [ ] | Castro | 48069 | 6,466 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Knox | 48275 | 6,408 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Castro | 48069 | 6,466 | · | · | · | · | 56 | 23 | PARTIAL |
+| [ ] | Knox | 48275 | 6,408 | · | · | · | · | 80 | · | PARTIAL |
 | [ ] | Baylor | 48023 | 6,349 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Hall | 48191 | 6,347 | · | · | · | · | · | 12 | GEOM-ONLY |
 | [ ] | Dallam | 48111 | 6,271 | · | · | · | · | · | · | GEOM-ONLY |

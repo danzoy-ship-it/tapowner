@@ -680,3 +680,8 @@ SWData "export_collector" pipe-delimited roll (collector_* cols; collections rol
 - **BIS FS deed-date (~70K sale + 28K year):** Moore 48341, Callahan 48059, Camp 48063(geo), Kinney 48271(geo), DeafSmith 48117, Madison 48313, Zavala 48507, Wilbarger 48487.
 - **Harris-eSearch exemptions:** Morris 48343 (morriscad.com), McCulloch 48307 (mccullochcad.org), Wilbarger 48487 (wilbargerappraisal.org — DOUBLE: BIS deed + eSearch exempt). Domain caution: wilbargercad.org/.com are whoownsit placeholders.
 - **Records-request:** Goliad 48175 (eSearch PDFs only), Edwards 48137 (Wix+eSearch, no export), LaSalle 48283 (newer TP public-portal, no report GUID listing), Lipscomb 48295 (lipscombcad.com dead, SWData search-only).
+
+## 2026-07-15 — wave 10B (14 tiny counties): 12 solved (overturned Crosby/Castro/Swisher/Parmer dead-ends)
+- **BIS FS deed-date (~55K sale + 13K year):** Terry 48445(geo; terrycoad.org), Mason 48319, Mills 48333, Concho 48095, Garza 48169, Knox 48275(knoxcad.com), Real 48385, Swisher 48437, Parmer 48369(geo), Schleicher 48413, Castro 48069.
+- **Harris-eSearch exemptions:** Crosby 48107 (crosbycentral.org — real domain; crosbycad.org/.com are squats), Castro 48069 (castrocad.org wp-content CSV — DOUBLE: FS deed + eSearch exempt).
+- **Records-request:** Winkler 48495 (eSearch DataRecords PDF-only, re-poll), Motley 48345 (SWData per-parcel only, Floyd-administered).
