@@ -9,25 +9,33 @@
 // notice OCR text -> Census geocode -> spatial ST_Contains, and (b) a
 // legal-description tuple match to parcels.legal_description. Both are best-effort.
 //
-// HOW THE DATA IS OBTAINED (reverse-engineered 2026-07-15, no login/CAPTCHA/pay):
+// HOW THE DATA IS OBTAINED (reverse-engineered 2026-07-15, FIXED 2026-07-15 evening
+// after the v6/no-ip guess below turned out stale -- captured the REAL frame straight
+// off the live SPA via a WebSocket.send() hook; no login/CAPTCHA/pay either way):
 //   1. GET https://<county>.tx.publicsearch.us/  -> the SPA embeds an anonymous
 //      bootstrap token in `window.__ort="<uuid>"` (also set as the httponly
 //      `authToken` cookie). This is the ONLY credential the search needs.
 //   2. Open a WebSocket to  wss://<county>.tx.publicsearch.us/ws .
-//   3. Send a redux-action-over-socket frame:
-//        { type:"@kofile/FETCH_DOCUMENTS/v6",
-//          payload:{ query:{ department:"FC", searchType:"advancedSearch",
-//                            recordedDateRange:"<start>,<end>",
-//                            limit:"50", offset:"0" },
-//                    workspaceID:"<random>" },
-//          authToken:<ort>, correlationId:<uuid>, sync:true }
-//      -> server replies "@kofile/FETCH_DOCUMENTS_FULFILLED/vN" with
+//   3. Send a redux-action-over-socket frame (THE REAL, VERIFIED-WORKING FORM):
+//        { type:"@kofile/FETCH_DOCUMENTS/v4",   <- v4, NOT v6
+//          payload:{ query:{ limit:"50", offset:"0", department:"FC",
+//                            keywordSearch:false, searchOcrText:false,
+//                            recordedDateRange:"YYYYMMDD,YYYYMMDD",  <- no dashes
+//                            searchType:"advancedSearch" },
+//                    workspaceID:"search" },
+//          authToken:<ort>, ip:"<caller's own public IP>",  <- REQUIRED, silently
+//          correlationId:<uuid>, sync:true }                    dropped if omitted
+//      -> server replies "@kofile/FETCH_DOCUMENTS_FULFILLED/v6" with
 //         payload.data.byOrder[] + payload.data.byHash{docId->doc}. Each doc has
 //         docNumber, recordedDate, instrumentDate (== the trustee SALE date),
-//         propAddress[{address1: legal desc}], docTypeCode ("FCN"), ocrText, ...
-//      NOTE: the Kofile search backend is intermittently slow and frequently
-//      times out server-side (its own web app shows "The request timed out") --
-//      so every request is retried with fresh connections.
+//         propAddress[{address1: legal desc}], returnAddress{...} (usually the
+//         filing TRUSTEE's office, not the property -- see the opt-in join lever
+//         below), docTypeCode ("FCN"), a ~199-char ocrText PREVIEW (NOT the full
+//         notice body -- the street address is paywalled in the doc image), ...
+//      NOTE: this backend is IP-sensitive -- a VPN/datacenter IP gets TLS-handshake-
+//      blocked outright, and a residential IP that's made ~30 connections gets
+//      rate-limited (connects fine, FETCH gets no reply). A cellular hotspot IP
+//      cleared both. See memory: cracking-blocked-records-apis.md.
 //
 //   DATABASE_URL=... node scripts/signals/load_kofile_foreclosures.mjs [county...] [--days=N]
 //
@@ -39,14 +47,43 @@ const { Client } = pkg;
 const UA =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
 
-// One entry per Kofile county. `sub` = subdomain, `fips` = 5-digit county FIPS.
+// One entry per Kofile county. `sub` = subdomain OR full hostname (see bootstrap()),
+// `fips` = 5-digit county FIPS. Below the proven 6, a batch identified across the PDF-
+// wave campaign (each bounced here because it has no live PDF feed) -- UNTESTED, added
+// as prep so the next hotspot session only needs to RUN this, not write more code.
 const SOURCES = {
+    // --- proven 2026-07-15 ---
     nueces:  { sub: "nueces",  fips: "48355" },
     cameron: { sub: "cameron", fips: "48061" },
     hidalgo: { sub: "hidalgo", fips: "48215" },
     dallas:  { sub: "dallas",  fips: "48113" }, // CURRENT-months complement to dallas_cc (PDF feed ends ~May 2026)
     denton:  { sub: "denton",  fips: "48121" },
     tarrant: { sub: "tarrant", fips: "48439" },
+
+    // --- untested prep, standard .tx.publicsearch.us host ---
+    johnson:      { sub: "johnson",      fips: "48251" },
+    kendall:      { sub: "kendall",      fips: "48259" },
+    wilson:       { sub: "wilson",       fips: "48493" },
+    walker:       { sub: "walker",       fips: "48471" },
+    grimes:       { sub: "grimes",       fips: "48185" },
+    sanpatricio:  { sub: "sanpatricio",  fips: "48409" },
+    starr:        { sub: "starr",        fips: "48427" },
+    llano:        { sub: "llano",        fips: "48299" },
+    midland:      { sub: "midland",      fips: "48329" }, // CivicPlus feed dead since 2019, this is now its only lane
+    jefferson:    { sub: "jefferson",    fips: "48245" },
+    smith:        { sub: "smith",        fips: "48423" },
+    grayson:      { sub: "grayson",      fips: "48181" },
+    montgomery:   { sub: "montgomery",   fips: "48339" },
+    potter:       { sub: "potter",       fips: "48375" },
+    brazos:       { sub: "brazos",       fips: "48041" },
+    collin:       { sub: "collin",       fips: "48085" }, // complement to the collin_cc Blazor scrape (that one only covers geocoded notices)
+
+    // --- untested prep, the .search.kofile.com host variant (found 2026-07-15/16;
+    // NOT yet confirmed to be the same app/protocol -- verify the bootstrap() GET
+    // returns a __ort token before trusting these; if it 404s/differs, skip-log it) ---
+    anderson:     { sub: "andersontx.search.kofile.com",  fips: "48001" },
+    zapata:       { sub: "zapatatx.search.kofile.com",    fips: "48505" },
+    jimwells:     { sub: "jimwellstx.search.kofile.com",  fips: "48249" },
 };
 
 // Government/institutional owners are not real seller leads -> drop them from
@@ -69,7 +106,11 @@ async function ensureIP() {
 
 // GET the SPA shell, pull the anon bootstrap token + session cookies.
 async function bootstrap(sub) {
-    const host = `${sub}.tx.publicsearch.us`;
+    // Most counties run at <sub>.tx.publicsearch.us, but a second Kofile subdomain
+    // flavor was found 2026-07-15/16 for some rural counties: <sub>.search.kofile.com
+    // (same underlying app per the vendor survey). If `sub` already looks like a full
+    // hostname (contains a dot), use it as-is; otherwise append the default suffix.
+    const host = sub.includes(".") ? sub : `${sub}.tx.publicsearch.us`;
     const r = await fetch(`https://${host}/`, {
         headers: { "User-Agent": UA, Accept: "text/html" },
         signal: AbortSignal.timeout(30000),
