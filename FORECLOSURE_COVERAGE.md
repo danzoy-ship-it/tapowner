@@ -1,0 +1,73 @@
+# TapOwner — Foreclosure Coverage Checklist (254 counties)
+
+**The living ledger for the courthouse/foreclosure-signals campaign** (app-session lane; writes
+`parcel_signals`, NOT `parcels`). Modeled on the Miner's `COUNTY_COVERAGE.md`. Purpose: make
+"what's loaded / what's left / what we already tried" legible so no county is silently lost or
+re-checked. Loaders: `api/scripts/signals/load_pdf_foreclosures.mjs` (the shared core + ~80 CivicPlus/
+CivicLive/etc counties), `load_kofile_foreclosures.mjs` (Kofile WebSocket), `load_collin_/travis_/
+county_foreclosures.mjs` (bespoke). System map + crack recipes: `FORECLOSURE_SOURCES.md`.
+
+**Last updated:** 2026-07-16.
+
+## ⚠️ Why this is NOT a "~10 systems → 254 counties" campaign (unlike the CAD/Miner side)
+CAD data collapses to ~10 vendor systems because (a) the system fixes the access recipe and (b) the
+data is BULK (one pull = whole county). Foreclosure data breaks both: the website platform
+(CivicPlus/CivicLive/Granicus/WordPress/…) is just the CMS the clerk happens to use — it does NOT
+define a uniform URL/recipe, so each county still needs its own `discover()`; and the data is SPARSE
+(a few scanned PDF notices/month, often no street address). The ONE real system-crack was Kofile
+(one WS protocol → ~46 counties, paywall-capped). So this campaign is closer to per-county work —
+the platform knowledge accelerates discovery but doesn't eliminate it.
+
+## STATUS: 91 / 254 counties have a foreclosure signal · 2,009 tied to parcels (as of 2026-07-16)
+
+## ✅ LOADED (91 counties; tie count in parens; source `<name>_cc` unless noted)
+arcgis: Bexar 276.
+Big metros / bespoke: Harris 268, Dallas 184 (+22 via dallas_kofile current-months), Collin 368
+(Blazor browser-scrape, `collin_cc`), Travis 12 (own Aumentum app, sample only — full load needs
+browser page-capture), Fort Bend 159, Williamson 45.
+CivicPlus/CivicLive/Granicus/WordPress/easydocs/Revize/AgendaSuite PDF counties: Bell 99, Kaufman
+102, Guadalupe 45, Ellis 41, Rockwall 41, Webb 29, Bastrop 23, Hunt 21, Coryell 20, Hays 18,
+McLennan 14, Randall 13, Parker 13, Medina 10, Comal 9, Henderson 9, Hill 9, Ector 8, Fannin 8,
+Victoria 7, Polk 5, Vanzandt 5, Wise 5, Angelina 5, Kerr 4, Johnson 4(kofile), Smith 4(kofile),
+Atascosa 3, Caldwell 3, Fayette 3, Kleberg 3, Navarro 3, San Patricio 3(kofile), Tom Green 3,
+Brazos 2(kofile), Bosque 2, Burnet 2, Houston 2, Lee 2(?), Milam 2, Panola 2, San Jacinto 2,
+Willacy 2, Andrews 1, Bowie 1, Cass 1, Cooke 1, Erath 1, Howard 1, Jackson 1, Lamar 1, Lampasas 1,
+Limestone 1, Madison 1, Midland 1(cc)/kofile, Shelby 1, Titus 1, Upshur 1, Wharton 1, Wood 1.
+0-tie-but-loaded (Kofile paywall or rural legal-only — notices present, no parcel tie): Cameron,
+Dawson, Duval, Goliad, Gonzales, Grayson, Grimes, Hidalgo, Hopkins, Jefferson, Liveoak, Nolan,
+Palo Pinto, Runnels, Scurry, Starr, Tyler, Walker, Wilson.
+
+## 🧱 IMPASSE LOG (attempted, not loadable from a free source — with reason + revisit trigger)
+- **Tyler Eagle / tylerhost.net (paywalled search)**: Taylor, Wichita, Aransas, Brazoria (also Tyler
+  cloud login). REVISIT only if we ever accept per-record cost — structurally paywalled.
+- **documents-on-demand / Box-only portals**: Hood. REVISIT: different-vendor crack.
+- **CivicPlus React DocumentCenter (antiforgery wall)**: Parker (worked via pinned URL), Somervell
+  (tiny — deferred). REVISIT: crack the React ajax/antiforgery flow once → applies to both.
+- **WAF/403 to headless fetch**: Jack, Trinity. REVISIT: headful browser (like Collin/Travis).
+- **Stale (feed exists but last post >6mo old)**: Liberty (2023), Jasper (2018), Matagorda (2021-24),
+  Refugio (2018), San Patricio-CivicLive (2023), Hardin (empty this cycle). REVISIT: re-check monthly.
+- **No sale dates / unparseable structure**: Newton (case numbers only), Robertson (mixed feed),
+  Goliad/Duval/Livermore-style rural metes-and-bounds (loaded but 0-tie).
+- **No online posting found (courthouse-door only)**: Cherokee, Harrison, McMullen. REVISIT: NEVER-
+  conclude-absence — re-probe real domain/Wayback/sibling hosts before treating as permanent.
+
+## 🅿️ REVISIT / PARKED QUEUE
+- **Kofile stragglers** (rate-limited or timed out mid-run 2026-07-16): Collin-kofile, Llano, Potter,
+  Montgomery (only 2 notices — verify). Re-run from a rested IP. `--try-return-address` proven a
+  dead-end (0 matches) — do not re-test.
+- **Kofile `.search.kofile.com` host** (Anderson/Zapata/Jim Wells): DIFFERENT incompatible system
+  (HTTP 500). REVISIT only if that host is separately reverse-engineered.
+- **Travis full load**: only a 20-notice sample loaded; the full ~245 needs browser page-capture of
+  its Aumentum results grid (WAF-blocked to headless). REVISIT with the browser.
+- **Collin non-geocoded**: 302 of 670 notices lack coordinates → need address geocoding to load.
+
+## ⏳ IN FLIGHT (2026-07-16 parallel wave — 6 Sonnet agents, own region files)
+Panhandle-North, South-Plains, Permian, Trans-Pecos/Border (incl. El Paso), Concho-Valley,
+NE+South-Central. ~80 deep-rural counties — expect a high "no online posting" rate (honest).
+
+## ⬜ NOT YET ATTEMPTED (the remainder after the in-flight wave)
+Roughly the deep-rural tail + a few mid counties not yet reached (~80 after this wave). A second
+parallel wave covers most of the rest. Highest-value un-attempted leverage NOT yet tried:
+**a systematic sweep of every county GIS/open-data portal for a Bexar-style ArcGIS foreclosure
+LAYER** — those are bulk + clean (97% tie) and would be real system-leverage; only Bexar found so far
+because no exhaustive sweep was done. Worth one dedicated agent.
