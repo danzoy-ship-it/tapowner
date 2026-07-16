@@ -4,8 +4,12 @@
 Rewrite the top section every working session. If a phase says "PASSED" in PROGRESS.md
 but isn't in the "Verified" table here with evidence, treat it as unverified.
 
-**Last updated:** 2026-07-14 (afternoon — build #12 shipped; Fort Bend + El Paso
-partials repaired via correct join keys; statewide 6.51M sqft · 466,792 pools).
+**Last updated:** 2026-07-16 (full project sanity check — 3 parallel read-only audit
+agents verified every section below against live code/git/DB, not against the prior
+version of this doc. The prior "2026-07-14" version was ~2 days and 100+ commits stale
+on data-coverage numbers specifically — see the scoreboard section for the scale of that
+drift as a caution against trusting this doc uncritically either; re-verify before a
+big decision.)
 
 ---
 
@@ -20,22 +24,56 @@ proof; costs stated before incurring them.
 
 ## WHERE IT IS RIGHT NOW
 
-**The app is feature-complete for founding-agent beta and hardened.** Twenty TestFlight builds.
-**Build #17 (Reverse Prospecting FEATURE FILTERS — 16-tag chips) CONFIRMED on-device 2026-07-15.**
-**Builds #18–20 shipped (awaiting on-device eval):** #18 pool/garage/features on the card, #19
-owner-portfolio "Owns N more" + "Detached garage" chip, **#20 SELLER SIGNALS v1** — "Owned
-10/15/20+ yrs" + "Owner 65+" Reverse-Prospecting filters/badges (from overnight-captured
-sale-dates + exemptions; api verified live, ethics-rule-safe, 32 backend unit tests). Earlier
-confirms: #12 (farm flow v2), #13 (unlock polish), #14–16 (contact-state button, CRM detail/scroll,
-template previews, email-only outreach). Flow builds on: unlock-all-first action sheet, "all 13" wording once worked,
-session no-match tracking, Email/Letter toggle in the outreach screen. The entire 6-agent audit backlog (A boot / B billing / C security /
-D data / E mobile) is CLOSED — including C2 (data endpoints now REQUIRE auth; anonymous
-scraping 401s) and D1 (51 mis-projected counties repaired in place). Farm mode grew into
-**Reverse Prospecting**: draw area → filter by beds/sqft/pool/stories → one-button Contact
-owners (auto-unlock w/ cost confirm → phones-first, emails secondary, ≤15 or CSV mail-merge)
-→ criteria-woven AI letter. Export pricing: 10¢/row at launch; evaluator mode now = free,
-300 rows/month (config-flip to enforce). tapowner.com is live (billing portal page works
-end-to-end). Apple demo account live (review@tapowner.com, code in Railway env).
+**The app is feature-complete for founding-agent beta and hardened. Latest build: #22**
+(commit `38182f2`, 2026-07-15 — courthouse-signal badge/filter UI). **Frederick has
+personally tested every build/functionality thoroughly on-device** (confirmed directly
+by him 2026-07-16) — this was simply never logged per-build in PROGRESS.md, which is
+why the doc/commit trail alone couldn't confirm it (a documentation gap, not a real
+product-quality gap). **What genuinely hasn't happened yet: founding agents have NOT
+been given TestFlight access.** This was deliberate — Frederick didn't consider the app
+ready to share until now. He's decided he's ready and wants to invite them **primarily
+to generate buzz/momentum, not for their testing help** (he doesn't need it). A one-time
+reminder is scheduled for 2026-07-16 10:00 AM Central to prompt him to send the invites.
+
+**Phases 0-9 of the original 10-phase build (TAPOWNER_BUILD.md §4) are all DONE and
+device-verified.** Phase 10 (polish/compliance/App Store) is PARTIAL: TestFlight-only,
+**not yet submitted to Apple for public review** (that's still a future step, not done).
+
+**The 2026-07-14 "ranked fix backlog" (A-F below) is almost entirely resolved** — of
+~30 tracked items, only 6 are still genuinely open (confirmed by direct code read, not
+assumption): E3 (contact-save shows "✓" even if the user cancels), C4b (admin-secret
+compare is not timing-safe; `trustProxy` still unset so per-IP rate limits are effectively
+global), and 4 hygiene items (hardcoded draft tone, `is_absentee` city/state-only,
+`charged_via='cache'` never recorded, no schema-migration tracking, founding_agent
+auto-promote-at-10-conversions never implemented, no in-app data disclaimer, no
+per-vendor-call cost/latency logging). None are launch-blocking; see the updated
+backlog section for the full resolved/open breakdown.
+
+**A whole new workstream exists that predates this doc: the COURTHOUSE-SIGNALS
+campaign** (pre-foreclosure, and later probate/tax-delinquency/etc.), running in
+`parcel_signals` — a table separate from the CAD `parcels` table by design (two-session
+no-collision rule, HANDOFF §3b). As of 2026-07-16: **71 foreclosure sources live
+(1 ArcGIS + ~65 CivicPlus/CivicLive/Granicus/WordPress/AgendaSuite/etc. PDF counties +
+Collin [368 tied, 100%, coordinate-based] + Travis [sample] + Kofile [paywall-limited,
+~60 tied across Dallas/Denton/Nueces]), ~1,950+ foreclosures tied to real parcels**,
+zero gov-owned false positives, surfaced as a "Pre-foreclosure" badge/farm-filter in the
+app (only while the sale date is still pending — past auctions correctly drop the label).
+Still expanding; see PROGRESS.md for the latest wave count. Kofile's biggest lever
+(a `returnAddress` join, code-complete but untested) needs a clean/cellular IP to validate.
+
+Farm mode grew into **Reverse Prospecting**: draw area → filter by beds/sqft/pool/stories/
+tenure/senior-owner/pre-foreclosure → one-button Contact owners (auto-unlock w/ cost
+confirm → phones-first, emails secondary, ≤15 or CSV mail-merge) → criteria-woven AI
+letter (ethics rule: signal fields like tenure/pre-foreclosure are structurally excluded
+from ever reaching AI draft copy). Export pricing: 10¢/row at launch; evaluator mode now
+= free, 300 rows/month. tapowner.com is live. Apple demo account live
+(review@tapowner.com, code in Railway env).
+
+**Stripe is still TEST MODE** (confirmed via `api/.env` prefix check) — blocked on
+Frederick's LLC → EIN → business bank chain, all still pending. The full pre-launch
+legal gate (attorney ToS review, TX Data Broker Act registration, insurance, and
+specifically the BatchData vendor-redistribution addendum — still only an informal
+AE "won't sue ≤40k records/mo" email, NOT a signed reseller right) remains open.
 
 **Data moat (Frederick's active priority):** building attributes mined from FREE county
 sources — see scoreboard below. `parcel_viewed` events log per-card attribute gaps so the
@@ -61,45 +99,38 @@ Denton / Montgomery / McLennan / Johnson are data-session (bulk/PIA). Details in
    legal gate (attorney ToS review, TX Data Broker reg, insurance, BatchData addendum).
 4. **Then:** App Store submission (demo account + review notes ready; builds proven).
 
-## COUNTY ATTRIBUTE SCOREBOARD (all free — statewide: 6,512,561 sqft · 466,792 pools · 1,842,774 beds · 29 counties)
+## COUNTY ATTRIBUTE SCOREBOARD (verified live against the DB 2026-07-16 — the table below
+this doc used to carry was already 2 days / ~110 `data/` commits stale; per-county detail now
+lives in `COUNTY_COVERAGE.md`, which the Miner session regenerates and owns — this section
+is topline-only so it can't drift the same way again)
 
-| County | Parcels | Pools | Extras | Source/loader |
-|---|---|---|---|---|
-| Harris | 1,248,998 | 124,542 | beds/baths | HCAD zip (`load_harris_attributes.py`) |
-| Bexar | 617,058 | pending BCAD | stories | county GIS (`load_bexar_attributes.py`) |
-| Tarrant | 618,423 | 83,674 | — | TAD zip (`load_tarrant_attributes.py`) |
-| Dallas | 589,491 | 64,367 | beds/baths/stories | DCAD zip (`load_dallas_attributes.py`) |
-| Collin | 344,684 | 62,787 | — | Socrata (`load_collin_attributes.py`) |
-| Travis | 342,851 | codes undecoded | stories | TCAD 30GB JSON (`load_travis_attributes.py`) |
-| Denton | 311,480 | — | — | prodigy CSV (`load_prodigy_csv_attributes.py`) |
-| Williamson | 233,017 | 17,212 | garage | WCAD Socrata (`load_williamson_attributes.py`) |
-| Montgomery | 247,131 | — | stories | prodigy JSON (`load_prodigy_json_attributes.py`) |
-| Fort Bend | 310,752 | — | year built | FBCAD CamaSummary REST, apn==PropertyNu (`load_fortbend_attributes.py`) |
-| Hays | 51,187 | 3,792 | beds | HaysCAD zip (`load_hays_attributes.py`) |
-| Guadalupe | 69,123 | 4,285 | — | free certified roll (`load_pacs_impdetail_attributes.py`) |
-| Galveston | 138,113 | 16,605 | — | full certified roll — found by hunt agent (PACS loader) |
-| Bastrop | 32,461 | 1,999 | — | free data export (PACS loader) |
-| Wilson | 16,684 | 2,597 | — | free appraisal roll (PACS loader) |
-| Brazoria | 126,423 | 14,110 | — | ProTax export (`load_brazoria_attributes.py`) |
-| Cameron | 126,420 | 8,290 | — | free PACS roll (hunt agent) |
-| Nueces | 111,280 | 8,811 | — | free PACS roll (hunt agent) |
-| El Paso | 260,171 | 19,228 | year built | EPCAD ABE dumps, GeoID==apn chain (`load_elpaso_attributes.py`) |
-| Kaufman | 66,950 | 3,891 | — | free full roll (PACS loader, LIVING AREA vocab fix) |
-| Grayson | 52,617 | 2,567 | — | GCAD ORR export (PACS loader; MH=APPENDAGES excluded) |
-| Bell | 121,481 | 7,174 | — | free certified .7z (PACS loader, RESIDENCE vocab) |
-| Lubbock | 105,971 | — | year built | CAD ArcGIS layer (`load_lubbock_attributes.py`) |
-| Johnson | 69,315 | 6,602 | — | JCAD certified roll WEBIMPR (`load_johnson_attributes.py`) |
-| Smith | 76,740 | — | year built | county GIS layer (`load_smith_attributes.py`) |
-| Midland | 53,655 | 4,157 | — | MCAD web file (`load_midland_attributes.py`) |
-| Ector | 50,161 | — | year built | ECAD roll XLSX (`load_ector_attributes.py`) |
-| Rockwall | 44,141 | 7,916 | — | 1.3GB PACS roll via Drive (PACS loader) |
-| Potter | 39,666 | 602 | — | PRAD Drive zip (PACS loader, BASE/SWIMPL vocab) |
-| Randall | 52,526 | 1,584 | — | PRAD Drive zip (PACS loader) |
+**Statewide, of 14,336,257 parcels (253/253 counties loaded geometrically):**
 
-**Records-request-only (all free sources exhausted):** Comal, Medina, Kendall, Atascosa,
-Parker, Ellis, Hidalgo, **Webb** (True Prodigy portal publishes only a PDF roll — API flow
-cracked and documented in HANDOFF §4 for reuse), **McLennan** (portal empty — 204 on every
-report category). The ready-to-load queue from the 2026-07-15 hunt is fully cleared.
+| Marker | Count | % of all parcels |
+|---|---:|---:|
+| Living area (sqft) | 8,240,069 | 57.5% |
+| Bedrooms | 3,938,392 | 27.5% |
+| Full baths | 5,059,948 | 35.3% |
+| Has pool | 738,322 | 5.2% |
+| Last sale date | 6,266,449 | 43.7% |
+| Exemptions (HS/OV65/etc.) | 2,516,038 | 17.6% |
+| Improvement tags (pool/garage/casita/etc.) | 5,565,250 | 38.8% |
+
+**Counties with ANY attribute signal: 231 of 253 (91.3%)** — up from 29 two days ago. By
+CAD-system family (see `data/DATA_ACCESS_CRACKS.md`): True Prodigy, BIS Consultants
+(~45 counties), SWData, and the generalized PACS/Pritchard&Abbott loader are all cracked
+and reusable — adding a new county on a known system is now a config change, not new
+engineering. Sale PRICE remains essentially $0 statewide (TX is non-disclosure; Hill
+County is the one known exception with real `sl_price` data).
+
+**Records-request queue (genuinely free-source-exhausted, not just unattempted):**
+Tarrant (beds/baths — confirmed policy-withheld), Collin (feature-tag segments), plus 10
+counties confirmed structurally gated in the 2026-07-16 pass: Anderson, Wharton, Hopkins,
+Montague, Goliad, Palo Pinto, Floyd, Red River, Lipscomb, Winkler. **Standing order:**
+no PAID records requests; even $0-fee electronic PIAs are parked pending the
+`parcel_viewed` felt-gap checkpoint (~2026-07-28). **Bexar's BCAD PIA** (sent 2026-07-14,
+statutory ≤10 business days, due ~2026-07-28) **has not landed yet** — Bexar currently has
+sqft/beds/baths (SARA ArcGIS layer) but no pool/casita and no sale-date/exemption signal.
 
 ---
 
@@ -146,83 +177,73 @@ report category). The ready-to-load queue from the 2026-07-15 hunt is fully clea
   engine (billing.ts) verified against the §5b model. Both live on tapowner.com, verified.
 - **AI drafting, trace caching/metering, CRM API** — built and server-verified.
 
-## WHAT WAS CLAIMED BUT IS NOT TRUE / NOT VERIFIED
+## WHAT WAS CLAIMED BUT IS NOT TRUE / NOT VERIFIED (historical — as of 2026-07-14)
 
-- Phase 10 "installs as a normal app" — the shipped TestFlight binary **hung on launch**.
+- Phase 10 "installs as a normal app" — the shipped TestFlight binary **hung on launch**
+  at the time. **Now resolved** (A1-A3 fixed; builds #7 onward have run cleanly).
 - Phases 7/8/9 "PASSED" — server side real; on-device evidence lived in code later deleted.
-- Phase 6 "reset logic is config-driven" — **no monthly reset of included traces exists.**
-- ~75% of the current mobile app has **never executed on any device** (the redesign + tail).
+  **Now resolved** — PROGRESS.md documents a real on-device confirmation for 7/8/9.
+- Phase 6 "reset logic is config-driven" — **now resolved**, `billing.ts handleInvoicePaid`
+  actually resets `included_traces_remaining` on `invoice.paid`.
+- ~75% of the current mobile app had **never executed on any device** as of 2026-07-14.
+  **Status now, 2026-07-16: still a live risk, but narrower** — builds #18-22 (the entire
+  seller-signals/owner-portfolio/courthouse-signals UI) have shipped and are NOT confirmed
+  on any device per any doc/commit found. This is the top verification gap right now.
 
 ---
 
-## RANKED FIX BACKLOG (cross-checked across ≥2 agents where marked ✓✓)
+## RANKED FIX BACKLOG — REFRESHED 2026-07-16 (verified by direct code read, not assumption)
 
-### A. MUST FIX BEFORE THE NEXT BUILD (or we can't trust the result)
-- **A1 ✓✓ Startup hang** — wrong-version `expo-font` in the icons chain threw at bundle eval.
-  Fixed on disk (dedupe to 14.0.12; `newArchEnabled:false` reverted as it was independently
-  fatal with MapLibre v11). *Unverified until a build launches.*
-- **A2 ✓✓ Offline "Loading…" strand** — `App.tsx` auth bootstrap awaits `fetchMe` with no
-  catch; a returning user launching offline/API-blip is stuck forever, looking exactly like
-  "it hung again." Fix before rebuild so a flaky launch can't produce a false failure signal.
-- **A3 Add an ErrorBoundary** — any release-mode render throw currently = silent frozen screen
-  with no signal. Wrap the tree so failures are visible/recoverable.
+**Of ~30 tracked items, 24 are RESOLVED and 6 are still genuinely open.** None of the
+open ones are launch-blocking; all are noted for whenever there's a slow moment.
 
-### B. MONEY / BILLING (before the first paid subscriber; Stripe is still test-mode)
-- **B1 ✓✓✓ Included traces never reset** (billing.ts upsert omits it; no period reset; upgrades
-  grant 0). Closer users overcharged from month-2. THREE agents. First renewals ≈ 2026-08-12.
-- **B2 ✓✓ Referral reward fires on the $0 trial invoice**, not first paid invoice → free months
-  leak to signups that never pay; farmable (self-referral = email-only, attribution window uses
-  a client-supplied timestamp).
-- **B3 ✓✓ Trace charge is non-atomic + no Stripe meter idempotency key** → concurrent double-tap
-  or network retry double-bills; included-balance can go negative.
-- **B4 §7 $25 unbilled-metered cap unimplemented** — unbounded trial-abuse vendor spend.
-- **B5 past_due users lose read access to their own CRM** (§7 wants 7-day read-only grace).
-- **B6 Live Stripe webhook may be registered for only 3 event types** → commission system may be
-  silently dead in production (verify enabled_events on the endpoint).
-- **B7 No cancel path** — every surface says "manage at tapowner.com" but no billing portal
-  exists (FTC click-to-cancel exposure); Prospector tier is unpurchasable (checkout hardcodes
-  the Closer price).
+### A. Boot — ALL RESOLVED
+- **A1 Startup hang** — fixed (`expo-font` dedupe 14.0.12). Builds #7+ have run cleanly.
+- **A2 Offline "Loading…" strand** — fixed, `App.tsx` bootstrap now has a catch.
+- **A3 ErrorBoundary** — `mobile/ErrorBoundary.tsx` exists and is wired in.
 
-### C. SECURITY
-- **C1 Rotate the DB password** — it circulated in plaintext over a public proxy tonight.
-- **C2 ✓✓ `/tiles`, `/parcels/at`, `/geocode` are unauthenticated** → the entire statewide
-  owner dataset is scrapeable with no login, and `/geocode` can drain the Google budget.
-- **C3 pg pool has no `error` listener** → a Railway DB blip crashes the whole API process.
-- **C4 OTP request has no per-email throttle** (email-bomb / cost); admin-secret compare is
-  timing-unsafe; `trustProxy` unset so per-IP limits are effectively global.
+### B. Money / billing — ALL RESOLVED (Stripe itself is still test-mode, see below — that's a business-chain blocker, not a bug)
+- **B1 Included traces never reset** — fixed, `billing.ts handleInvoicePaid` resets on `invoice.paid`.
+- **B2 Referral reward on $0 trial invoice** — fixed, early-return guard on `amount_paid<=0`.
+- **B3 Non-atomic trace charge / no idempotency key** — fixed, `UNIQUE(user_id,parcel_id)` + deterministic Stripe meter identifier.
+- **B4 $25 metered cap unimplemented** — fixed, checked in `trace.ts` before every vendor call.
+- **B5 past_due loses CRM read** — resolved (superseded by read-only-grace design).
+- **B6 webhook may register only 3 event types** — handler code dispatches all 5; the live Stripe dashboard config itself is unverifiable from source (flag if ever in doubt).
+- **B7 no cancel path** — resolved by design: `/billing/portal-session` + `web/app/billing/page.tsx` exist; Prospector is reached via Portal downgrade (intentional, not a bug).
 
-### D. DATA INTEGRITY
-- **D1 ✓✓ 51 counties (~580K parcels) mis-projected** (Web Mercator stored as lon/lat) →
-  invisible, never match a tap. Reproject-on-load + bbox assertion + reload those counties.
-- **D2 Stacked condo parcels** — `LIMIT 1` tap-to-owner returns an arbitrary unit's owner
-  (violates "a wrong owner is worse than no owner").
-- **D3 Protected-record trace bug** — `owner_name_hash` is NOT NULL but null for the 405K
-  protected parcels → tracing one 500s *after* the BatchData call (spend leak) and never caches;
-  also protected parcels aren't gated from tracing at all (compliance + cost).
-- **D4 ~24.8K placeholder owner strings** ("UNKNOWN OWNER", "CONFIDENTIAL", "-") shown as real.
+### C. Security — MOSTLY RESOLVED, 1 item still open
+- **C1 DB password rotation** — claimed done 2026-07-14 (one-time action, unverifiable independently).
+- **C2 unauthenticated data endpoints** — fixed, `dataAuth()` gates tiles/parcels-at/geocode.
+- **C3 no pg pool error listener** — fixed, `db.ts` has `pool.on("error", …)`.
+- **C4 — STILL PARTIALLY OPEN:** OTP per-email throttle IS implemented (1/min, 5/hr). But
+  the admin-secret comparison in `partners.ts` is still a plain `!==` (not timing-safe), and
+  `trustProxy` is still unset on the Fastify instance, so per-IP rate limits are effectively
+  global rather than per-caller. Low urgency, but genuinely unfixed.
 
-### E. MOBILE PRODUCT REGRESSIONS (from the redesign)
-- **E1 ✓✓ Owner mailing address no longer displayed anywhere** (the absentee-outreach datum,
-  required by build-doc §4). Restore on PropertyCard/ContactScreen + carry in route params.
-- **E2 First-tap-swallowed saves** — ContactScreen/AccountScreen ScrollViews dropped
-  `keyboardShouldPersistTaps="handled"`.
-- **E3 Contact form marks "In Contacts ✓" + logs contact_saved even when the user cancels.**
-- **E4 Draft flow burns a metered AI draft before checking Mail availability**; a lone traced
-  email can be deselected → composer opens unaddressed; sequential composers race on iOS;
-  Gmail-only users can't send at all (no share-sheet fallback).
-- **E5 Location denial bricks the whole app** (no tabs/logout/settings); prompt fires over the
-  login screen. Move the request to first map use.
-- **E6 Tap-race** — two quick parcel taps can show the wrong parcel's owner (no stale guard);
-  `Number(id) || null` drops a legitimate feature id of 0.
-- **E7 vCard share is iOS-only** (`Share({url})`), silently broken on Android; vCard fields
-  unescaped.
+### D. Data integrity — ALL RESOLVED
+- **D1** 51 mis-projected counties — reprojected via `data/fix_misprojected_counties.py`.
+- **D2** stacked condo `LIMIT 1` — fixed, deterministic `ORDER BY ST_Area, id`.
+- **D3** protected-record trace bug — fixed, gated before any vendor call in `trace.ts`.
+- **D4** placeholder owner strings shown as real — fixed, `isPlaceholderOwner` filters display.
 
-### F. HYGIENE / DEDUP / DOCS
-- Shared styles duplicated across screens (chips, badges, buttons, inputs); dead `statusLabel`
-  export; hardcoded default tone; `is_absentee` compares city/state only (not full address);
-  `charged_via='cache'` never recorded; no schema migration tracking; `founding_agent`
-  auto-promote + `lifetime_closer` written but never read; in-app "informational use only"
-  disclaimer never shipped; §8 per-vendor-call cost/latency logging absent.
+### E. Mobile regressions — 1 STILL OPEN
+- **E1-E2, E4-E7** all confirmed fixed in code (mailing address restored, keyboard-persist-taps
+  present, mail-availability + share-sheet fallback + vCard escaping done, location-denial
+  self-heals, tap-race guarded).
+- **E3 — STILL OPEN:** `ContactScreen.handleSaveToContacts()` marks "In Contacts ✓" and fires
+  the `contact_saved` event as soon as `presentFormAsync` resolves, regardless of whether the
+  user actually tapped Done or Cancel. A canceled save still shows success. Small, real, unfixed.
+
+### F. Hygiene — 6 STILL OPEN (none urgent)
+- Duplicated shared styles across screens — still open, no consolidation found.
+- Hardcoded default AI-draft tone (`"professional"` literal) — still open.
+- `is_absentee` compares city/state only, not full address — still open.
+- `charged_via='cache'` value is defined in the type but never actually written — still open.
+- No schema-migration tracking directory anywhere in `api/` — still open.
+- `founding_agent` auto-promote-at-10-conversions — **never implemented at all** (only display
+  aggregation exists); `lifetime_closer` is written once and never read anywhere — still open.
+- In-app "informational use only" data disclaimer — never shipped — still open.
+- §8 per-vendor-call cost/latency logging — absent from `api/src/trace/batchdata.ts` — still open.
 
 ---
 
