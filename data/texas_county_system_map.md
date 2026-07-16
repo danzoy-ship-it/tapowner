@@ -1,284 +1,278 @@
 # Texas County Appraisal-System Map
 
-Which CAMA/appraisal software each Texas county runs, its free bulk-roll URL where found, and the load verdict. Built to let the next wave batch-load the PACS counties and skip/flag the app-lane and Pritchard&Abbott holdouts. Sorted by parcel count (biggest first).
+**Quick lookup: find your county's row below for its current status, vendor/access method, and any caveats.** Numbers (Improv/Beds/Sale/Exempt %) are pulled live from the DB each time this table is regenerated — trust them over any prose elsewhere. The `Vendor / Access` and `Notes` columns are curated from the session log (below this table) wherever a specific recipe or caveat was documented; blank means "loaded via a standard route with nothing unusual to flag" — check `COUNTY_COVERAGE.md` for the numeric scoreboard and `DATA_ACCESS_CRACKS.md` for the vendor-system recipes.
 
-**Verdict legend**
-- `PACS-loadable` — True Automation / Harris Govern PACS certified roll with IMPROVEMENT_DETAIL(+ATTR); run `data/load_pacs_impdetail_attributes.py <fips> <roll.zip>` (fixed-width) or `data/load_pacs_property_data_export.py` (CSV Segment export).
-- `app-lane` — True Prodigy (`{county}.prodigycad.com`); no bulk file, per-property API only (fill-on-blank + cache). Do NOT mass-harvest.
-- `P&A-hard` — Pritchard & Abbott (pandai.com / iswdata / southwestdata portals); no public bulk, records-request or licensed vendor.
-- `BIS-gis` — BIS Consultants GIS layer (gis.bisclient.com); typically sqft-only, no beds.
-- `PACS-portal(no bulk found)` — esearch/TrueAutomation portal present but bulk export page not located by the crawler; likely loadable with a manual download-page check.
-- `unclassified` — site resolved, no fingerprint matched; needs a manual look.
-- `no-domain` — CAD website domain not auto-resolved; needs a manual lookup.
+**Status legend:**
+- `MINED` — has real improvement/feature detail (segments and/or a meaningful beds/baths count), not just a value roll.
+- `SIGNAL` — has a seller-signal (sale date and/or exemptions) but no improvement detail (sqft-only or nothing physical).
+- `GEOM-ONLY` — nothing beyond geometry/owner; either genuinely gated (records-request queue) or not yet swept.
 
-**Verdict breakdown (all 253 counties in DB):**
+**Records-request queue (confirmed gated after an exhaustive live-site crawl, 2026-07-16 — need Frederick to send a $0 open-records/PIA request):** Smith, Anderson, Wharton, Hopkins, Montague, Goliad, Palo Pinto, Floyd, Red River, Lipscomb, Winkler, Motley, Shackelford. Plus segment/bed-specific gaps: Hidalgo (no TP export exists), Montgomery/Brazoria/Ellis/Webb/Harrison (PACS ATTR has no bedroom column), **Tarrant beds (CONFIRMED unavailable — TAD withholds counts in every file; a records-request will not help)**.
 
-- P&A-hard: 78
-- PACS-portal(no bulk found): 73
-- unclassified: 58
-- PACS-loadable: 28
-- no-domain: 11
-- app-lane: 2
-- BIS-gis (sqft only): 2
-- PACS-loadable(custom): 1
+**Deferred (mass-harvest per-property paths, vetoed by Frederick — do NOT scrape):** JimWells, Burleson, Maverick improvements.
 
-**Load status** column: `beds+baths+sqft` = full attributes; `baths+sqft` = baths + sqft but the district publishes no bedroom count (real gap); `sqft only` = sqft/improvements only; `-` = nothing loaded yet. A trailing `*` = loaded/refreshed in the 2026-07-15 mid-size-county session.
+**Regenerate this table** with `python data/build_county_table.py > /tmp/table.md` (pulls live DB stats; the vendor/note dict inside the script is hand-curated — update it when a county's status changes, then splice the output back in here) — or just read the chronological log below for the latest narrative.
 
-| county | fips | parcels | system | verdict | load status | domain | free bulk roll URL |
-|---|---|---|---|---|---|---|---|
-| harris | 48201 | 1,523,641 | PACS (HCAD) | PACS-loadable | beds+baths+sqft | hcad.org | Real_building_land.zip (fixtures.txt) |
-| travis | 48453 | 828,773 | PACS/True Prodigy | PACS-loadable | beds+baths+sqft | traviscad.org | FREE improvement_detail_2026.zip @ /wp-content/largefiles/ (coded rows 252=beds/251=baths); DATA-LANE not app-lane |
-| tarrant | 48439 | 757,161 | True Prodigy | app-lane | sqft only | tad.org | live API Rooms: Bedrooms/Bathrooms |
-| bexar | 48029 | 709,541 | PACS -> SARA ArcGIS | PACS-loadable | beds+baths+sqft | bcad.org | SARA BCAD_Parcels_PROD FeatureServer |
-| dallas | 48113 | 694,160 | PACS/TrueAutomation | PACS-loadable | beds+baths+sqft | dallascad.org | NUM_BEDROOMS bulk export |
-| elpaso | 48141 | 407,130 | PACS (EPCAD) | PACS-loadable | beds+baths+sqft | epcad.org | EPCAD improvements dump |
-| collin | 48085 | 387,737 | PACS | PACS-loadable | beds+baths+sqft | collincad.org | Collin improvement export |
-| fortbend | 48157 | 375,097 | Tyler ORION (not PACS) | orion-thin | sqft only | fbcad.org | FBCAD publishes an Orion Certified Export (56MB, /wp-content/uploads/2025/07/…Orion-2025-Certified-Export-REDACTED.zip) BUT it has NO improvement/segment or beds/baths file and NO sale/deed date — only Property/Owner/Exemption/Entity. Exemptions are OwnerQuickRefID-keyed (2-hop join to parcels). Improvements would need FBCAD's separate Residential-Segments zip (only 2022 found). LOW yield — skip unless a segments file for 2024/25 surfaces. |
-| denton | 48121 | 353,631 | PACS/TrueAutomation | PACS-loadable | sqft only | dentoncad.com | DCAD certified export |
-| hidalgo | 48215 | 328,322 | unknown | unclassified | sqft only | hidalgoad.org |  |
-| montgomery | 48339 | 320,915 | PACS | PACS-loadable | sqft only | mcad-tx.org | MCAD certified export |
-| williamson | 48491 | 282,983 | PACS (WCAD) | PACS-loadable ✅SOCRATA | beds+baths+sqft+improv+sale | wcad.org | **data.wcad.org SOCRATA API** (quickrefid=source_property_id): Segment 4kxj-e8c3→improvements, PropChar cvyp-ab5t→deeddate/sqft/garage; loaded 246,937 improv + 231,644 sale via load_wcad_socrata.py |
-| brazoria | 48039 | 275,131 | PACS (BCAD ProTax) | PACS-loadable | sqft only | brazoriacad.org | ProTax_ImprovementExport.txt |
-| galveston | 48167 | 188,695 | PACS/TrueAutomation | PACS-loadable ✅LOADED | improv+baths+sqft+sale+exempt | galvestoncad.org | galvestoncad.org/wp-content/uploads/2025/01/…APPRAISAL_IMPROVEMENT_DETAIL.zip is the FULL certified roll (std deflate): 146,673 improv (pool 14.7K, boat_dock/waterfront 3,608), 162,267 sale, 84,892 exempt. Found via wp-json probe 2026-07-16 |
-| cameron | 48061 | 185,062 | unknown | unclassified | beds+baths+sqft | cameroncad.com |  |
-| bell | 48027 | 167,412 | PACS | PACS-loadable | beds+baths+sqft | bellcad.org | Bell certified roll ATTR |
-| liberty | 48291 | 162,275 | unknown | unclassified | beds+baths+sqft | libertycad.org |  |
-| nueces | 48355 | 157,198 | unknown | unclassified | beds+baths+sqft | nuecescad.org |  |
-| smith | 48423 | 140,245 | PACS/TrueAutomation | PACS-portal(no bulk found) | sqft only | smithcad.org |  |
-| lubbock | 48303 | 135,112 | BIS Consultants (GIS) | BIS-gis (sqft only) | sqft only | lubbockcad.org | gis.bisclient.com/lubbockcad (sqft, no beds) |
-| jefferson | 48245 | 122,202 |  | no-domain | sqft only |  |  |
-| hays | 48209 | 117,427 | Tyler ORION | orion-thin | beds+baths+sqft | hayscad.com | 2020 "fixed-length" export is actually ORION (Property/Owner/Exemption/Entity only — NO improvement/segment file, like Fort Bend). Improvements gap unfillable from this; beds came from an earlier source. Skip unless a segments export surfaces. |
-| mclennan | 48309 | 115,362 | unknown | unclassified | - | mclennancad.org |  |
-| henderson | 48213 | 106,708 | unknown | unclassified | - | hendersoncad.org |  |
-| comal | 48091 | 103,537 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | comalad.org |  |
-| johnson | 48251 | 101,847 | PACS/TrueAutomation (.tab) | PACS-loadable(custom) | sqft only | johnsoncad.com | JCAD external*.tab OR WEBIMPR.CSV extract -- needs tab parser |
-| parker | 48367 | 100,548 | Pritchard & Abbott | P&A-hard | - | parkercad.org |  |
-| ellis | 48139 | 98,803 | unknown | unclassified | - | elliscad.org |  |
-| webb | 48479 | 98,291 |  | no-domain | - |  |  |
-| guadalupe | 48187 | 95,571 | PACS/TrueAutomation | PACS-portal(no bulk found) | beds+baths+sqft | guadalupead.org |  |
-| kaufman | 48257 | 94,650 | PACS | PACS-loadable | beds+baths+sqft | kaufman-cad.org | Kaufman certified roll ATTR |
-| grayson | 48181 | 89,348 | PACS | PACS-loadable | baths+sqft | graysonappraisal.org | Grayson certified roll ATTR |
-| gregg | 48183 | 77,816 | PACS | PACS-loadable | beds+baths+sqft * | gcad.org | https://gcad.org/wp-content/uploads/2025/07/2025_gcad_certified_real_appraisal_data.zip |
-| ector | 48135 | 75,891 | unknown | unclassified | sqft only | ectorcad.com |  |
-| midland | 48329 | 75,645 | Pritchard & Abbott | P&A-hard | sqft only | midcad.org |  |
-| brazos | 48041 | 74,666 | PACS | PACS-loadable | beds+baths+sqft * | brazoscad.org | https://brazoscad.org/wp-content/uploads/2025/08/2025-CERTIFIED-EXPORT.zip |
-| taylor | 48441 | 70,598 | PACS | PACS-loadable | beds+baths+sqft * | taylor-cad.org | https://taylor-cad.org/wp-content/uploads/2026/06/TaylorCAD_2025_Cert_Appr_Roll_as_of_29Jun26.zip |
-| hunt | 48231 | 69,728 | unknown | unclassified | - | hunt-cad.org |  |
-| randall | 48381 | 64,824 | PACS (PRAD) | PACS-loadable | beds+baths+sqft | prad.org | Randall certified roll ATTR (loaded) |
-| bastrop | 48021 | 63,357 | PACS/TrueAutomation | PACS-portal(no bulk found) | beds+baths+sqft | bastropcad.org |  |
-| angelina | 48005 | 60,693 | PACS/TrueAutomation | PACS-loadable | sqft only * | angelinacad.org | https://www.angelinacad.org/media-records/2025Sup20_03102026.zip (open-records page; 'Plumbing'=FIXTURE counts — baths guarded off; beds not published) |
-| polk | 48373 | 60,178 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | polkcad.org |  |
-| wichita | 48485 | 58,742 | BIS Consultants | BIS-gis (sqft only) | - | wadtx.com | gis.bisclient.com/wichitacad |
-| tomgreen | 48451 | 58,686 | Pritchard & Abbott | P&A-hard | - | tomgreencad.com |  |
-| potter | 48375 | 53,490 | PACS (PRAD) | PACS-loadable | beds+baths+sqft | prad.org | Potter certified roll ATTR (loaded) |
-| bowie | 48037 | 53,212 | unknown | unclassified | - | bowie-cad.org |  |
-| rockwall | 48397 | 52,739 | unknown | unclassified | beds+baths+sqft | rockwallcad.com |  |
-| sanpatricio | 48409 | 51,385 | unknown | unclassified | - | sanpatriciocad.org |  |
-| hood | 48221 | 51,275 | Pritchard & Abbott | P&A-hard | - | hoodcad.net |  |
-| harrison | 48203 | 50,995 | unknown | unclassified | - | harrison-cad.org |  |
-| orange | 48361 | 50,337 | PACS (Property Data Export CSV) | PACS-loadable | sqft only * | orangecad.net | 2025-Certified-Export-Files.zip (Segment CSV; no beds published) |
-| burnet | 48053 | 50,138 | unknown | unclassified | - | burnetcad.org |  |
-| wise | 48497 | 48,705 | PACS | PACS-loadable | baths+sqft * | wise-cad.com | https://wise-cad.com/wp-content/uploads/2025/07/Certified-Roll-1_2025_07_23.zip |
-| waller | 48473 | 48,136 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | waller-cad.org |  |
-| nacogdoches | 48347 | 48,003 |  | no-domain | - |  |  |
-| cherokee | 48073 | 46,761 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | cherokeecad.com |  |
-| navarro | 48349 | 46,167 | Pritchard & Abbott | P&A-hard | - | navarrocad.com |  |
-| victoria | 48469 | 45,104 | Pritchard & Abbott | P&A-hard | - | victoriacad.org |  |
-| wood | 48499 | 44,576 | unknown | unclassified | - | woodcad.com |  |
-| medina | 48325 | 44,330 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | medinacad.org |  |
-| vanzandt | 48467 | 43,963 | unknown | unclassified | - | vzcad.org |  |
-| anderson | 48001 | 43,894 | unknown | unclassified | - | andersoncad.org |  |
-| hardin | 48199 | 41,635 | Pritchard & Abbott | P&A-hard | - | hardin-cad.org |  |
-| hill | 48217 | 39,355 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | hillcad.org |  |
-| llano | 48299 | 38,879 | unknown | unclassified | - | llanocad.org |  |
-| palopinto | 48363 | 38,698 |  | no-domain | - |  |  |
-| starr | 48427 | 38,571 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | starrcad.org |  |
-| rusk | 48401 | 37,967 | Pritchard & Abbott | P&A-hard | - | ruskcad.org |  |
-| chambers | 48071 | 37,510 | Pritchard & Abbott | P&A-hard | - | chamberscad.org |  |
-| matagorda | 48321 | 37,211 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | matagorda-cad.org | wp-uploads 2025_CERTIFIED_APPRAISAL_ROLL.zip is PDF-only (like Webb) -> PIA |
-| jasper | 48241 | 37,136 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | jaspercad.org |  |
-| kerr | 48265 | 36,913 | PACS | PACS-loadable | beds+baths+sqft * | kerrcad.org | https://kerrcad.org/wp-content/uploads/2025/11/2025-Cert-Export-Files.zip |
-| atascosa | 48013 | 36,791 | unknown | unclassified | - | atascosacad.org |  |
-| sanjacinto | 48407 | 36,346 |  | no-domain | - |  |  |
-| lamar | 48277 | 36,246 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | lamarcad.org |  |
-| walker | 48471 | 35,582 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | walkercad.org |  |
-| cass | 48067 | 34,816 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | casscad.org |  |
-| bandera | 48019 | 33,261 | unknown | unclassified | - | banderacad.org |  |
-| cooke | 48097 | 33,170 | unknown | unclassified | - | cookecad.org |  |
-| tyler | 48457 | 33,043 | unknown | unclassified | - | tylercad.org |  |
-| gillespie | 48171 | 32,351 | PACS | PACS-loadable | sqft only * | gillespiecad.org | https://gillespiecad.org/wp-content/uploads/2025/08/Gillespie-CAD-2025-Certified-Roll-Export.zip ('Plumbing'=presence flag — baths guarded off) |
-| wharton | 48481 | 31,888 | unknown | unclassified | - | whartoncad.net |  |
-| coryell | 48099 | 31,711 | PACS | PACS-loadable | beds+baths+sqft * | coryellcad.org | https://coryellcad.org/wp-content/uploads/2026/02/2025-Certified-Appraisal-Roll-as-of-Supplement-48.zip |
-| valverde | 48465 | 31,635 | unknown | unclassified | - | valverdecad.org |  |
-| brown | 48049 | 31,411 | unknown | unclassified | - | browncad.org |  |
-| upshur | 48459 | 30,293 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | upshur-cad.org |  |
-| kendall | 48259 | 29,986 | unknown | unclassified | - | kendallcad.org |  |
-| fannin | 48147 | 29,043 | Pritchard & Abbott | P&A-hard | - | fannincad.org |  |
-| wilson | 48493 | 28,827 | PACS/TrueAutomation | PACS-portal(no bulk found) | beds+baths+sqft | wilson-cad.org |  |
-| jimwells | 48249 | 27,944 | unknown | unclassified | - | jimwellscad.org |  |
-| jones | 48253 | 27,732 | Pritchard & Abbott | P&A-hard | - | jonescad.org |  |
-| grimes | 48185 | 27,711 | BIS-gis-embed | unclassified | - | grimescad.org |  |
-| leon | 48289 | 27,570 | Pritchard & Abbott | P&A-hard | - | leoncad.org |  |
-| burleson | 48051 | 27,282 | unknown | unclassified | - | burlesoncad.com |  |
-| aransas | 48007 | 26,690 | Pritchard & Abbott | P&A-hard | - | aransascad.org |  |
-| houston | 48225 | 26,611 | Pritchard & Abbott | P&A-hard | - | houstoncad.org |  |
-| caldwell | 48055 | 26,155 | PACS | PACS-loadable | beds+baths+sqft * | caldwellcad.org | https://caldwellcad.org/wp-content/uploads/2026/06/2026-Caldwell-CAD-export_June-5-2026.zip (posts fresh exports ~monthly) |
-| maverick | 48323 | 26,048 | unknown | unclassified | - | maverickcad.org |  |
-| trinity | 48455 | 25,952 | unknown | unclassified | - | trinitycad.com |  |
-| hopkins | 48223 | 25,149 | unknown | unclassified | - | hopkinscad.org |  |
-| montague | 48337 | 24,836 | unknown | unclassified | - | montaguecad.org |  |
-| erath | 48143 | 24,656 | unknown | unclassified | - | erathcad.org |  |
-| freestone | 48161 | 23,979 | Pritchard & Abbott | P&A-hard | - | freestonecad.org |  |
-| hudspeth | 48229 | 23,954 | PACS | PACS-loadable | sqft only * | hudspethcad.org | https://hudspethcad.org/wp-content/uploads/2023/08/2021-HUDSPETH-PRELIMINARY-ROLL-EXPORT.zip (2021 latest; ATTR ~empty, mostly land) |
-| fayette | 48149 | 23,882 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | fayettecad.org |  |
-| bee | 48025 | 23,864 | PACS | PACS-loadable | baths+sqft * | beecad.org | BEE-CAD-2025-CERTIFIED-APPRAISAL-ROLL-CSV.zip (no beds published) |
-| washington | 48477 | 23,475 | PACS | PACS-loadable | - | washingtoncad.org | https://washingtoncad.org/wp-content/uploads/2026/03/2025-Certified-Appraisal-Roll.zip |
-| sabine | 48403 | 23,352 | unknown | unclassified | - | sabinecad.org |  |
-| newton | 48351 | 23,278 | PACS | PACS-loadable | beds+baths+sqft * | newtoncad.org | https://newtoncad.org/wp-content/uploads/2025/08/2025-CERTIFIED-APP-ROLL.zip |
-| colorado | 48089 | 22,756 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | coloradocad.org |  |
-| calhoun | 48057 | 22,678 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | calhouncad.org |  |
-| austin | 48015 | 22,581 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | austincad.org |  |
-| limestone | 48293 | 21,727 | unknown | unclassified | - | limestonecad.com |  |
-| uvalde | 48463 | 21,722 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | uvaldecad.org |  |
-| eastland | 48133 | 21,448 | Pritchard & Abbott | P&A-hard | - | eastlandcad.org |  |
-| shelby | 48419 | 21,378 | Pritchard & Abbott | P&A-hard | - | shelbycad.com |  |
-| milam | 48331 | 20,992 | unknown | unclassified | - | milamcad.org |  |
-| titus | 48449 | 20,833 | PACS | PACS-loadable | sqft only * | titus-cad.org | https://titus-cad.org/wp-content/uploads/2026/03/2025-CERTIFIED-AS-OF-LAST-SUPP.zip (beds/baths published only sparsely) |
-| dewitt | 48123 | 20,802 | Pritchard & Abbott | P&A-hard | - | dewittcad.org |  |
-| howard | 48227 | 20,654 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | howardcad.org | publishes only collector tax-roll CSVs (no improvement files) -> PIA |
-| gonzales | 48177 | 20,420 | Pritchard & Abbott | P&A-hard | - | gonzalescad.org |  |
-| brewster | 48043 | 20,287 | unknown | unclassified | - | brewstercad.org |  |
-| bosque | 48035 | 19,975 | unknown | unclassified | - | bosquecad.org |  |
-| marion | 48315 | 19,841 | unknown | unclassified | - | marioncad.org |  |
-| lavaca | 48285 | 19,767 | PACS | PACS-loadable | baths+sqft * | lavacacad.com | https://lavacacad.com/wp-content/uploads/2025/07/2025-CERTIFIED-REAL-PROPERTY-FILES.zip (no beds published) |
-| hale | 48189 | 19,108 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | halecad.org |  |
-| hutchinson | 48233 | 18,938 | Pritchard & Abbott | P&A-hard | - | hutchinsoncad.org |  |
-| panola | 48365 | 18,812 | Pritchard & Abbott | P&A-hard | - | panolacad.org |  |
-| falls | 48145 | 18,581 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | fallscad.net |  |
-| jackson | 48239 | 18,453 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | jacksoncad.org |  |
-| presidio | 48377 | 18,436 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | presidiocad.org |  |
-| comanche | 48093 | 17,580 | PACS | PACS-loadable | beds+baths+sqft * | comanchecad.org | https://comanchecad.org/wp-content/uploads/2025/07/Cert-Real-Roll-100000-Ex.zip |
-| hockley | 48219 | 17,242 | PACS | PACS-loadable | baths+sqft * | hockleycad.org | https://www.hockleycad.org/wp-content/uploads/2026/04/2026-PRELIMINARY-APPRAISAL-ROLL.zip (no beds published) |
-| robertson | 48395 | 16,935 | unknown | unclassified | - | robertsoncad.org |  |
-| liveoak | 48297 | 16,839 |  | no-domain | - |  |  |
-| gaines | 48165 | 16,576 | PACS | PACS-loadable | - | gainescad.org | https://gainescad.org/wp-content/uploads/2026/04/2025-Gaines-Real-Certified.zip |
-| lampasas | 48281 | 16,541 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | lampasascad.com |  |
-| franklin | 48159 | 16,540 | Pritchard & Abbott | P&A-hard | - | franklin-cad.org |  |
-| young | 48503 | 16,353 | Pritchard & Abbott | P&A-hard | - | youngcad.org |  |
-| gray | 48179 | 16,251 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | graycad.org |  |
-| lee | 48287 | 16,090 | unknown | unclassified | - | leecad.org |  |
-| dimmit | 48127 | 15,542 | PACS | PACS-loadable | - | dimmit-cad.org | https://dimmit-cad.org/wp-content/uploads/2025/08/2025-REAL-MH-CERTIFIED-ROLL.zip |
-| ward | 48475 | 15,174 | Pritchard & Abbott | P&A-hard | - | wardcad.org |  |
-| runnels | 48399 | 15,008 | unknown | unclassified | - | runnelscad.org |  |
-| reeves | 48389 | 14,975 | unknown | unclassified | - | reevescad.org |  |
-| kleberg | 48273 | 14,909 | unknown | unclassified | - | klebergcad.org |  |
-| duval | 48131 | 14,772 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | duvalcad.org |  |
-| pecos | 48371 | 14,720 | Pritchard & Abbott | P&A-hard | - | pecoscad.org |  |
-| karnes | 48255 | 14,436 | Pritchard & Abbott | P&A-hard | - | karnescad.org |  |
-| blanco | 48031 | 14,269 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | blancocad.com |  |
-| hamilton | 48193 | 14,253 | Pritchard & Abbott | P&A-hard | - | hamiltoncad.org |  |
-| willacy | 48489 | 13,989 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | willacycad.org |  |
-| lamb | 48279 | 13,871 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | lambcad.org |  |
-| scurry | 48415 | 13,849 |  | no-domain | - |  |  |
-| redriver | 48387 | 13,728 | unknown | unclassified | - | redrivercad.org |  |
-| clay | 48077 | 13,501 | Pritchard & Abbott | P&A-hard | - | claycad.org |  |
-| culberson | 48109 | 13,327 | unknown | unclassified | - | culbersoncad.org |  |
-| floyd | 48153 | 13,217 |  | no-domain | - |  |  |
-| nolan | 48353 | 13,216 | Pritchard & Abbott | P&A-hard | - | nolan-cad.org |  |
-| frio | 48163 | 13,213 | Pritchard & Abbott | P&A-hard | - | friocad.org |  |
-| coleman | 48083 | 12,839 | unknown | unclassified | - | colemancad.org |  |
-| sanaugustine | 48405 | 12,722 | Pritchard & Abbott | P&A-hard | - | sanaugustinecad.org |  |
-| stephens | 48429 | 12,647 | Pritchard & Abbott | P&A-hard | - | stephenscad.com |  |
-| zapata | 48505 | 12,623 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | zapatacad.com |  |
-| refugio | 48391 | 12,478 | Pritchard & Abbott | P&A-hard | - | refugiocad.org |  |
-| rains | 48379 | 12,301 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | rainscad.org |  |
-| moore | 48341 | 12,256 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | moorecad.org |  |
-| callahan | 48059 | 12,064 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | callahancad.org | publishes only tax-roll books (no improvement files) -> PIA |
-| wilbarger | 48487 | 11,894 | unknown | unclassified | - | wilbargercad.org |  |
-| jack | 48237 | 11,866 | unknown | unclassified | - | jackcad.org |  |
-| morris | 48343 | 11,857 | unknown | unclassified | - | morriscad.org |  |
-| camp | 48063 | 11,652 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | campcad.org |  |
-| sansaba | 48411 | 11,591 | Pritchard & Abbott | P&A-hard | - | sansabacad.org |  |
-| lipscomb | 48295 | 11,030 |  | no-domain | - |  |  |
-| kinney | 48271 | 11,010 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | kinneycad.org |  |
-| deafsmith | 48117 | 10,901 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | deafsmithcad.org |  |
-| mcculloch | 48307 | 10,778 | Pritchard & Abbott | P&A-hard | - | mccullochcad.org |  |
-| andrews | 48003 | 10,522 | PACS | PACS-loadable | baths+sqft * | andrewscad.org | https://andrewscad.org/wp-content/uploads/2024/08/2024-Certified-Appraisal-Roll.zip (deflate64 — Explorer-COM extract + repack; sparse beds) |
-| lasalle | 48283 | 10,341 |  | no-domain | - |  |  |
-| goliad | 48175 | 10,314 | Pritchard & Abbott | P&A-hard | - | goliadcad.org |  |
-| madison | 48313 | 10,307 | Pritchard & Abbott | P&A-hard | - | madisoncad.org |  |
-| edwards | 48137 | 9,948 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | edwardscad.org |  |
-| zavala | 48507 | 9,744 | Pritchard & Abbott | P&A-hard | - | zavalacad.com |  |
-| dawson | 48115 | 9,676 | Pritchard & Abbott | P&A-hard | - | dawsoncad.org |  |
-| archer | 48009 | 9,653 | Pritchard & Abbott | P&A-hard | - | archercad.org |  |
-| kimble | 48267 | 9,556 | PACS | PACS-loadable | - | kimblecad.org | https://kimblecad.org/wp-content/uploads/2025/09/2025-CERTIFIED-APPRAISAL-ROLL.zip |
-| motley | 48345 | 9,374 |  | no-domain | - |  |  |
-| haskell | 48207 | 9,370 | Pritchard & Abbott | P&A-hard | - | haskellcad.org |  |
-| crockett | 48105 | 9,113 | Pritchard & Abbott | P&A-hard | - | crockettcad.org |  |
-| terry | 48445 | 9,113 | unknown | unclassified | - | terrycad.org |  |
-| mason | 48319 | 9,096 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | masoncad.org |  |
-| mills | 48333 | 9,025 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | millscad.org |  |
-| mitchell | 48335 | 8,743 | PACS | PACS-loadable | sqft only * | mitchellcad.org | https://mitchellcad.org/wp-content/uploads/2024/08/2024-Certified-Roll-all-types-Properties.zip (sparse beds/baths) |
-| real | 48385 | 8,272 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | realcad.org |  |
-| coke | 48081 | 8,271 | Pritchard & Abbott | P&A-hard | - | cokecad.org |  |
-| concho | 48095 | 8,034 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | conchocad.org |  |
-| upton | 48461 | 7,846 | Pritchard & Abbott | P&A-hard | - | uptoncad.org |  |
-| wheeler | 48483 | 7,676 | Pritchard & Abbott | P&A-hard | - | wheelercad.org |  |
-| lynn | 48305 | 7,324 | Pritchard & Abbott | P&A-hard | - | lynncad.org |  |
-| yoakum | 48501 | 7,291 | PACS | PACS-loadable | baths+sqft * | yoakumcad.org | https://yoakumcad.org/wp-content/uploads/2025/09/2025-CERTIFIED-APPRAISAL-ROLL.zip (deflate64 — Explorer-COM extract + repack; no beds published) |
-| martin | 48317 | 7,255 | Pritchard & Abbott | P&A-hard | - | martincad.org |  |
-| winkler | 48495 | 7,234 | Pritchard & Abbott | P&A-hard | - | winklercad.org |  |
-| jeffdavis | 48243 | 7,175 | Pritchard & Abbott | P&A-hard | - | jeffdaviscad.org |  |
-| hardeman | 48197 | 6,958 | Pritchard & Abbott | P&A-hard | - | hardemancad.org |  |
-| crane | 48103 | 6,913 | Pritchard & Abbott | P&A-hard | - | cranecad.org |  |
-| somervell | 48425 | 6,823 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | somervellcad.org |  |
-| fisher | 48151 | 6,817 | Pritchard & Abbott | P&A-hard | - | fishercad.org |  |
-| carson | 48065 | 6,710 | Pritchard & Abbott | P&A-hard | - | carsoncad.org |  |
-| crosby | 48107 | 6,670 | unknown | unclassified | - | crosbycad.org |  |
-| swisher | 48437 | 6,657 | Pritchard & Abbott | P&A-hard | - | swisher-cad.org |  |
-| parmer | 48369 | 6,606 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | parmercad.org |  |
-| garza | 48169 | 6,583 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | garzacad.org |  |
-| schleicher | 48413 | 6,559 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | schleichercad.org |  |
-| ochiltree | 48357 | 6,521 | Pritchard & Abbott | P&A-hard | - | ochiltreecad.org |  |
-| castro | 48069 | 6,466 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | castrocad.org |  |
-| delta | 48119 | 6,461 | PACS | PACS-loadable | baths+sqft * | delta-cad.org | https://delta-cad.org/wp-content/uploads/2025/12/1733946367_2024-10-02_000533_APPRAISAL_ABSTRACT_SUBDV-2024-Certified-Tax-Roll.zip (dwelling cd is bare 'RES') |
-| knox | 48275 | 6,408 | unknown | unclassified | - | knoxcad.org |  |
-| baylor | 48023 | 6,349 | Pritchard & Abbott | P&A-hard | - | baylorcad.org |  |
-| hall | 48191 | 6,347 | Pritchard & Abbott | P&A-hard | - | hallcad.org |  |
-| dallam | 48111 | 6,271 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | dallamcad.org |  |
-| bailey | 48017 | 6,044 | unknown | unclassified | - | baileycad.org |  |
-| childress | 48075 | 6,030 | Pritchard & Abbott | P&A-hard | - | childresscad.org |  |
-| sutton | 48435 | 5,905 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | suttoncad.com |  |
-| hansford | 48195 | 5,867 | unknown | unclassified | - | hansfordcad.org |  |
-| brooks | 48047 | 5,739 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | brookscad.org |  |
-| cochran | 48079 | 5,735 | unknown | unclassified | - | cochrancad.org |  |
-| collingsworth | 48087 | 5,735 | Pritchard & Abbott | P&A-hard | - | collingsworthcad.org |  |
-| menard | 48327 | 5,708 | Pritchard & Abbott | P&A-hard | - | menardcad.org |  |
-| hartley | 48205 | 5,645 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | hartleycad.org |  |
-| terrell | 48443 | 5,562 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | terrellcad.org |  |
-| shackelford | 48417 | 5,542 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | shackelfordcad.com |  |
-| foard | 48155 | 5,393 | Pritchard & Abbott | P&A-hard | - | foardcad.org |  |
-| stonewall | 48433 | 5,203 | Pritchard & Abbott | P&A-hard | - | stonewallcad.org |  |
-| dickens | 48125 | 4,744 | Pritchard & Abbott | P&A-hard | - | dickenscad.org |  |
-| hemphill | 48211 | 4,685 | unknown | unclassified | - | hemphillcad.org |  |
-| throckmorton | 48447 | 4,664 | Pritchard & Abbott | P&A-hard | - | throckmortoncad.org |  |
-| reagan | 48383 | 4,606 | Pritchard & Abbott | P&A-hard | - | reagancad.org |  |
-| jimhogg | 48247 | 4,441 | Pritchard & Abbott | P&A-hard | - | jimhogg-cad.org |  |
-| cottle | 48101 | 4,373 | Pritchard & Abbott | P&A-hard | - | cottlecad.org |  |
-| mcmullen | 48311 | 4,188 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | mcmullencad.org |  |
-| oldham | 48359 | 4,162 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | oldhamcad.org |  |
-| briscoe | 48045 | 4,091 | Pritchard & Abbott | P&A-hard | - | briscoecad.org |  |
-| armstrong | 48011 | 4,058 | Pritchard & Abbott | P&A-hard | - | armstrongcad.org |  |
-| borden | 48033 | 3,752 | Pritchard & Abbott | P&A-hard | - | bordencad.org |  |
-| irion | 48235 | 3,615 | Pritchard & Abbott | P&A-hard | - | irioncad.org |  |
-| kent | 48263 | 3,598 | Pritchard & Abbott | P&A-hard | - | kentcad.org |  |
-| sherman | 48421 | 3,531 | Pritchard & Abbott | P&A-hard | - | shermancad.org |  |
-| glasscock | 48173 | 2,988 | Pritchard & Abbott | P&A-hard | - | glasscockcad.org |  |
-| roberts | 48393 | 2,574 | Pritchard & Abbott | P&A-hard | - | robertscad.org |  |
-| sterling | 48431 | 2,364 | Pritchard & Abbott | P&A-hard | - | sterlingcad.org |  |
-| king | 48269 | 2,313 | Pritchard & Abbott | P&A-hard | - | kingcad.org |  |
-| loving | 48301 | 1,914 | Pritchard & Abbott | P&A-hard | - | lovingcad.org |  |
-| kenedy | 48261 | 538 | PACS/TrueAutomation | PACS-portal(no bulk found) | - | kenedycad.org |  |
+
+| County | FIPS | Parcels | Status | Improv% | Beds% | Sale% | Exempt% | Price | Vendor / Access | Notes |
+|---|---|---:|---|---:|---:|---:|---:|---:|---|---|
+| Harris | 48201 | 1,523,641 | MINED | 41 | 82 | 0 | 0 | — | PACS/HCAD | download.hcad.org CAMA fixtures.txt (beds/baths) |
+| Travis | 48453 | 828,773 | MINED | 41 | 12 | 0 | 0 | — | PACS/TP data-lane | traviscad.org /publicinformation improvement_detail_2026.zip; coded rows 252=beds/251=baths |
+| Tarrant | 48439 | 757,161 | MINED | 91 | 0 | 98 | 55 | — | TP static bulk | tad.org/content/data-download (703MB); BEDS CONFIRMED UNAVAILABLE — TAD withholds counts in every file, records-request won't help |
+| Bexar | 48029 | 709,541 | MINED | 88 | 83 | 0 | 0 | — | PACS→SARA GIS | SARA BCAD_Parcels_PROD FeatureServer |
+| Dallas | 48113 | 694,160 | MINED | 77 | 83 | 0 | 0 | — | PACS/TrueAutomation | DCAD RES_ADDL + RES_DETAIL.CSV bulk beds |
+| Elpaso | 48141 | 407,130 | MINED | 64 | 38 | 0 | 0 | — | PACS/EPCAD |  |
+| Collin | 48085 | 387,737 | MINED | 0 | 74 | 97 | 67 | — | PACS/MDB | Collin MDB has beds/baths/pool; improvements text-array empty (already mined via structured cols) |
+| Fortbend | 48157 | 375,097 | MINED | 75 | 50 | 0 | 0 | — | Orion | thin — Property/Owner/Exemption/Entity only, no improvement/segment file; LOW yield, sqft only |
+| Denton | 48121 | 353,631 | MINED | 88 | 75 | 96 | 62 | — | PACS/open-Apache-dir | dentoncad.net/data/_uploaded/.../datafiles/ FULL: improv 311K beds 265K sqft 314K sale 338K exempt 220K |
+| Hidalgo | 48215 | 328,322 | SIGNAL | 0 | 0 | 93 | 47 | — | HCAD shapefile mdb | hidalgoad.org data-downloads; PARTIAL (sqft/year/sale/exempt, no segments/beds). TP export confirmed absent (136 reports, all PDF) |
+| Montgomery | 48339 | 320,915 | MINED | 74 | 0 | 91 | 54 | — | PACS/Google-Drive | mcad-tx.org/appraisal-data-exports TP-CMS; improv 239K sale 291K exempt 174K baths 215K(3.94); beds ABSENT (ATTR name-only, no count) |
+| Williamson | 48491 | 282,983 | MINED | 87 | 24 | 82 | 0 | — | Socrata (WCAD) | data.wcad.org Segment+PropChar feeds; FULL improv+sale |
+| Brazoria | 48039 | 275,131 | MINED | 62 | 0 | 78 | 40 | — | PACS/pcloud | brazoriacad.org pcloud publink; improv 170K sale 216K exempt 109K; beds ABSENT (ATTR has no bedroom attr) |
+| Galveston | 48167 | 188,695 | MINED | 78 | 1 | 86 | 45 | — | PACS | galvestoncad.org wp-content zip; improv 147K sale 162K exempt 85K |
+| Cameron | 48061 | 185,062 | MINED | 75 | 20 | 95 | 39 | — | appraisal_info dash-fix | deed_dt dashed MM-DD-YYYY; sale 175K exempt 71K |
+| Bell | 48027 | 167,412 | MINED | 78 | 11 | 0 | 0 | — | PACS | Bell certified roll ATTR |
+| Liberty | 48291 | 162,275 | MINED | 34 | 3 | 0 | 0 | — |  |  |
+| Nueces | 48355 | 157,198 | MINED | 79 | 6 | 90 | 46 | — |  |  |
+| Smith | 48423 | 140,245 | SIGNAL | 0 | 0 | 0 | 0 | — | GSA gsacorp.io — RECORDS-REQUEST | CAMA session/POST-export gated (no static file); partial deed via Tax_Parcels_Improvements FS (+221, ~12% condo-subset). Ask GSA cert-roll, (903) 510-8600 |
+| Lubbock | 48303 | 135,112 | SIGNAL | 0 | 0 | 95 | 0 | — | BIS/Orion direct | gis.lubbockcad.org MapServer/129 FULL: sqft 106K year 108K sale 129K. No beds (Rec4/5 export discontinued ~2015) |
+| Jefferson | 48245 | 122,202 | MINED | 71 | 0 | 0 | 0 | — |  |  |
+| Hays | 48209 | 117,427 | MINED | 74 | 13 | 0 | 0 | — | Orion | thin, like Fort Bend — no improvement/segment file |
+| Mclennan | 48309 | 115,362 | MINED | 77 | 0 | 84 | 42 | — | PACS/deflate64 Wayback | mclennancad.org 2022 export via Shell-COM extract; improv 89K sale 97K exempt 48K baths 75K(1.83, numbered attrs) |
+| Henderson | 48213 | 106,708 | SIGNAL | 0 | 0 | 24 | 0 | — | BIS FS direct | services7.arcgis.com/4x7oelC9W8TNucjG/HendersonCADWebService; sale 26K only |
+| Comal | 48091 | 103,537 | SIGNAL | 0 | 0 | 95 | 0 | — | BIS FS direct | services7.arcgis.com/Yz6eib2o8WvEgWq8/ComalCADWebService; sale 98K only |
+| Johnson | 48251 | 101,847 | MINED | 72 | 0 | 0 | 0 | — | PACS .tab custom | johnsoncad.com WEBIMPR.CSV; GSA-lever reference county for Smith |
+| Parker | 48367 | 100,548 | SIGNAL | 0 | 0 | 92 | 0 | — | BIS FS | services.arcgis.com/79g1H99xInKSRRK3; sale 92,836 only, deed-only no sqft |
+| Ellis | 48139 | 98,803 | MINED | 81 | 0 | 95 | 53 | — |  |  |
+| Webb | 48479 | 98,291 | MINED | 82 | 0 | 90 | 43 | — |  |  |
+| Guadalupe | 48187 | 95,571 | MINED | 78 | 37 | 93 | 48 | — |  |  |
+| Kaufman | 48257 | 94,650 | MINED | 78 | 4 | 91 | 50 | — | PACS | kaufman-cad.org; improv 74K sale 87K exempt 47K baths(1.90) |
+| Grayson | 48181 | 89,348 | MINED | 68 | 0 | 0 | 0 | — |  |  |
+| Gregg | 48183 | 77,816 | MINED | 74 | 16 | 0 | 0 | — | PACS — KEY MISMATCH | GCAD_Export prop_id space ≠ DB source_property_id; unresolved, needs geo_id crosswalk |
+| Ector | 48135 | 75,891 | SIGNAL | 20 | 0 | 68 | 42 | — | GSA xlsx | load_gsa_roll_xlsx.py; sqft 58K sale 52K exempt 32K improv 15K(feature types) |
+| Midland | 48329 | 75,645 | MINED | 75 | 0 | 88 | 46 | — | P&A export_web | load_pa_export.py webbld/websale/webprop |
+| Brazos | 48041 | 74,666 | MINED | 86 | 51 | 0 | 0 | — |  |  |
+| Taylor | 48441 | 70,598 | MINED | 74 | 29 | 0 | 0 | — |  |  |
+| Hunt | 48231 | 69,728 | SIGNAL | 0 | 0 | 89 | 0 | — | BIS FS direct | services3.arcgis.com/GIIiqmeq0npieHV9/HuntCADWebService; sale 62K year 48K. Full CAMA is SharePoint-login-gated — records-request |
+| Randall | 48381 | 64,824 | MINED | 85 | 75 | 100 | 53 | — |  |  |
+| Bastrop | 48021 | 63,357 | MINED | 66 | 0 | 92 | 38 | — |  |  |
+| Angelina | 48005 | 60,693 | MINED | 63 | 0 | 94 | 36 | — | PACS | 'Plumbing'=fixture counts → baths guarded off |
+| Polk | 48373 | 60,178 | MINED | 44 | 30 | 94 | 19 | — |  |  |
+| Wichita | 48485 | 58,742 | MINED | 80 | 68 | 95 | 44 | — | PACS | wadtx.com; improv 47K BEDS 40K sale 56K exempt 26K baths(1.65) |
+| Tomgreen | 48451 | 58,686 | SIGNAL | 0 | 0 | 98 | 0 | — | BIS FS | services5.arcgis.com/3KYdtBnAMnav1mt9; sale 57,764 only |
+| Potter | 48375 | 53,490 | MINED | 80 | 63 | 100 | 35 | — |  |  |
+| Bowie | 48037 | 53,212 | SIGNAL | 0 | 0 | 50 | 41 | — | Drive ownership.csv | year 19K sale 27K homestead 22K (derived HS values>0) |
+| Rockwall | 48397 | 52,739 | MINED | 87 | 49 | 97 | 63 | — | appraisal_info dash-fix | sale 51K exempt 33K |
+| Sanpatricio | 48409 | 51,385 | MINED | 64 | 0 | 57 | 36 | — | PACS | sanpatcad.org; improv 33K sale 29K exempt 18K; beds ABSENT |
+| Hood | 48221 | 51,275 | MINED | 65 | 0 | 93 | 39 | — |  |  |
+| Harrison | 48203 | 50,995 | MINED | 57 | 0 | 3 | 33 | — | TP-token FULL PACS | RAW token, 'DATA EXPORTS' category; improv 29K exempt 17K; beds ABSENT(material-code ATTR); sale sparse (9814-wide INFO offset issue) |
+| Orange | 48361 | 50,337 | MINED | 47 | 0 | 0 | 0 | — |  |  |
+| Burnet | 48053 | 50,138 | SIGNAL | 0 | 0 | 92 | 0 | — | BIS FS | sale 46K year 25K |
+| Wise | 48497 | 48,705 | MINED | 67 | 0 | 49 | 0 | — |  |  |
+| Waller | 48473 | 48,136 | SIGNAL | 0 | 0 | 88 | 0 | — |  |  |
+| Nacogdoches | 48347 | 48,003 | SIGNAL | 0 | 0 | 17 | 38 | — | PACS abbreviated | nacocad.org (NOT nacogdochescad.org), INFO-only; sale 8K exempt 18K |
+| Cherokee | 48073 | 46,761 | SIGNAL | 0 | 0 | 90 | 0 | — | BIS FS | sale 42K year 16K |
+| Navarro | 48349 | 46,167 | GEOM-ONLY | 0 | 0 | 0 | 0 | — | P&A ArcGIS (pandai) | value+Is_Exempt+deed-vol/page; MARGINAL, not loaded (exempt flag not code-mappable) |
+| Victoria | 48469 | 45,104 | MINED | 76 | 58 | 86 | 42 | — |  |  |
+| Wood | 48499 | 44,576 | MINED | 54 | 0 | 87 | 32 | — | PACS | woodcad.net; improv 24K sale 39K exempt 14K; baths fixture-only dropped |
+| Medina | 48325 | 44,330 | SIGNAL | 0 | 0 | 88 | 0 | — | BIS FS | sale 39K year 25K (needs Referer) |
+| Vanzandt | 48467 | 43,963 | SIGNAL | 0 | 0 | 93 | 0 | — | BIS FS | sale 41K |
+| Anderson | 48001 | 43,894 | GEOM-ONLY | 0 | 0 | 0 | 0 | — | TP — RECORDS-REQUEST | reports all-PDF, bulk API 401; advancedsearch gives owner/value/legal only (not loaded, no signal fields) |
+| Hardin | 48199 | 41,635 | MINED | 53 | 0 | 19 | 39 | — | PACS | hardin-cad.org; improv 22K exempt 16K baths(1.37); beds negligible (367 rows) |
+| Hill | 48217 | 39,355 | SIGNAL | 0 | 0 | 33 | 0 | 12,774 | GIS DBF (Parcels_export.dbf) | sale 13K + SALE PRICE 12,774 (sl_price!) + year — the ONLY county with real sale prices |
+| Llano | 48299 | 38,879 | SIGNAL | 0 | 0 | 87 | 0 | — | BIS AGOL | services.arcgis.com/3fXpNNO2cx0O3RtY; sale 34K year 18K |
+| Palopinto | 48363 | 38,698 | GEOM-ONLY | 0 | 0 | 0 | 0 | — | RECORDS-REQUEST (confirmed 07-16) | SWData 403 on every host; StratMap YEAR_BUILT empty; exhaustive crawl found no bulk |
+| Starr | 48427 | 38,571 | SIGNAL | 0 | 0 | 56 | 0 | — | GIS DBF (Ownership.dbf, 2021) | sale 22K |
+| Rusk | 48401 | 37,967 | SIGNAL | 0 | 0 | 0 | 9 | — | Harris-eSearch — PARTIAL | site IP-locked (UserLockedOut); loaded 3,303 exempt via Wayback-truncated CSV (86% verified join); retry live URL later for ~25K more rows |
+| Chambers | 48071 | 37,510 | SIGNAL | 0 | 0 | 0 | 38 | — | Harris-eSearch | chamberscad.org; exempt 14K |
+| Matagorda | 48321 | 37,211 | SIGNAL | 0 | 0 | 81 | 0 | — | GIS DBF (2024-GIS-DATA.zip) | sale 30K; the certified roll itself is PDF-only |
+| Jasper | 48241 | 37,136 | MINED | 41 | 0 | 38 | 21 | — | PACS (misnamed zip) | 2020 vintage; improv 15K sale 14K exempt 8K |
+| Kerr | 48265 | 36,913 | MINED | 61 | 22 | 88 | 0 | — |  |  |
+| Atascosa | 48013 | 36,791 | SIGNAL | 0 | 0 | 71 | 0 | — | BIS FS | sale 26K year 21K |
+| Sanjacinto | 48407 | 36,346 | MINED | 44 | 4 | 83 | 22 | — |  |  |
+| Lamar | 48277 | 36,246 | MINED | 65 | 6 | 81 | 33 | — | PACS-portal | AG bare code 7,847 rows; GIS-only per crawl, unresolved |
+| Walker | 48471 | 35,582 | SIGNAL | 0 | 0 | 85 | 0 | — | dead-end | notice PDFs only, unresolved |
+| Cass | 48067 | 34,816 | SIGNAL | 0 | 0 | 77 | 0 | — | BIS FS | sale 27K year 16K |
+| Bandera | 48019 | 33,261 | MINED | 44 | 0 | 74 | 19 | — |  |  |
+| Cooke | 48097 | 33,170 | MINED | 65 | 49 | 86 | 32 | — | TP-token FULL PACS | improv 21K sale 29K exempt 11K BEDS 16K baths(1.75) |
+| Tyler | 48457 | 33,043 | SIGNAL | 0 | 0 | 84 | 0 | — | PACS/esearch | has improvements internally; export is records-request only (PIA target) |
+| Gillespie | 48171 | 32,351 | MINED | 65 | 1 | 84 | 25 | — | PACS | 'Plumbing'=presence flag, baths guarded off |
+| Wharton | 48481 | 31,888 | GEOM-ONLY | 0 | 0 | 0 | 0 | — | RECORDS-REQUEST ($40 CD) | 979-532-8931; BIS FS found but Deed_Date/Vol/Page 100% EMPTY — not loaded (no usable fields) |
+| Coryell | 48099 | 31,711 | MINED | 77 | 7 | 86 | 44 | — |  |  |
+| Valverde | 48465 | 31,635 | MINED | 59 | 0 | 90 | 31 | — | PACS (Google Drive) | valverdecad.org TP-CMS; improv 19K sale 29K exempt 10K |
+| Brown | 48049 | 31,411 | MINED | 68 | 15 | 83 | 30 | — | PACS | brown-cad.org (hyphen); improv 21K sale 26K exempt 10K beds 4.6K baths(1.53) |
+| Upshur | 48459 | 30,293 | SIGNAL | 0 | 0 | 73 | 0 | — | BIS FS | sale 22K year 15K |
+| Kendall | 48259 | 29,986 | SIGNAL | 0 | 0 | 90 | 0 | — | BIS FS | sale 27K year 19K |
+| Fannin | 48147 | 29,043 | SIGNAL | 0 | 0 | 94 | 0 | — | BIS FS | needs Referer; sale 27K year 16K |
+| Wilson | 48493 | 28,827 | MINED | 70 | 3 | 84 | 45 | — | PACS | wilson-cad.org 2024 (NOT wilsoncad.org); improv 20K sale 24K exempt 13K baths(1.82) |
+| Jimwells | 48249 | 27,944 | GEOM-ONLY | 0 | 0 | 0 | 0 | — | TP per-property — DEFERRED | searchfulltext+/improvement exists but is per-parcel (mass-harvest vetoed) |
+| Jones | 48253 | 27,732 | SIGNAL | 0 | 0 | 0 | 18 | — | Harris-eSearch | jonescad.org; exempt 4,925 |
+| Grimes | 48185 | 27,711 | SIGNAL | 0 | 0 | 89 | 0 | — | dead-end (print report) | 96MB fixed-width PRINT roll, painful to parse; effectively records-request |
+| Leon | 48289 | 27,570 | SIGNAL | 0 | 0 | 0 | 15 | — | Harris-eSearch | leoncad.org; exempt 4,233 |
+| Burleson | 48051 | 27,282 | GEOM-ONLY | 0 | 0 | 0 | 0 | — | BIS eSearch per-property — DEFERRED | GetImprovements?propertyId= is per-parcel (mass-harvest vetoed) |
+| Aransas | 48007 | 26,690 | MINED | 61 | 29 | 85 | 25 | — | PACS | improv 16.2K beds 7.6K sale 22.7K |
+| Houston | 48225 | 26,611 | SIGNAL | 0 | 0 | 0 | 18 | — | Harris-eSearch | exemptions loaded |
+| Caldwell | 48055 | 26,155 | MINED | 75 | 34 | 88 | 33 | — |  |  |
+| Maverick | 48323 | 26,048 | GEOM-ONLY | 0 | 0 | 0 | 0 | — | TP per-property — DEFERRED | improvement endpoint returns EMPTY (district config hides segments) |
+| Trinity | 48455 | 25,952 | MINED | 31 | 1 | 55 | 14 | — | PACS | trinitycad.net; 8.0K improv sale 14.3K |
+| Hopkins | 48223 | 25,149 | GEOM-ONLY | 0 | 0 | 0 | 0 | — | RECORDS-REQUEST (confirmed 07-16) | SDS SignalR-only, no COLLECTORS.zip on any host — exhaustive crawl found nothing free |
+| Montague | 48337 | 24,836 | GEOM-ONLY | 0 | 0 | 0 | 0 | — | RECORDS-REQUEST (confirmed 07-16) | SDS Blazor SignalR-only ('MORE' dropdown opened & checked); free PDF exemption-list fallback only |
+| Erath | 48143 | 24,656 | GEOM-ONLY | 0 | 0 | 0 | 0 | — | BIS FS oversized — DEFERRED | 123K rows for 24K parcels, fetch times out; needs where-filter tuning. Domain erath-cad.com |
+| Freestone | 48161 | 23,979 | SIGNAL | 0 | 0 | 0 | 20 | — | Harris-eSearch | exemptions loaded |
+| Hudspeth | 48229 | 23,954 | SIGNAL | 5 | 0 | 23 | 2 | — | PACS — STALE | newest export is 2021 |
+| Fayette | 48149 | 23,882 | SIGNAL | 0 | 0 | 82 | 28 | — | GIS DBF (Ownership.dbf) | sqft 13K sale 20K exempt 6.7K |
+| Bee | 48025 | 23,864 | MINED | 57 | 0 | 0 | 0 | — |  |  |
+| Washington | 48477 | 23,475 | MINED | 74 | 36 | 17 | 41 | — | PACS |  |
+| Sabine | 48403 | 23,352 | SIGNAL | 0 | 0 | 89 | 18 | — | SWData COLLECTORS export | load_swdata_collectors.py; sale 20,774 exempt 4,212 |
+| Newton | 48351 | 23,278 | MINED | 42 | 29 | 64 | 19 | — |  |  |
+| Colorado | 48089 | 22,756 | SIGNAL | 0 | 0 | 76 | 0 | — | BIS FS | sale 17K |
+| Calhoun | 48057 | 22,678 | SIGNAL | 0 | 0 | 87 | 0 | — | BIS FS (geo join) | sale 20K |
+| Austin | 48015 | 22,581 | SIGNAL | 0 | 0 | 95 | 0 | — | BIS FS | sale 22K year 14K |
+| Limestone | 48293 | 21,727 | MINED | 57 | 0 | 86 | 23 | — | TP-token FULL PACS | improv 12K sale 19K exempt 5K baths(1.56) |
+| Uvalde | 48463 | 21,722 | SIGNAL | 0 | 0 | 94 | 0 | — |  |  |
+| Eastland | 48133 | 21,448 | SIGNAL | 0 | 0 | 0 | 22 | — |  |  |
+| Shelby | 48419 | 21,378 | SIGNAL | 0 | 0 | 82 | 0 | — | Wix static — dead end |  |
+| Milam | 48331 | 20,992 | MINED | 61 | 3 | 83 | 31 | — | PACS | 12.8K improv sale 17.4K |
+| Titus | 48449 | 20,833 | MINED | 65 | 1 | 82 | 33 | — |  |  |
+| Dewitt | 48123 | 20,802 | SIGNAL | 0 | 0 | 0 | 20 | — |  |  |
+| Howard | 48227 | 20,654 | SIGNAL | 0 | 0 | 16 | 0 | — | BIS FS | sale 3,335 (low); publishes only collector tax-roll CSVs for improvements — PIA. 2022 SWData COLLECTORS_Agent.zip exists, not yet loaded |
+| Gonzales | 48177 | 20,420 | SIGNAL | 0 | 0 | 0 | 18 | — |  |  |
+| Brewster | 48043 | 20,287 | SIGNAL | 25 | 0 | 83 | 11 | — | PACS (nested zip) | brewstercotad.org (NOT brewstercad); improv 5K sale 17K |
+| Bosque | 48035 | 19,975 | SIGNAL | 0 | 0 | 98 | 0 | — | BIS FS | sale 19,537 |
+| Marion | 48315 | 19,841 | SIGNAL | 0 | 0 | 0 | 15 | — |  |  |
+| Lavaca | 48285 | 19,767 | MINED | 65 | 0 | 90 | 28 | — |  |  |
+| Hale | 48189 | 19,108 | SIGNAL | 0 | 0 | 75 | 0 | — | BIS FS (geo join) | sale 14K year 7.9K |
+| Hutchinson | 48233 | 18,938 | SIGNAL | 0 | 0 | 0 | 28 | — |  |  |
+| Panola | 48365 | 18,812 | SIGNAL | 0 | 0 | 0 | 24 | — |  |  |
+| Falls | 48145 | 18,581 | SIGNAL | 0 | 0 | 53 | 0 | — | BIS FS | fallscad.NET; sale 9,920 year 2,793 |
+| Jackson | 48239 | 18,453 | SIGNAL | 0 | 0 | 82 | 0 | — | BIS FS (geo join) | sale 15K |
+| Presidio | 48377 | 18,436 | SIGNAL | 0 | 0 | 85 | 0 | — | BIS FS | sale 15,633 year 3,897 |
+| Comanche | 48093 | 17,580 | MINED | 53 | 9 | 84 | 23 | — |  |  |
+| Hockley | 48219 | 17,242 | MINED | 60 | 0 | 64 | 28 | — |  |  |
+| Robertson | 48395 | 16,935 | SIGNAL | 0 | 0 | 54 | 0 | — | BIS FS (geo join) | sale 9,079 |
+| Liveoak | 48297 | 16,839 | SIGNAL | 0 | 0 | 0 | 16 | — |  |  |
+| Gaines | 48165 | 16,576 | MINED | 58 | 0 | 89 | 24 | — |  |  |
+| Lampasas | 48281 | 16,541 | SIGNAL | 0 | 0 | 20 | 0 | — | PACS-portal — PIA target | unresolved |
+| Franklin | 48159 | 16,540 | SIGNAL | 0 | 0 | 0 | 19 | — |  |  |
+| Young | 48503 | 16,353 | SIGNAL | 0 | 0 | 80 | 0 | — | BIS FS | sale 13,053 year 9,452 |
+| Gray | 48179 | 16,251 | SIGNAL | 0 | 0 | 82 | 0 | — | BIS FS | sale 13,246 year 10,525 |
+| Lee | 48287 | 16,090 | SIGNAL | 0 | 0 | 85 | 0 | — | BIS FS | sale 13,704 year 8,610 |
+| Dimmit | 48127 | 15,542 | MINED | 26 | 2 | 55 | 10 | — |  |  |
+| Ward | 48475 | 15,174 | SIGNAL | 0 | 0 | 0 | 15 | — |  |  |
+| Runnels | 48399 | 15,008 | GEOM-ONLY | 0 | 0 | 0 | 0 | — | SWData ArcGIS (obfuscated cols) — DEFERRED | needs bespoke field-map loader |
+| Reeves | 48389 | 14,975 | MINED | 35 | 0 | 17 | 14 | — | TP-token raw FULL PACS | sparse desert county; improv 5.2K sqft 5.2K |
+| Kleberg | 48273 | 14,909 | SIGNAL | 0 | 0 | 82 | 0 | — |  |  |
+| Duval | 48131 | 14,772 | SIGNAL | 0 | 0 | 66 | 0 | — | BIS FS | sale 9,736 year 552 |
+| Pecos | 48371 | 14,720 | SIGNAL | 0 | 0 | 0 | 19 | — | Harris-eSearch | pecoscad.org; exempt 2,741 |
+| Karnes | 48255 | 14,436 | SIGNAL | 0 | 0 | 0 | 17 | — |  |  |
+| Blanco | 48031 | 14,269 | SIGNAL | 0 | 0 | 82 | 0 | — | BIS FS | sale 11,766 |
+| Hamilton | 48193 | 14,253 | SIGNAL | 0 | 0 | 84 | 0 | — | BIS FS (geo join) | sale 11,984 year 6,467 |
+| Willacy | 48489 | 13,989 | SIGNAL | 0 | 0 | 63 | 0 | — | BIS FS | sale 8,749 |
+| Lamb | 48279 | 13,871 | SIGNAL | 0 | 0 | 82 | 0 | — | BIS FS | sale 11,390 |
+| Scurry | 48415 | 13,849 | MINED | 56 | 22 | 80 | 27 | — | PACS | scurrytex.com; improv 7,806 beds 3,031 sale 11,107 exempt 3,702 |
+| Redriver | 48387 | 13,728 | GEOM-ONLY | 0 | 0 | 0 | 0 | — | RECORDS-REQUEST (confirmed 07-16) | BIS + P&A layers exist but Deed_Date/market are 100% EMPTY on every row |
+| Clay | 48077 | 13,501 | SIGNAL | 0 | 0 | 0 | 23 | — |  |  |
+| Culberson | 48109 | 13,327 | SIGNAL | 0 | 0 | 0 | 3 | — |  |  |
+| Floyd | 48153 | 13,217 | GEOM-ONLY | 0 | 0 | 0 | 0 | — | RECORDS-REQUEST (confirmed 07-16) | SWData 403, no COLLECTORS.zip; per-property webProperty.aspx exists but is vetoed |
+| Nolan | 48353 | 13,216 | SIGNAL | 0 | 0 | 0 | 25 | — |  |  |
+| Frio | 48163 | 13,213 | SIGNAL | 0 | 0 | 0 | 18 | — |  |  |
+| Coleman | 48083 | 12,839 | SIGNAL | 0 | 0 | 0 | 18 | — | Harris-eSearch | colemancad.net; exempt 2,287 |
+| Sanaugustine | 48405 | 12,722 | SIGNAL | 0 | 0 | 0 | 10 | — |  |  |
+| Stephens | 48429 | 12,647 | SIGNAL | 0 | 0 | 84 | 0 | — | BIS FS (public, no Referer) | sale 10,681 |
+| Zapata | 48505 | 12,623 | SIGNAL | 0 | 0 | 69 | 0 | — | BIS FS | sale 8,705 year 6,131 |
+| Refugio | 48391 | 12,478 | SIGNAL | 0 | 0 | 0 | 21 | — |  |  |
+| Rains | 48379 | 12,301 | SIGNAL | 0 | 0 | 87 | 0 | — | BIS FS | sale 10,722 year 6,745 |
+| Moore | 48341 | 12,256 | SIGNAL | 0 | 0 | 84 | 0 | — | BIS FS | sale 10,284 year 4,304 |
+| Callahan | 48059 | 12,064 | SIGNAL | 0 | 0 | 88 | 0 | — | BIS FS | sale 10,648; tax-roll books only for improvements — PIA |
+| Wilbarger | 48487 | 11,894 | SIGNAL | 0 | 0 | 66 | 22 | — | BIS FS + Harris-eSearch (double) | wilbargerappraisal.org (NOT wilbargercad); sale 7,853 year 5,281 exempt 2,665 |
+| Jack | 48237 | 11,866 | SIGNAL | 0 | 0 | 0 | 18 | — |  |  |
+| Morris | 48343 | 11,857 | SIGNAL | 0 | 0 | 0 | 28 | — | Harris-eSearch | morriscad.com; exempt 3,275 |
+| Camp | 48063 | 11,652 | SIGNAL | 0 | 0 | 87 | 0 | — | BIS FS (geo join) | sale 10,113 year 5,702 |
+| Sansaba | 48411 | 11,591 | SIGNAL | 0 | 0 | 0 | 12 | — |  |  |
+| Lipscomb | 48295 | 11,030 | GEOM-ONLY | 0 | 0 | 0 | 0 | — | RECORDS-REQUEST (confirmed 07-16) | SWData 403, no COLLECTORS.zip on any host |
+| Kinney | 48271 | 11,010 | SIGNAL | 0 | 0 | 60 | 0 | — |  |  |
+| Deafsmith | 48117 | 10,901 | SIGNAL | 0 | 0 | 84 | 0 | — | BIS FS | sale 9,151 year 3,049 |
+| Mcculloch | 48307 | 10,778 | SIGNAL | 0 | 0 | 0 | 17 | — | Harris-eSearch | mccullochcad.org; exempt 1,869 |
+| Andrews | 48003 | 10,522 | MINED | 69 | 3 | 81 | 37 | — | PACS (deflate64) | sale 8.5K exempt 3.9K improv 7.2K |
+| Lasalle | 48283 | 10,341 | MINED | 33 | 0 | 59 | 8 | — | TP-token FULL PACS | officelookup www.lasallecad.com; improv 3,384 sale 6,102 exempt 792 |
+| Goliad | 48175 | 10,314 | GEOM-ONLY | 0 | 0 | 0 | 0 | — | RECORDS-REQUEST (confirmed 07-16) | eSearch PDF-only; BIS GoliadCADWebService exists but subscription DISABLED — re-check monthly, instant solve if renewed |
+| Madison | 48313 | 10,307 | SIGNAL | 0 | 0 | 87 | 0 | — | BIS FS | sale 8,991 year 3,908 |
+| Edwards | 48137 | 9,948 | SIGNAL | 0 | 0 | 80 | 0 | — | BIS FS | f3531c87ca084095b1b1b81c840b6a57; sale 8,000 year 3,791 |
+| Zavala | 48507 | 9,744 | SIGNAL | 0 | 0 | 74 | 0 | — | BIS FS | sale 7,254 year 4,078 |
+| Dawson | 48115 | 9,676 | SIGNAL | 0 | 0 | 0 | 24 | — |  |  |
+| Archer | 48009 | 9,653 | SIGNAL | 0 | 0 | 0 | 28 | — |  |  |
+| Kimble | 48267 | 9,556 | MINED | 41 | 0 | 89 | 15 | — | PACS |  |
+| Motley | 48345 | 9,374 | GEOM-ONLY | 0 | 0 | 0 | 0 | — | RECORDS-REQUEST | no own domain, Floyd-administered; SWData per-property only |
+| Haskell | 48207 | 9,370 | SIGNAL | 0 | 0 | 0 | 16 | — |  |  |
+| Crockett | 48105 | 9,113 | SIGNAL | 0 | 0 | 0 | 8 | — |  |  |
+| Terry | 48445 | 9,113 | SIGNAL | 0 | 0 | 76 | 0 | — | BIS FS (geo join) | terrycoad.org; sale 6,910 |
+| Mason | 48319 | 9,096 | SIGNAL | 0 | 0 | 19 | 0 | — | BIS FS | sale 1,694 (thin) |
+| Mills | 48333 | 9,025 | SIGNAL | 0 | 0 | 95 | 0 | — | BIS FS | sale 8,585 |
+| Mitchell | 48335 | 8,743 | MINED | 50 | 2 | 83 | 21 | — | PACS | sparse beds/baths |
+| Real | 48385 | 8,272 | SIGNAL | 0 | 0 | 83 | 0 | — | BIS FS | sale 6,856 year 436 |
+| Coke | 48081 | 8,271 | SIGNAL | 0 | 0 | 0 | 11 | — |  |  |
+| Concho | 48095 | 8,034 | SIGNAL | 0 | 0 | 97 | 0 | — | BIS FS | sale 7,765 |
+| Upton | 48461 | 7,846 | SIGNAL | 0 | 0 | 0 | 16 | — |  |  |
+| Wheeler | 48483 | 7,676 | SIGNAL | 0 | 0 | 0 | 15 | — |  |  |
+| Lynn | 48305 | 7,324 | SIGNAL | 0 | 0 | 0 | 22 | — |  |  |
+| Yoakum | 48501 | 7,291 | MINED | 49 | 0 | 59 | 22 | — | PACS (deflate64) | sale 4.3K exempt 1.6K improv 3.6K |
+| Martin | 48317 | 7,255 | SIGNAL | 0 | 0 | 0 | 15 | — |  |  |
+| Winkler | 48495 | 7,234 | GEOM-ONLY | 0 | 0 | 0 | 0 | — | RECORDS-REQUEST (confirmed 07-16) | P&A Is_Exempt=entity-only (not homestead); Improvements layer=60 GPS points |
+| Jeffdavis | 48243 | 7,175 | SIGNAL | 0 | 0 | 0 | 6 | — |  |  |
+| Hardeman | 48197 | 6,958 | SIGNAL | 0 | 0 | 0 | 13 | — |  |  |
+| Crane | 48103 | 6,913 | SIGNAL | 0 | 0 | 0 | 14 | — |  |  |
+| Somervell | 48425 | 6,823 | SIGNAL | 0 | 0 | 95 | 0 | — | TrueAutomation PropAccess | dead end, main site parked/spammy |
+| Fisher | 48151 | 6,817 | SIGNAL | 0 | 0 | 0 | 15 | — |  |  |
+| Carson | 48065 | 6,710 | SIGNAL | 0 | 0 | 0 | 25 | — |  |  |
+| Crosby | 48107 | 6,670 | SIGNAL | 0 | 0 | 0 | 16 | — | Harris-eSearch | crosbycentral.org (real domain — overturned earlier dead-end); exempt 1,092 |
+| Swisher | 48437 | 6,657 | SIGNAL | 0 | 0 | 84 | 0 | — | BIS FS (geo pattern) | sale 5,618 year 2,283 |
+| Parmer | 48369 | 6,606 | SIGNAL | 0 | 0 | 64 | 0 | — | BIS FS (geo join) | sale 4,240 year 2,410 |
+| Garza | 48169 | 6,583 | SIGNAL | 0 | 0 | 65 | 0 | — | BIS FS | sale 4,309 year 1,114; also a 2019 P&A DW export exists, unparsed (low marginal value) |
+| Schleicher | 48413 | 6,559 | SIGNAL | 0 | 0 | 76 | 0 | — | BIS FS | sale 4,957 year 1,882 |
+| Ochiltree | 48357 | 6,521 | SIGNAL | 0 | 0 | 0 | 28 | — |  |  |
+| Castro | 48069 | 6,466 | SIGNAL | 0 | 0 | 56 | 23 | — | BIS FS + Harris-eSearch (double) | castrocad.org; sale 3,596 year 601 exempt 1,491 |
+| Delta | 48119 | 6,461 | MINED | 49 | 0 | 87 | 22 | — | PACS | dwelling cd bare 'RES' |
+| Knox | 48275 | 6,408 | SIGNAL | 0 | 0 | 80 | 0 | — | BIS FS | knoxcad.com (real domain); sale 5,097 |
+| Baylor | 48023 | 6,349 | GEOM-ONLY | 0 | 0 | 0 | 0 | — | StratMap-only — no signal | BIS app SB_0005 'Subscription disabled', re-check monthly |
+| Hall | 48191 | 6,347 | SIGNAL | 0 | 0 | 0 | 12 | — |  |  |
+| Dallam | 48111 | 6,271 | SIGNAL | 0 | 0 | 86 | 0 | — | BIS FS | sale 5,388 year 1,130 |
+| Bailey | 48017 | 6,044 | SIGNAL | 0 | 0 | 76 | 0 | — | BIS FS | bailey-cad.org (real domain); sale 4,594 year 905 |
+| Childress | 48075 | 6,030 | SIGNAL | 0 | 0 | 0 | 22 | — |  |  |
+| Sutton | 48435 | 5,905 | SIGNAL | 0 | 0 | 82 | 0 | — | BIS FS (geo join) | sale 4,839 |
+| Hansford | 48195 | 5,867 | SIGNAL | 0 | 0 | 0 | 21 | — |  |  |
+| Brooks | 48047 | 5,739 | GEOM-ONLY | 0 | 0 | 0 | 0 | — | BIS FS — skipped | Deed_Date field 100% EMPTY, no signal loaded |
+| Cochran | 48079 | 5,735 | SIGNAL | 0 | 0 | 62 | 0 | — | BIS FS | cochrancad.com (real domain); sale 3,549 year 255 |
+| Collingsworth | 48087 | 5,735 | SIGNAL | 0 | 0 | 0 | 11 | — |  |  |
+| Menard | 48327 | 5,708 | SIGNAL | 0 | 0 | 0 | 10 | — |  |  |
+| Hartley | 48205 | 5,645 | SIGNAL | 0 | 0 | 97 | 0 | — | BIS FS | sale 5,502 |
+| Terrell | 48443 | 5,562 | SIGNAL | 0 | 0 | 62 | 0 | — | BIS FS | sale 3,436 |
+| Shackelford | 48417 | 5,542 | GEOM-ONLY | 0 | 0 | 0 | 0 | — | hard case — deferred | only a formatted PRINT report, not machine-parseable |
+| Foard | 48155 | 5,393 | SIGNAL | 0 | 0 | 0 | 6 | — |  |  |
+| Stonewall | 48433 | 5,203 | SIGNAL | 0 | 0 | 0 | 9 | — |  |  |
+| Dickens | 48125 | 4,744 | SIGNAL | 0 | 0 | 0 | 10 | — |  |  |
+| Hemphill | 48211 | 4,685 | SIGNAL | 0 | 0 | 0 | 17 | — |  |  |
+| Throckmorton | 48447 | 4,664 | GEOM-ONLY | 0 | 0 | 0 | 0 | — |  |  |
+| Reagan | 48383 | 4,606 | SIGNAL | 0 | 0 | 0 | 22 | — |  |  |
+| Jimhogg | 48247 | 4,441 | SIGNAL | 0 | 0 | 0 | 23 | — |  |  |
+| Cottle | 48101 | 4,373 | SIGNAL | 0 | 0 | 0 | 8 | — |  |  |
+| Mcmullen | 48311 | 4,188 | SIGNAL | 0 | 0 | 47 | 0 | — | BIS FS (geo join) | sale 1,983 |
+| Oldham | 48359 | 4,162 | SIGNAL | 0 | 0 | 86 | 0 | — | BIS FS (geo join) | sale 3,583 |
+| Briscoe | 48045 | 4,091 | SIGNAL | 0 | 0 | 0 | 8 | — |  |  |
+| Armstrong | 48011 | 4,058 | SIGNAL | 0 | 0 | 0 | 15 | — |  |  |
+| Borden | 48033 | 3,752 | SIGNAL | 0 | 0 | 0 | 2 | — |  |  |
+| Irion | 48235 | 3,615 | SIGNAL | 0 | 0 | 0 | 12 | — |  |  |
+| Kent | 48263 | 3,598 | SIGNAL | 0 | 0 | 0 | 5 | — |  |  |
+| Sherman | 48421 | 3,531 | SIGNAL | 0 | 0 | 0 | 16 | — |  |  |
+| Glasscock | 48173 | 2,988 | SIGNAL | 0 | 0 | 0 | 6 | — |  |  |
+| Roberts | 48393 | 2,574 | GEOM-ONLY | 0 | 0 | 0 | 0 | — | StratMap-only — no signal | Prop_ID mostly blank |
+| Sterling | 48431 | 2,364 | SIGNAL | 0 | 0 | 0 | 13 | — |  |  |
+| King | 48269 | 2,313 | SIGNAL | 0 | 0 | 0 | 1 | — |  |  |
+| Loving | 48301 | 1,914 | SIGNAL | 0 | 0 | 0 | 1 | — |  |  |
+| Kenedy | 48261 | 538 | MINED | 34 | 2 | 46 | 8 | — | PACS | kenedycad.org preliminary roll; improv 185 beds 10 sale 249 exempt 43 |
+
+---
+
+## Chronological Session Log (history — every wave, in order found)
 
 ---
 
