@@ -700,3 +700,11 @@ Dallam 48111, Sutton 48435(geo), Terrell 48443, Oldham 48359(geo), Hartley 48205
 ### RECORDS-REQUEST (genuinely gated, confirmed):
 - **Smith 48423** — GSA `smithcad-search.gsacorp.io` CAMA only behind session search+export (no bulk file); ArcGIS Hub Tax_Parcels_Improvements = 17.5K/140K deed only. Ask GSA cert-roll. (903) 510-8600.
 - **Anderson 48001** — TP reports all-PDF; bulk API 401. Ask PACS export. **Wharton 48481** — TP reports xlsx/PDF only; $40 CD by written request. 979-532-8931.
+
+## 2026-07-16 — Frederick directive: re-crack ALL records-request counties ("it's on the website")
+Redeployed fable-5 with an explicit "assume it's public, crawl the live site link-by-link" mandate on every county flagged records-request. Group 1 (Smith/Lubbock/Anderson/Wharton) result:
+- **Lubbock** — CONFIRMED already fully cracked+loaded earlier this session (gis.lubbockcad.org MapServer/129 direct Orion layer: sqft 106K/year 108K/sale 129K). No new action.
+- **Smith** — found a bonus partial layer `services5.arcgis.com/KgTmADyzXWOLUPKd/Tax_Parcels_Improvements/FeatureServer/0` (PIN/ACCOUNT/RECD_DATE, 17.5K rows, ~12% coverage — appears to be a condo/specific-subdivision subset, not county-wide). Loaded: +221 sale dates (join spid==PIN, spot-checked real). Full CAMA (GSA smithcad-search.gsacorp.io) confirmed still POST-form/session-gated — genuine records-request remains for segments/beds.
+- **Wharton** — found `services6.arcgis.com/j94FvPaik4etwHFk/WhartonCADWebService/FeatureServer/0` (93.7K, anonymous) but Deed_Date/Volume/Page are 100% EMPTY — owner+value+acreage only, no seller-signal. NOT loaded (no useful fields for our schema).
+- **Anderson** — cracked the TP public `advancedsearch` BULK list endpoint (`POST /public/property/advancedsearch?page=N&pageSize=1000` body `{}`, raw token) — owner+value+legal only, no deed/exempt/sqft. NOT loaded (no useful fields). TP reports still all-PDF; CAMA still records-request.
+Groups 2/3 (Hopkins/Montague/Goliad/Edwards/LaSalle/Rusk + PaloPinto/Floyd/RedRiver/Lipscomb/Winkler) hit the session usage cap mid-run — redispatched.

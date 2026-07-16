@@ -8,7 +8,7 @@ Regenerate with `python data/build_coverage_log.py` after each mining batch (ref
 
 - ☑ **Mined (has improvements/feature tags): 78** / 253
 - Full attributes (improv+dims): 44  ·  Partial: 112  ·  Geometry-only (need mining): 97  ·  Missing from DB: 0
-- Seller-signals — sale date: 145 counties  ·  exemptions (homestead/over-65/DV tenure): 133 counties  ·  **any seller-signal: 210 counties**
+- Seller-signals — sale date: 146 counties  ·  exemptions (homestead/over-65/DV tenure): 133 counties  ·  **any seller-signal: 211 counties**
 
 Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISSING. % = share of the county's parcels with that attribute.
 
