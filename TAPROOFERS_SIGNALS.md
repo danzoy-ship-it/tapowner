@@ -74,3 +74,27 @@ This is the one "genuinely new" signal with an access-restricted path. Resolutio
 * Legitimate vendors sell FSBO + Expired/Withdrawn/Cancelled + Pre-foreclosure (Lis Pendens / Notice of Default / Notice of Trustee Sale) as daily-delivered records with owner contact info, DNC-flagged, filterable by zip/radius. Established players: REDX, Vulcan7, Landvoice, my+plus leads (Austin TX-based), ArchAgent, Mojo. Most are subscription (~$40–60/mo tiers) and several expose native API/CRM integrations.
 * Integration approach when this vertical is built: treat as a `TraceProvider`-style vendor behind the same interface pattern as BatchData — signed terms + API, matched to parcels by address. Note many of these overlap the AGENT vertical's needs (expired/FSBO/pre-foreclosure are agent signals too), so a single vendor deal could feed both products — cost amortizes across verticals, consistent with the shared-engine model.
 * Compliance note: these vendors DNC-flag their data and rely on FSBO "implied consent," but our standing outreach rule still applies — generic/educational, honor opt-outs, and this feed inherits the pre-launch legal gate.
+
+## Roof-age data strategy (resolves the "permits only go back 4–5 years" problem)
+
+Where roof-replacement dates actually live (and don't)
+
+* MLS / Texas Seller's Disclosure Notices — the source realtors use: prior listing remarks + the seller-completed disclosure form (asks roof type/age/repairs), archived as MLS documents. Licensed, per-property, human-readable. NOT a feedable dataset — do not pursue programmatically. Only exists for homes that sold with an agent since the reroof.
+* Permit records, deep history — city open-data portals often expose only ~4–5 years, but the underlying permit history goes back decades and Verisk (BuildFax) aggregates it nationally as a commercial product (insurers buy it). Hard limit: most unincorporated Texas county areas have NO residential permitting at all — the record was never created. Permit data can never cover all 254 counties, regardless of vendor.
+* CAD/assessor records — carry roof material sometimes, essentially never roof age (like-for-like reroofs don't trigger reassessment). Dead end for age.
+* Aerial-imagery AI (the industry's real answer) — insurers solved this exact problem with historical-imagery change detection: CAPE Analytics (Moody's) and ZestyAI analyze 20+ years of aerial photos to identify the year a roof was replaced. ZestyAI: ~92% accuracy, ~97% US coverage, permits-as-ground-truth cross-validated with imagery, confidence score per result, API/batch access; carrier references include Texas-focused use. CAPE: 200M+ structures, returns year-of-last-replacement + confidence, on-demand API. This is the only method with true 254-county coverage. Caveat: priced for insurance carriers; per-lookup pricing for a contractor-lead app unknown — inquiries in flight (see actions below).
+
+The four-tier strategy (best → fallback; UI must label the source)
+
+1. Permit history where it exists (metro adapters; optionally deepened later via a Verisk/BuildFax feed) — ground truth.
+2. Imagery-derived roof age via API (CAPE or ZestyAI) — statewide gap-filler, contingent on workable per-lookup pricing. Plausibly viable inside a premium tier: roofers pay $1,000+/yr for storm tools; a sub-$2 roof-age lookup on a qualified lead pencils easily.
+3. Year-built proxy — the honest floor, already in the parcel data. Displayed as "estimated — original roof assumed."
+4. User-confirmed (the compounding moat) — every roofer learns the true roof age at the door. A one-tap "confirm roof age" input banks it into a proprietary dataset with `source=user_confirmed`. Over time this becomes roof-age data nobody can buy — same corroborate-and-bank pattern as the platform's trace cache. Design rule when built: user confirmations override lower tiers but never silently overwrite permit ground truth (flag conflicts for review instead).
+
+Frederick actions (money/vendor — NOT engineering)
+
+* Sales inquiry to ZestyAI (Roof Age product) — SENT 2026-07-16. Asked: (1) whether non-carrier use is permitted (embedding results in a contractor lead-qualification app), (2) per-lookup or small-volume pricing; framed as low-thousands of lookups/mo across Texas, scaling with user base. AWAITING REPLY — nudge once after ~1 week of silence, then mark dead.
+* Same inquiry to CAPE Analytics / Moody's (Roof Age API) — SENT 2026-07-16, same two questions. AWAITING REPLY — same nudge rule.
+* Optional third if both stall: Verisk (BuildFax legacy) deep permit-history feed pricing for Texas metros.
+* On any reply: log the outcome here (per-lookup price + terms verdict) and apply the decision rule below.
+* Decision rule: if any vendor lands under ~$2/lookup with redistribution-compatible terms → tier 2 ships in the roofer Pro tier. If all decline or price enterprise-only → ship tiers 1+3+4 and revisit at scale.
