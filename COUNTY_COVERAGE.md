@@ -6,9 +6,9 @@ Regenerate with `python data/build_coverage_log.py` after each mining batch (ref
 
 ## Scoreboard (253 counties)
 
-- ☑ **Mined (has improvements/feature tags): 78** / 253
-- Full attributes (improv+dims): 44  ·  Partial: 112  ·  Geometry-only (need mining): 97  ·  Missing from DB: 0
-- Seller-signals — sale date: 146 counties  ·  exemptions (homestead/over-65/DV tenure): 133 counties  ·  **any seller-signal: 211 counties**
+- ☑ **Mined (has improvements/feature tags): 79** / 253
+- Full attributes (improv+dims): 44  ·  Partial: 114  ·  Geometry-only (need mining): 95  ·  Missing from DB: 0
+- Seller-signals — sale date: 148 counties  ·  exemptions (homestead/over-65/DV tenure): 135 counties  ·  **any seller-signal: 214 counties**
 
 Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISSING. % = share of the county's parcels with that attribute.
 
@@ -36,7 +36,7 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Llano | 48299 | 38,879 | · | · | · | · | 87 | · | PARTIAL |
 | [ ] | Palopinto | 48363 | 38,698 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Starr | 48427 | 38,571 | · | · | · | · | 56 | · | PARTIAL |
-| [ ] | Rusk | 48401 | 37,967 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Rusk | 48401 | 37,967 | · | · | · | · | · | 9 | GEOM-ONLY |
 | [ ] | Chambers | 48071 | 37,510 | · | · | · | · | · | 38 | GEOM-ONLY |
 | [ ] | Matagorda | 48321 | 37,211 | · | · | · | · | 81 | · | PARTIAL |
 | [ ] | Atascosa | 48013 | 36,791 | · | · | · | · | 71 | · | PARTIAL |
@@ -119,10 +119,9 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Kinney | 48271 | 11,010 | · | · | · | · | 60 | · | PARTIAL |
 | [ ] | Deafsmith | 48117 | 10,901 | · | · | · | · | 84 | · | PARTIAL |
 | [ ] | Mcculloch | 48307 | 10,778 | · | · | · | · | · | 17 | GEOM-ONLY |
-| [ ] | Lasalle | 48283 | 10,341 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Goliad | 48175 | 10,314 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Madison | 48313 | 10,307 | · | · | · | · | 87 | · | PARTIAL |
-| [ ] | Edwards | 48137 | 9,948 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Edwards | 48137 | 9,948 | · | · | · | · | 80 | · | PARTIAL |
 | [ ] | Zavala | 48507 | 9,744 | · | · | · | · | 74 | · | PARTIAL |
 | [ ] | Dawson | 48115 | 9,676 | · | · | · | · | · | 24 | GEOM-ONLY |
 | [ ] | Archer | 48009 | 9,653 | · | · | · | · | · | 28 | GEOM-ONLY |
@@ -262,6 +261,7 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [x] | Reeves | 48389 | 14,975 | 35 | · | · | 35 | 17 | 14 | PARTIAL |
 | [x] | Scurry | 48415 | 13,849 | 56 | 22 | 29 | 56 | 80 | 27 | FULL+SIGNALS |
 | [x] | Andrews | 48003 | 10,522 | 55 | 3 | 50 | 69 | 81 | 37 | FULL+SIGNALS |
+| [x] | Lasalle | 48283 | 10,341 | 33 | · | · | 33 | 59 | 8 | PARTIAL |
 | [x] | Kimble | 48267 | 9,556 | 32 | · | · | 41 | 89 | 15 | PARTIAL |
 | [x] | Mitchell | 48335 | 8,743 | 39 | 2 | 2 | 50 | 83 | 21 | PARTIAL |
 | [x] | Yoakum | 48501 | 7,291 | 38 | · | 11 | 49 | 59 | 22 | PARTIAL |
