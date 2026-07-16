@@ -685,3 +685,6 @@ SWData "export_collector" pipe-delimited roll (collector_* cols; collections rol
 - **BIS FS deed-date (~55K sale + 13K year):** Terry 48445(geo; terrycoad.org), Mason 48319, Mills 48333, Concho 48095, Garza 48169, Knox 48275(knoxcad.com), Real 48385, Swisher 48437, Parmer 48369(geo), Schleicher 48413, Castro 48069.
 - **Harris-eSearch exemptions:** Crosby 48107 (crosbycentral.org — real domain; crosbycad.org/.com are squats), Castro 48069 (castrocad.org wp-content CSV — DOUBLE: FS deed + eSearch exempt).
 - **Records-request:** Winkler 48495 (eSearch DataRecords PDF-only, re-poll), Motley 48345 (SWData per-parcel only, Floyd-administered).
+
+## 2026-07-15 — wave 10C (12 tiny counties): 8 BIS deed-date loaded (~33K sale)
+Dallam 48111, Sutton 48435(geo), Terrell 48443, Oldham 48359(geo), Hartley 48205, McMullen 48311(geo), Bailey 48017(bailey-cad.org), Cochran 48079(cochrancad.com). Brooks 48047 = BIS but Deed_Date field 100% empty (skip). Baylor 48023/Roberts 48393/Throckmorton 48447 = StratMap25 only (geometry+owner+values, no deed/sqft/exempt = no signal); their BIS apps return SB_0005 "Subscription disabled" — re-check monthly.

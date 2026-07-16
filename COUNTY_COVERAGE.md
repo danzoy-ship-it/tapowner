@@ -7,8 +7,8 @@ Regenerate with `python data/build_coverage_log.py` after each mining batch (ref
 ## Scoreboard (253 counties)
 
 - ☑ **Mined (has improvements/feature tags): 76** / 253
-- Full attributes (improv+dims): 44  ·  Partial: 97  ·  Geometry-only (need mining): 112  ·  Missing from DB: 0
-- Seller-signals — sale date: 129 counties  ·  exemptions (homestead/over-65/DV tenure): 130 counties  ·  **any seller-signal: 194 counties**
+- Full attributes (improv+dims): 44  ·  Partial: 105  ·  Geometry-only (need mining): 104  ·  Missing from DB: 0
+- Seller-signals — sale date: 137 counties  ·  exemptions (homestead/over-65/DV tenure): 130 counties  ·  **any seller-signal: 202 counties**
 
 Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISSING. % = share of the county's parcels with that attribute.
 
@@ -158,17 +158,17 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Knox | 48275 | 6,408 | · | · | · | · | 80 | · | PARTIAL |
 | [ ] | Baylor | 48023 | 6,349 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Hall | 48191 | 6,347 | · | · | · | · | · | 12 | GEOM-ONLY |
-| [ ] | Dallam | 48111 | 6,271 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Bailey | 48017 | 6,044 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Dallam | 48111 | 6,271 | · | · | · | · | 86 | · | PARTIAL |
+| [ ] | Bailey | 48017 | 6,044 | · | · | · | · | 76 | · | PARTIAL |
 | [ ] | Childress | 48075 | 6,030 | · | · | · | · | · | 22 | GEOM-ONLY |
-| [ ] | Sutton | 48435 | 5,905 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Sutton | 48435 | 5,905 | · | · | · | · | 82 | · | PARTIAL |
 | [ ] | Hansford | 48195 | 5,867 | · | · | · | · | · | 21 | GEOM-ONLY |
 | [ ] | Brooks | 48047 | 5,739 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Cochran | 48079 | 5,735 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Cochran | 48079 | 5,735 | · | · | · | · | 62 | · | PARTIAL |
 | [ ] | Collingsworth | 48087 | 5,735 | · | · | · | · | · | 11 | GEOM-ONLY |
 | [ ] | Menard | 48327 | 5,708 | · | · | · | · | · | 10 | GEOM-ONLY |
-| [ ] | Hartley | 48205 | 5,645 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Terrell | 48443 | 5,562 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Hartley | 48205 | 5,645 | · | · | · | · | 97 | · | PARTIAL |
+| [ ] | Terrell | 48443 | 5,562 | · | · | · | · | 62 | · | PARTIAL |
 | [ ] | Shackelford | 48417 | 5,542 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Foard | 48155 | 5,393 | · | · | · | · | · | 6 | GEOM-ONLY |
 | [ ] | Stonewall | 48433 | 5,203 | · | · | · | · | · | 9 | GEOM-ONLY |
@@ -178,8 +178,8 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Reagan | 48383 | 4,606 | · | · | · | · | · | 22 | GEOM-ONLY |
 | [ ] | Jimhogg | 48247 | 4,441 | · | · | · | · | · | 23 | GEOM-ONLY |
 | [ ] | Cottle | 48101 | 4,373 | · | · | · | · | · | 8 | GEOM-ONLY |
-| [ ] | Mcmullen | 48311 | 4,188 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Oldham | 48359 | 4,162 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Mcmullen | 48311 | 4,188 | · | · | · | · | 47 | · | PARTIAL |
+| [ ] | Oldham | 48359 | 4,162 | · | · | · | · | 86 | · | PARTIAL |
 | [ ] | Briscoe | 48045 | 4,091 | · | · | · | · | · | 8 | GEOM-ONLY |
 | [ ] | Armstrong | 48011 | 4,058 | · | · | · | · | · | 15 | GEOM-ONLY |
 | [ ] | Borden | 48033 | 3,752 | · | · | · | · | · | 2 | GEOM-ONLY |
