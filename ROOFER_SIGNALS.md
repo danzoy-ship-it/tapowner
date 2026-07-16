@@ -94,6 +94,25 @@ last_sale_date already loaded). Buckets:
 - **Do NOT build the roofer APP or launch until TapOwner #1 is live/earning** (VERTICALS_STRATEGY.md
   sequencing). This doc is the DATA foundation only.
 
+## ⚙️ Permit signals validated as QUERIES, not materialized rows (2026-07-16) — and why that matters
+The Miner's `permits` table landed (3.6M rows, 2.95M tied, 6-county SA↔Austin corridor; cols:
+permit_category/issued_date/description/valuation/address/parcel_id/geom). The permit-derived roofer
+signals are **read-time queries joining permits × parcels × parcel_signals — they create NO new rows**:
+- #14 solar-tell: `permits WHERE permit_category='solar' AND issued_date >= now()-24mo` → 4,251 parcels
+- #12 fresh-reroof: `permit_category='roof' AND issued_date >= now()-6mo` → 2,697
+- #4 claim-window ⭐: roof_damage hit 6–20mo ago `AND NOT EXISTS (roof permit since the storm)` →
+  **502,709 parcels** (in the 6 permit counties alone)
+- #8 roof-age: `roof_age = now() − COALESCE(latest roof-permit issued_date, year_built)` (the invariant)
+**DESIGN RULE (disk-driven):** materialize signals only when they can't be a query. The storm/hail
+signal was MATERIALIZED (3.3M parcel rows = 3.5GB) and that + the wind backfill hit the DB disk ceiling
+(24GB total, `mdzeroextend` failure). Storm signals SHOULD move to store-the-swath + intersect-at-query
+(a few thousand polygon rows) — leaner and tunable. Do NOT re-materialize wind. Permit signals stay
+queries.
+**DISK / COST decision for Frederick:** DB is at ~24GB on Railway (parcels 18GB is inherent). At the
+6-county permit scale we're fine. Taking permits STATEWIDE (254 counties) would grow that table ~10–40×
+and WILL need a bigger Railway volume (a cost/plan decision, his call) — flag before the Miner goes
+statewide. Reclaiming the hail 3.5GB by de-materializing it to swaths is the free alternative.
+
 ## Feasibility log
 - 2026-07-16: **hail-data (#1) feasibility CONFIRMED (green light).** Free public sources exist and
   are spatial:
