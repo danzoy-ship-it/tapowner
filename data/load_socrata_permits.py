@@ -133,6 +133,10 @@ def main():
     hard_limit = None
     if "--limit" in sys.argv:
         hard_limit = int(sys.argv[sys.argv.index("--limit") + 1])
+    dataset = cfg["dataset"]
+    if "--dataset" in sys.argv:   # load another dataset under the same jurisdiction (e.g. Dallas fiscal-year files)
+        dataset = sys.argv[sys.argv.index("--dataset") + 1]
+    cfg = dict(cfg, dataset=dataset)
 
     src_cols = [v for v in fm.values() if v]
     select = ",".join(sorted(set(src_cols)))

@@ -20,9 +20,12 @@ import time
 import psycopg2
 
 # SQL fragment: normalize an address column to a comparable street key.
-NORM = (r"regexp_replace(regexp_replace(upper({col}), "
-        r"'\s+(STE|SUITE|APT|UNIT|BLDG|BLD|#|LOT|SPACE|SPC|RM|ROOM|FL|FLOOR)\b.*$', ''), "
-        r"'\s+', ' ', 'g')")
+# 1) upper; 2) cut everything from a comma OR a unit/suite/city token onward
+#    (parcel situs often has ',DALLAS, TX 75219' inline; permits are street-only);
+# 3) drop 'STE:450' style unit tails; 4) collapse whitespace.
+NORM = (r"trim(regexp_replace(regexp_replace(upper({col}), "
+        r"'\s*(,|\bSTE\b|\bSTE:|\bSUITE\b|\bAPT\b|\bUNIT\b|\bBLDG\b|\bBLD\b|#|\bLOT\b|\bSPACE\b|\bSPC\b|\bRM\b|\bROOM\b|\bFL\b|\bFLOOR\b).*$', ''), "
+        r"'\s+', ' ', 'g'))")
 
 
 def main():
