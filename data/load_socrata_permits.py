@@ -75,10 +75,13 @@ CITIES = {
 def parse_date(v):
     if not v:
         return None
-    s = str(v)
-    for fmt in ("%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d", "%m/%d/%Y"):
+    s = str(v).strip()
+    tok = s.split()[0] if s else ""   # 'M/D/YYYY h:mm' -> 'M/D/YYYY'
+    for cand, fmt in ((s[:26] if "." in s else s[:19] if "T" in s else s[:10], "%Y-%m-%dT%H:%M:%S.%f"),
+                      (s[:19], "%Y-%m-%dT%H:%M:%S"), (s[:10], "%Y-%m-%d"),
+                      (tok, "%m/%d/%Y"), (tok, "%m/%d/%y")):
         try:
-            d = datetime.strptime(s[:26] if "." in s else s[:19] if "T" in s else s[:10], fmt).date()
+            d = datetime.strptime(cand, fmt).date()
             return d if 1900 <= d.year <= date.today().year + 1 else None
         except ValueError:
             continue

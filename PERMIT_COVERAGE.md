@@ -6,6 +6,13 @@
 
 **Files:** `data/permits_setup.py` (idempotent table) · `data/permit_categorize.py` (category normalizer) · `data/load_socrata_permits.py` · `data/load_arcgis_permits.py` · `data/join_permits_to_parcels.py`.
 
+## Capture spec (per TAPROOFERS_SIGNALS.md / ROOFER_SIGNALS.md — the `permits` table serves ~8 roofer signals + remodeler/solar/pool)
+The table is **vertical-generic** (no roofer-specific columns). Each permit captures what the signals need:
+- **`issued_date`** (REQUIRED — aging / recency / claim-window / storm-window signals key on it). Coverage: Austin/SA/Dallas/Buda 100%; NB 61%, Seguin/San Marcos 74% (the rest are applied-but-not-yet-issued — filter `issued_date IS NOT NULL`).
+- **`description`** (raw free-text) + **`permit_type_raw`** (verbatim type/work/class strings) — kept RAW, not just a code, so the **metal-roof signal (#13)** reads "metal" from the text and **storm-adjacent-repair (#17)** can tell a re-roof from a fence/window/gutter job. (metal-in-text found: Austin 3,130 · Seguin 1,079 · NB 317 · others fewer.)
+- **`permit_category`** (normalized) covers: **roof, solar, remodel, addition, pool, fence, window, gutter, hvac, new_build**, + electrical/plumbing/demolition/irrigation/sign/other. Roof + solar are roofer-priority; window/gutter/fence are split out for signal #17. Re-derive anytime with `data/recategorize_permits.py` after editing `permit_categorize.py`.
+- Plus: `valuation` (where the source has it), `address`, `geom` (Point 4326), `parcel_id` (matched homeowner), `jurisdiction`, `source_system`.
+
 ## Permit SYSTEMS in Texas (crack once, apply to the family)
 | System | How to pull | Loader | Status |
 |---|---|---|---|

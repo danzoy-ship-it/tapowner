@@ -14,9 +14,14 @@ import re
 # (category, compiled regex) — order matters: first match wins.
 _RULES = [
     ("solar",      re.compile(r"\bsolar\b|photovolta|\bpv\b|\bp\.?v\.? system|rooftop solar", re.I)),
-    ("roof",       re.compile(r"re-?\s?roof|roof\s*replac|roof\s*recover|re-?cover|shingle|roofing|\btear-?off\b|\bnew roof\b", re.I)),
+    ("roof",       re.compile(r"re-?\s?roof|roof\s*replac|roof\s*recover|re-?cover|shingle|roofing|\btear-?off\b|\bnew roof\b|\broof\b", re.I)),
     ("pool",       re.compile(r"\bpool\b|\bspa\b|hot tub|swimming", re.I)),
     ("addition",   re.compile(r"\baddition\b|\badd-?on\b|room add|\badu\b|accessory dwelling|second (?:story|floor)", re.I)),
+    # window/gutter/fence come BEFORE remodel so storm-adjacent-repair (signal #17)
+    # can tell these non-roof repairs apart from a re-roof.
+    ("window",     re.compile(r"\bwindow(?:s)?\b|glazing|fenestration|storefront glass", re.I)),
+    ("gutter",     re.compile(r"\bgutter(?:s)?\b|downspout|\bfascia\b|\bsoffit\b", re.I)),
+    ("fence",      re.compile(r"\bfence\b|retaining wall", re.I)),
     ("remodel",    re.compile(r"remodel|renovat|\balter(?:ation)?\b|interior finish|tenant (?:finish|improvement)|\brepair\b|rehab|restor", re.I)),
     ("new_build",  re.compile(r"new construction|new (?:single|residential|commercial|building|structure|sfr|home|dwelling|res\b)|\bnew\b.*(?:home|house|residence|building)", re.I)),
     ("hvac",       re.compile(r"\bhvac\b|mechanical|air ?condition|\ba/?c\b|furnace|heat ?pump|rooftop unit|\brtu\b|change ?out|\bmini ?split\b|condenser", re.I)),
@@ -24,7 +29,6 @@ _RULES = [
     ("plumbing",   re.compile(r"plumb|water heater|sewer|\bgas\b line|re-?pipe|backflow|irrigation.*plumb", re.I)),
     ("demolition", re.compile(r"\bdemo(?:lition|lish)?\b|tear ?down|raze", re.I)),
     ("irrigation", re.compile(r"irrigation|sprinkler", re.I)),
-    ("fence",      re.compile(r"\bfence\b|retaining wall", re.I)),
     ("sign",       re.compile(r"\bsign\b|billboard|banner", re.I)),
 ]
 
@@ -53,6 +57,10 @@ if __name__ == "__main__":
         ("Mechanical Permit", "Change Out", "", "Replace HVAC condenser", "hvac"),
         ("Building Permit", "New", "", "New single family residence", "new_build"),
         ("Plumbing Permit", "None", "", "Replace water heater", "plumbing"),
+        ("Building Permit", "Repair", "", "Install standing-seam METAL roof", "roof"),
+        ("Building Permit", "Repair", "", "Replace 12 windows", "window"),
+        ("Building Permit", "Repair", "", "Gutter and downspout replacement", "gutter"),
+        ("Building Permit", "Repair", "", "New privacy fence", "fence"),
     ]
     for a, b, c, d, want in tests:
         got = categorize(a, b, c, d)
