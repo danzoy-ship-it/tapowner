@@ -114,9 +114,11 @@ def main():
             pid = str(field(a, "prop_id", "prop_id_text", "quickrefid") or "").strip()
             if not pid:
                 continue
+            geo = str(field(a, "geo_id", "geoid", "geo_id_text") or "").strip()
             ex = field(a, "exemptions", "exemption")
             codes = [c.strip().upper() for c in str(ex).replace(";", ",").split(",") if c.strip()] if ex else None
             staged[pid] = (
+                geo,
                 to_int(field(a, "totsqftlvg", "tot_sqft_lvg", "living_area", "sqft"), 1, 2_000_000),
                 to_int(field(a, "yearbuilt", "year_built", "yr_blt"), 1800, date.today().year + 1),
                 parse_any_date(field(a, "saledate", "sale_date", "deeddate", "deed_date")),
@@ -147,12 +149,13 @@ def _db_phase(fips, staged, dry):
     import io
     conn = _connect(); cur = conn.cursor()
     cur.execute("""CREATE TEMP TABLE bis_stage (
-                       pid TEXT PRIMARY KEY, sqft INT, yr INT, sale_dt DATE, lot INT, exemptions TEXT[])""")
+                       pid TEXT PRIMARY KEY, geo TEXT, sqft INT, yr INT, sale_dt DATE, lot INT, exemptions TEXT[])""")
     buf = io.StringIO()
-    for pid, (sq, yr, dt, lot, codes) in staged.items():
+    for pid, (geo, sq, yr, dt, lot, codes) in staged.items():
         arr = "{" + ",".join(codes) + "}" if codes else r"\N"
         buf.write("\t".join([
             pid.replace("\\", "\\\\"),
+            geo.replace("\\", "\\\\") if geo else r"\N",
             r"\N" if sq is None else str(sq),
             r"\N" if yr is None else str(yr),
             r"\N" if dt is None else dt.isoformat(),
@@ -160,11 +163,17 @@ def _db_phase(fips, staged, dry):
             arr,
         ]) + "\n")
     buf.seek(0)
-    cur.copy_expert("COPY bis_stage (pid, sqft, yr, sale_dt, lot, exemptions) FROM STDIN", buf)
+    cur.copy_expert("COPY bis_stage (pid, geo, sqft, yr, sale_dt, lot, exemptions) FROM STDIN", buf)
     cur.execute("ANALYZE bis_stage")
 
+    # BIS parcel layers carry BOTH prop_id and geo_id; the DB key varies by
+    # county (source_property_id or apn, matching either) — test all four, the
+    # >=30% guard rejects a coincidental low-overlap match. (Erath-lesson: prop_id
+    # alone aborted where the DB actually keys on geo_id.)
     cands = [("spid==PROP_ID", "p.source_property_id = s.pid"),
-             ("apn==PROP_ID", "p.apn = s.pid")]
+             ("apn==PROP_ID", "p.apn = s.pid"),
+             ("apn==GEO_ID", "p.apn = s.geo AND s.geo IS NOT NULL"),
+             ("spid==GEO_ID", "p.source_property_id = s.geo AND s.geo IS NOT NULL")]
     best_join, best_n = None, 0
     for label, cond in cands:
         cur.execute(f"SELECT count(*) FROM bis_stage s JOIN parcels p ON p.county_fips=%s AND {cond}", (fips,))

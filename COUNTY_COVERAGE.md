@@ -6,9 +6,9 @@ Regenerate with `python data/build_coverage_log.py` after each mining batch (ref
 
 ## Scoreboard (253 counties)
 
-- ☑ **Mined (has improvements/feature tags): 74** / 253
-- Full attributes (improv+dims): 43  ·  Partial: 56  ·  Geometry-only (need mining): 154  ·  Missing from DB: 0
-- Seller-signals — sale date: 85 counties  ·  exemptions (homestead/over-65/DV tenure): 119 counties  ·  **any seller-signal: 145 counties**
+- ☑ **Mined (has improvements/feature tags): 75** / 253
+- Full attributes (improv+dims): 43  ·  Partial: 71  ·  Geometry-only (need mining): 139  ·  Missing from DB: 0
+- Seller-signals — sale date: 100 counties  ·  exemptions (homestead/over-65/DV tenure): 122 counties  ·  **any seller-signal: 162 counties**
 
 Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISSING. % = share of the county's parcels with that attribute.
 
@@ -80,38 +80,37 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Hutchinson | 48233 | 18,938 | · | · | · | · | · | 28 | GEOM-ONLY |
 | [ ] | Panola | 48365 | 18,812 | · | · | · | · | · | 24 | GEOM-ONLY |
 | [ ] | Falls | 48145 | 18,581 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Jackson | 48239 | 18,453 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Presidio | 48377 | 18,436 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Robertson | 48395 | 16,935 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Jackson | 48239 | 18,453 | · | · | · | · | 82 | · | PARTIAL |
+| [ ] | Presidio | 48377 | 18,436 | · | · | · | · | 85 | · | PARTIAL |
+| [ ] | Robertson | 48395 | 16,935 | · | · | · | · | 54 | · | PARTIAL |
 | [ ] | Liveoak | 48297 | 16,839 | · | · | · | · | · | 16 | GEOM-ONLY |
 | [ ] | Lampasas | 48281 | 16,541 | · | · | · | · | 20 | · | GEOM-ONLY |
 | [ ] | Franklin | 48159 | 16,540 | · | · | · | · | · | 19 | GEOM-ONLY |
-| [ ] | Young | 48503 | 16,353 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Gray | 48179 | 16,251 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Lee | 48287 | 16,090 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Young | 48503 | 16,353 | · | · | · | · | 80 | · | PARTIAL |
+| [ ] | Gray | 48179 | 16,251 | · | · | · | · | 82 | · | PARTIAL |
+| [ ] | Lee | 48287 | 16,090 | · | · | · | · | 85 | · | PARTIAL |
 | [ ] | Ward | 48475 | 15,174 | · | · | · | · | · | 15 | GEOM-ONLY |
 | [ ] | Runnels | 48399 | 15,008 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Reeves | 48389 | 14,975 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Kleberg | 48273 | 14,909 | · | · | · | · | 82 | · | PARTIAL |
-| [ ] | Duval | 48131 | 14,772 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Pecos | 48371 | 14,720 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Duval | 48131 | 14,772 | · | · | · | · | 66 | · | PARTIAL |
+| [ ] | Pecos | 48371 | 14,720 | · | · | · | · | · | 19 | GEOM-ONLY |
 | [ ] | Karnes | 48255 | 14,436 | · | · | · | · | · | 17 | GEOM-ONLY |
-| [ ] | Blanco | 48031 | 14,269 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Hamilton | 48193 | 14,253 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Willacy | 48489 | 13,989 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Lamb | 48279 | 13,871 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Blanco | 48031 | 14,269 | · | · | · | · | 82 | · | PARTIAL |
+| [ ] | Hamilton | 48193 | 14,253 | · | · | · | · | 84 | · | PARTIAL |
+| [ ] | Willacy | 48489 | 13,989 | · | · | · | · | 63 | · | PARTIAL |
+| [ ] | Lamb | 48279 | 13,871 | · | · | · | · | 82 | · | PARTIAL |
 | [ ] | Redriver | 48387 | 13,728 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Clay | 48077 | 13,501 | · | · | · | · | · | 23 | GEOM-ONLY |
 | [ ] | Culberson | 48109 | 13,327 | · | · | · | · | · | 3 | GEOM-ONLY |
 | [ ] | Floyd | 48153 | 13,217 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Nolan | 48353 | 13,216 | · | · | · | · | · | 25 | GEOM-ONLY |
 | [ ] | Frio | 48163 | 13,213 | · | · | · | · | · | 18 | GEOM-ONLY |
-| [ ] | Coleman | 48083 | 12,839 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Coleman | 48083 | 12,839 | · | · | · | · | · | 18 | GEOM-ONLY |
 | [ ] | Sanaugustine | 48405 | 12,722 | · | · | · | · | · | 10 | GEOM-ONLY |
-| [ ] | Stephens | 48429 | 12,647 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Zapata | 48505 | 12,623 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Stephens | 48429 | 12,647 | · | · | · | · | 84 | · | PARTIAL |
+| [ ] | Zapata | 48505 | 12,623 | · | · | · | · | 69 | · | PARTIAL |
 | [ ] | Refugio | 48391 | 12,478 | · | · | · | · | · | 21 | GEOM-ONLY |
-| [ ] | Rains | 48379 | 12,301 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Rains | 48379 | 12,301 | · | · | · | · | 87 | · | PARTIAL |
 | [ ] | Moore | 48341 | 12,256 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Callahan | 48059 | 12,064 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Wilbarger | 48487 | 11,894 | · | · | · | · | · | · | GEOM-ONLY |
@@ -260,6 +259,7 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [x] | Hockley | 48219 | 17,242 | 46 | · | 32 | 60 | 64 | 28 | FULL+SIGNALS |
 | [x] | Gaines | 48165 | 16,576 | 38 | · | 34 | 58 | 89 | 24 | FULL+SIGNALS |
 | [x] | Dimmit | 48127 | 15,542 | 23 | 2 | 13 | 26 | 55 | 10 | PARTIAL |
+| [x] | Reeves | 48389 | 14,975 | 35 | · | · | 35 | 17 | 14 | PARTIAL |
 | [x] | Scurry | 48415 | 13,849 | 56 | 22 | 29 | 56 | 80 | 27 | FULL+SIGNALS |
 | [x] | Andrews | 48003 | 10,522 | 55 | 3 | 50 | 69 | 81 | 37 | FULL+SIGNALS |
 | [x] | Kimble | 48267 | 9,556 | 32 | · | · | 41 | 89 | 15 | PARTIAL |

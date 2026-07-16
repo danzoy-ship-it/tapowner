@@ -654,3 +654,15 @@ SWData "export_collector" pipe-delimited roll (collector_* cols; collections rol
 - **JimWells 48249 / Burleson 48051 / Maverick 48323** — improvement detail only via PER-PROPERTY API (TP searchfulltext+/improvement for JimWells/Maverick [Maverick's is empty]; BIS eSearch GetImprovements?propertyId= for Burleson). = the mass-harvest path Frederick vetoed → DEFERRED to a sanctioned per-property pass. (Burleson/JimWells could still get deed/value bulk from their BIS FS if we extract the serverId.)
 - **Hopkins 48223 (iswdata SPA 403) / Montague 48337 (Blazor/SignalR, no COLLECTORS.zip)** — records-request.
 ### Note: TP `/public/config/reports` for JimWells/Maverick = 100% PDFs (no .zip export). Confirms the TP-token bulk crack only works where a county actually posts a .zip export (Cooke did; these don't).
+
+## 2026-07-15 — parallel waves 9B + 9C (20 counties) + BIS loader geo-join enhancement
+**load_bis_gis.py ENHANCED:** now captures geo_id and tries apn/spid × prop_id/geo_id (4-way, >=30% guard). Fixes the Erath-class abort where a county's parcels key on geo_id not prop_id. Verified: Hamilton 48193, Jackson 48239, Robertson 48395 joined on apn==geo (would have ABORTED before).
+### Loaded
+- **Reeves 48389** — TP token BULK cert-export (RAW `Authorization: {token}` NOT Bearer; Origin header; `/public/reportcategory/Appraisal Roll and Totals/search` → reportS3ID; `/public/filedownload/reeves/dac0e474-60c8-11ef-8fc9-0242ac110006.zip`; resume `-C -`). improv 5.2K, sqft 5.2K (sparse desert county). Reusable TP raw-token variant.
+- **14 BIS FeatureServer deed-date counties** (~157K sale + ~72K year): Blanco 48031, Lamb 48279, Willacy 48489, Zapata 48505, Rains 48379, Hamilton 48193, Stephens 48429, Jackson 48239, Presidio 48377, Robertson 48395, Young 48503, Duval 48131, Lee 48287, Gray 48179.
+- **Coleman 48083 + Pecos 48371** — Harris-eSearch CSV (exemptions). Coleman = colemancad.net; Pecos = pecoscad.org.
+### Deferred (log, revisit)
+- **Erath 48143** — BIS FS is oversized (123K rows for 24K parcels) → fetch times out; needs a where-filter or resultRecordCount tuning.
+- **Runnels 48399** — county ArcGIS SWData layer `services7.arcgis.com/ZBhj1vSHtyYLR1HF/Runnels_Parcels/FeatureServer/0` with obfuscated cols (SW_dbo_bas=prop_id, SW_dbo_b_2=geo_id, SW_dbo__18=deed date EPOCH MS). Needs a bespoke field-map loader.
+### Records-request: Floyd 48153 (P&A iswdata 403), Red River 48387 (BIS attributes stripped/empty).
+### Wave-9C overturned earlier records-request verdicts for Hamilton/Stephens/Willacy/Rains/Zapata — all had live BIS layers. (never-conclude-absence win.)
