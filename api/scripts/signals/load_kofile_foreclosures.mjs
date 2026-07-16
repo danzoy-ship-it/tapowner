@@ -42,6 +42,7 @@
 // Departments: FC = "Foreclosures" (the whole department is trustee-sale notices).
 
 import pkg from "pg";
+import { pathToFileURL } from "url";
 const { Client } = pkg;
 
 const UA =
@@ -58,6 +59,12 @@ const SOURCES = {
     hidalgo: { sub: "hidalgo", fips: "48215" },
     dallas:  { sub: "dallas",  fips: "48113" }, // CURRENT-months complement to dallas_cc (PDF feed ends ~May 2026)
     denton:  { sub: "denton",  fips: "48121" },
+    // TARRANT: no rows currently stored (the old pull expired). Unlike the
+    // 0%-tie counties, Tarrant's FREE index DOES carry a real legalDescription,
+    // so it is tie-able -- a clean-IP re-pull run through THIS loader (with the
+    // fix-1 address matcher, fix-2 legal-normalizer v2, and fix-3 OCR re-parse)
+    // is what will finally tie Tarrant. It just needs a hotspot IP to fetch; the
+    // matcher is now ready for it. (See FORECLOSURE_COVERAGE.md Tarrant note.)
     tarrant: { sub: "tarrant", fips: "48439" },
 
     // --- untested prep, standard .tx.publicsearch.us host ---
@@ -262,23 +269,237 @@ function toISO(mdy) {
     return `${m[3]}-${m[1].padStart(2, "0")}-${m[2].padStart(2, "0")}`;
 }
 
+// County-seat (courthouse) city per Kofile county -- used only to recognize a
+// clerk-stamp "recorded at the courthouse" address that OCR sometimes glues
+// onto a document (streetFromOcr guard below). A real property match against
+// this same city is still allowed -- we only skip a candidate that lands here
+// AND carries stamp language ("CLERK"/"RECORDED"/"FILED") nearby.
+const COUNTY_SEAT = {
+    nueces: "CORPUS CHRISTI", cameron: "BROWNSVILLE", hidalgo: "EDINBURG", dallas: "DALLAS",
+    denton: "DENTON", tarrant: "FORT WORTH", johnson: "CLEBURNE", kendall: "BOERNE",
+    wilson: "FLORESVILLE", walker: "HUNTSVILLE", grimes: "ANDERSON", sanpatricio: "SINTON",
+    starr: "RIO GRANDE CITY", llano: "LLANO", midland: "MIDLAND", jefferson: "BEAUMONT",
+    smith: "TYLER", grayson: "SHERMAN", montgomery: "CONROE", potter: "AMARILLO",
+    brazos: "BRYAN", collin: "MCKINNEY",
+};
+
+// Strip the boilerplate that rides along with the OCR preview text and would
+// otherwise get glued onto a real number+street run: county-clerk recording
+// stamps, "Page N of N" footers, recording timestamps (full "12:39 PM" or the
+// truncated "39 PM" that survives the ~199-char OCR preview cutoff), and
+// 6+-digit document/instrument IDs (Kofile pads these with leading zeros,
+// e.g. "00000010820736"). (Fix 3, part 1/2.)
+function cleanOcrNoise(t) {
+    let s = t;
+    s = s.replace(/\bPage\s+\d+\s+of\s+\d+\b/gi, " ");
+    s = s.replace(/\b\d{1,2}(?::\d{2})?\s*(?:AM|PM)\b/gi, " ");
+    s = s.replace(/\b(?:FILE|INSTRUMENT|DOC(?:UMENT)?)\s*#?\s*\d+\b/gi, " ");
+    s = s.replace(/\b\d{6,}\b/g, " "); // padded doc/instrument IDs
+    return s.replace(/\s+/g, " ").trim();
+}
+
 // Best-effort street address out of the notice OCR text. TX Notices of
 // Foreclosure Sale usually state the property street address somewhere in the
 // body ("...commonly known as 1234 MAIN ST, CORPUS CHRISTI, TX 78412..."). We
 // look for a "<number> <street>, <city>, TX <zip>" shaped run.
-function streetFromOcr(ocr) {
+//
+// Fix 3: (a) noise-clean first so a recording stamp/timestamp/doc-ID glued in
+// front of the real address doesn't get captured as part of it; (b) take the
+// LAST plausible run in the text instead of the first (a courthouse address in
+// a clerk stamp tends to appear early, the property address later); (c) skip a
+// run whose city is this county's courthouse city AND that still carries
+// clerk-stamp language nearby (real property notices routinely name the
+// courthouse city too -- e.g. Dallas houses foreclosing IN Dallas -- so the
+// stamp-language co-occurrence is required, not just the city match alone).
+function streetFromOcr(ocr, countyName) {
     if (!ocr) return null;
-    const t = ocr.replace(/\s+/g, " ");
-    const re = /(\d{2,6}\s+[A-Z0-9][A-Z0-9 .'#\/-]{3,40}?),?\s+([A-Z][A-Z .'-]{2,24}?),?\s+(?:TX|TEXAS)\.?\s+(\d{5})/gi;
+    const t = cleanOcrNoise(ocr.replace(/\s+/g, " "));
+    const seat = countyName && COUNTY_SEAT[countyName];
+    const re = /(\d{1,6}\s+[A-Z0-9][A-Z0-9 .'#\/-]{3,40}?),?\s+([A-Z][A-Z .'-]{2,24}?),?\s+(?:TX|TEXAS)\.?\s+(\d{5})/gi;
     let best = null, m;
     while ((m = re.exec(t))) {
         const cand = { street: m[1].trim(), city: m[2].trim(), zip: m[3] };
-        // prefer a plausible street (has a suffix-ish token), skip PO boxes
-        if (/P\.?\s?O\.?\s?BOX/i.test(cand.street)) continue;
-        best = cand;
-        break;
+        if (/P\.?\s?O\.?\s?BOX/i.test(cand.street)) continue; // skip PO boxes
+        if (seat && cand.city.toUpperCase() === seat) {
+            const before = t.slice(Math.max(0, m.index - 40), m.index);
+            if (/CLERK|RECORDED|FILED/i.test(before)) continue; // courthouse stamp, not the property
+        }
+        best = cand; // keep overwriting -> LAST match in the text wins
     }
     return best;
+}
+
+// ---------------------------------------------------------------- address-match (fix 1)
+
+// USPS street-suffix and directional abbreviation tables, both directions
+// normalized to one canonical (long) form so "DR"/"DRIVE", "N"/"NORTH" etc.
+// compare equal regardless of which spelling the notice or the CAD used.
+const SUFFIX_MAP = {
+    ST: "STREET", STREET: "STREET", AVE: "AVENUE", AVENUE: "AVENUE", DR: "DRIVE", DRIVE: "DRIVE",
+    RD: "ROAD", ROAD: "ROAD", LN: "LANE", LANE: "LANE", BLVD: "BOULEVARD", BOULEVARD: "BOULEVARD",
+    CT: "COURT", COURT: "COURT", CIR: "CIRCLE", CIRCLE: "CIRCLE", PL: "PLACE", PLACE: "PLACE",
+    TRL: "TRAIL", TRAIL: "TRAIL", TER: "TERRACE", TERRACE: "TERRACE", WAY: "WAY",
+    PKWY: "PARKWAY", PARKWAY: "PARKWAY", LOOP: "LOOP", RUN: "RUN", PASS: "PASS",
+    PT: "POINT", POINT: "POINT", XING: "CROSSING", CROSSING: "CROSSING", HWY: "HIGHWAY",
+    HIGHWAY: "HIGHWAY", SQ: "SQUARE", SQUARE: "SQUARE", RDG: "RIDGE", RIDGE: "RIDGE",
+    HOLW: "HOLLOW", HOLLOW: "HOLLOW", MNR: "MANOR", MANOR: "MANOR", MDW: "MEADOW", MDWS: "MEADOW",
+    MEADOW: "MEADOW", MEADOWS: "MEADOW", GRV: "GROVE", GROVE: "GROVE", VLY: "VALLEY", VALLEY: "VALLEY",
+    SPG: "SPRING", SPGS: "SPRING", SPRING: "SPRING", SPRINGS: "SPRING", GLN: "GLEN", GLEN: "GLEN",
+    CRK: "CREEK", CREEK: "CREEK", LNDG: "LANDING", LANDING: "LANDING", EST: "ESTATE", ESTATES: "ESTATE",
+    EXT: "EXTENSION", EXTENSION: "EXTENSION", GDNS: "GARDEN", GARDENS: "GARDEN", GARDEN: "GARDEN",
+    HBR: "HARBOR", HARBOR: "HARBOR", HTS: "HEIGHTS", HEIGHTS: "HEIGHTS", IS: "ISLAND", ISLAND: "ISLAND",
+    JCT: "JUNCTION", JUNCTION: "JUNCTION", KNL: "KNOLL", KNOLL: "KNOLL", LK: "LAKE", LAKE: "LAKE",
+    MTN: "MOUNTAIN", MOUNTAIN: "MOUNTAIN", ORCH: "ORCHARD", ORCHARD: "ORCHARD", PARK: "PARK",
+    PLZ: "PLAZA", PLAZA: "PLAZA", RNCH: "RANCH", RANCH: "RANCH", SHR: "SHORE", SHORE: "SHORE",
+    STA: "STATION", STATION: "STATION", TRCE: "TRACE", TRACE: "TRACE", VW: "VIEW", VIEW: "VIEW",
+    VLG: "VILLAGE", VILLAGE: "VILLAGE", VIS: "VISTA", VISTA: "VISTA", WALK: "WALK", CV: "COVE",
+    COVE: "COVE", BND: "BEND", BEND: "BEND",
+};
+const DIR_MAP = {
+    N: "NORTH", NORTH: "NORTH", S: "SOUTH", SOUTH: "SOUTH", E: "EAST", EAST: "EAST", W: "WEST", WEST: "WEST",
+    NE: "NORTHEAST", NORTHEAST: "NORTHEAST", NW: "NORTHWEST", NORTHWEST: "NORTHWEST",
+    SE: "SOUTHEAST", SOUTHEAST: "SOUTHEAST", SW: "SOUTHWEST", SOUTHWEST: "SOUTHWEST",
+};
+
+function normAddrWord(w) {
+    const u = w.toUpperCase();
+    if (DIR_MAP[u]) return { word: DIR_MAP[u], isDir: true, isSuffix: false };
+    if (SUFFIX_MAP[u]) return { word: SUFFIX_MAP[u], isDir: false, isSuffix: true };
+    return { word: u, isDir: false, isSuffix: false };
+}
+
+// A notice's property field is address-shaped when it starts with a house
+// number and does NOT carry legal-description tokens (LOT/BLK/ABST) -- the
+// exact test the Dallas re-join proved: "legalDescription" there is really a
+// street address. Applies regardless of which field (legal vs. OCR) it came
+// from (fix 1).
+const ADDR_SHAPE_RE = /^\d{1,5}\s+[A-Z]/i;
+const LEGAL_TOKEN_RE = /\b(?:LOTS?|LTS?|BLOCKS?|BLK|BK|ABST(?:RACT)?)\b/i;
+function isAddressShaped(s) {
+    if (!s) return false;
+    const t = cleanOcrNoise(s.trim());
+    return ADDR_SHAPE_RE.test(t) && !LEGAL_TOKEN_RE.test(t);
+}
+
+// Parse "<num> <street...>" into {num, directional, core[], suffix, trailingCity}.
+// Two robustness tricks baked in:
+//  - if the text right after the leading number is ITSELF another
+//    number+letters run (the OCR "0040 5414 PARTRIDGE" glued-stamp-digit
+//    pattern), recurse into the inner run -- the outer number was noise.
+//  - the street "core" stops at the first recognized USPS suffix; anything
+//    after that (Kofile's propAddress field sometimes appends the city with
+//    no delimiter, e.g. "357 WHISPERING OAKS DR ADKINS") is kept separately
+//    as trailingCity for the disambiguation pass, not glued onto the street.
+function parseAddressCore(raw) {
+    if (!raw) return null;
+    let t = cleanOcrNoise(raw).toUpperCase().replace(/[.,#]/g, " ").replace(/\s+/g, " ").trim();
+    let m = t.match(/^(\d{1,6})\s+(.*)$/);
+    if (!m) return null;
+    let num = m[1], restStr = m[2];
+    for (let i = 0; i < 3; i++) {
+        const inner = restStr.match(/^(\d{1,6})\s+([A-Z].*)$/);
+        if (!inner) break;
+        num = inner[1];
+        restStr = inner[2];
+    }
+    const words = restStr.split(" ").filter(Boolean).map(normAddrWord);
+    let i = 0, directional = null;
+    if (words.length && words[0].isDir) { directional = words[0].word; i = 1; }
+    // Use the LAST suffix token as the street type, NOT the first: many street
+    // NAMES begin with a word that is itself a USPS suffix (TRAIL CREEK, GLEN
+    // INNES, GARDEN GROVE, OAK PARK...). Splitting on the first suffix wrongly
+    // truncated the core to empty and dropped the match.
+    let suffixIdx = -1;
+    for (let j = words.length - 1; j >= i; j--) { if (words[j].isSuffix) { suffixIdx = j; break; } }
+    let core, suffix, trailingCity;
+    if (suffixIdx >= 0) {
+        core = words.slice(i, suffixIdx).map((w) => w.word);
+        suffix = words[suffixIdx].word;
+        const rest = words.slice(suffixIdx + 1).map((w) => w.word);
+        trailingCity = rest.length ? rest.join(" ") : null;
+    } else {
+        core = words.slice(i).map((w) => w.word);
+        suffix = null;
+        trailingCity = null;
+    }
+    // Empty core means the only suffix WAS the first name word (e.g. a street
+    // literally named "PARK"): fall back to treating every name word as core.
+    if (!core.length) {
+        core = words.slice(i).map((w) => w.word);
+        suffix = null;
+        trailingCity = null;
+    }
+    const coreStr = core.join(" ");
+    if (!coreStr) return null;
+    return { num, directional, core, suffix, trailingCity, coreStr };
+}
+
+function haversineMeters(lat1, lon1, lat2, lon2) {
+    if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) return Infinity;
+    const R = 6371000, toRad = (d) => (d * Math.PI) / 180;
+    const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// keep the narrower list only if it's non-empty; an empty filter usually means
+// the disambiguating field is missing on the parcel side, not that none match.
+const narrowOrKeep = (all, filtered) => (filtered.length ? filtered : all);
+
+// Address-match strategy (fix 1): match a "<num> <street...>" candidate (from
+// EITHER the legal/propAddress field or the OCR-derived street -- caller's
+// choice) against parcels.situs_number (leading zeros stripped both sides) +
+// a despaced street-core ILIKE. Unique-match-only; ambiguous ties are broken
+// in order: directional -> city -> zip -> nearest stored centroid (<=250m).
+async function matchAddressCandidate(c, fips, raw, extra = {}) {
+    const parsed = parseAddressCore(raw);
+    if (!parsed) return null;
+    const r = await c.query(
+        `SELECT id, situs_address, situs_city, situs_zip,
+                ST_X(ST_Centroid(geom)) lon, ST_Y(ST_Centroid(geom)) lat
+         FROM parcels
+         WHERE county_fips=$1 AND situs_number IS NOT NULL AND situs_number <> ''
+           AND ltrim(situs_number,'0')=ltrim($2,'0')
+           AND upper(situs_address) LIKE $3
+           AND (owner_name IS NULL OR owner_name !~* '${GOV_OWNER_RE}')
+         LIMIT 12`,
+        [fips, parsed.num, "%" + parsed.coreStr + "%"]
+    );
+    if (!r.rows.length) return null;
+    let cands = r.rows;
+
+    if (cands.length > 1 && parsed.directional) {
+        const f = cands.filter((row) => (parseAddressCore(row.situs_address) || {}).directional === parsed.directional);
+        cands = narrowOrKeep(cands, f);
+    }
+    const city = extra.city || parsed.trailingCity;
+    if (cands.length > 1 && city) {
+        const cu = city.toUpperCase();
+        const f = cands.filter((row) => row.situs_city && row.situs_city.toUpperCase().includes(cu));
+        cands = narrowOrKeep(cands, f);
+    }
+    if (cands.length > 1 && extra.zip) {
+        const f = cands.filter((row) => row.situs_zip === extra.zip);
+        cands = narrowOrKeep(cands, f);
+    }
+    if (cands.length > 1 && !extra.noGeocode) {
+        const g = await censusGeocode(
+            `${parsed.num} ${parsed.coreStr}${parsed.suffix ? " " + parsed.suffix : ""}`,
+            city || "",
+            extra.zip || ""
+        );
+        if (g) {
+            const withDist = cands
+                .map((row) => ({ row, d: haversineMeters(g.lat, g.lon, row.lat, row.lon) }))
+                .sort((a, b) => a.d - b.d);
+            if (withDist.length && withDist[0].d <= 250 && (withDist.length === 1 || withDist[1].d > 250)) {
+                cands = [withDist[0].row];
+            }
+        }
+    }
+    if (cands.length !== 1) return null; // still ambiguous -> unique-match-only guard
+    const row = cands[0];
+    return { parcel_id: row.id, lon: row.lon, lat: row.lat };
 }
 
 const propLegal = (doc) =>
@@ -319,23 +540,162 @@ function returnAddrKey(ra) {
     return `${num}|${body}|${ra.zip || ""}`;
 }
 
-// Parse a legal description into {subWords[], lot, blk} for a tuple join.
-function parseLegal(s) {
+// ---------------------------------------------------------------- legal matcher v2 (fix 2)
+
+// Subdivision stopword -> canonical SHORT form. Used two ways: (1) to build a
+// despaced "canonical" subdivision key where the short form is a prefix of the
+// long one (PL<PLACE, AC<ACRES, ADD<ADDITION, EST<ESTATES, SEC<SECTION) so a
+// despaced substring ILIKE matches regardless of which side abbreviated;
+// (2) to identify which words are generic (droppable) for the relaxed retry.
+const SUB_STOPWORD = {
+    PLACE: "PL", PL: "PL", ADDITION: "ADD", ADDN: "ADD", ADD: "ADD",
+    ACRES: "AC", AC: "AC", PARK: "PK", PK: "PK", ESTATES: "EST", ESTATE: "EST", EST: "EST",
+    SECTION: "SEC", SEC: "SEC", NUMBER: "NO", NO: "NO", HEIGHTS: "HTS", HTS: "HTS",
+    GARDENS: "GDNS", GDNS: "GDNS", VILLAGE: "VLG", VLG: "VLG", TERRACE: "TER", TER: "TER",
+};
+
+// Parse a legal description into {subWords[], subCanon, longestWord, lot, blk,
+// unit, lotIsNumeric}. subCanon = despaced canonical subdivision key;
+// longestWord = the single most distinctive (non-stopword) word for the
+// relaxed retry.
+function parseLegalV2(s) {
     if (!s) return null;
     const t = s.toUpperCase().replace(/[.,#]/g, " ").replace(/\s+/g, " ").trim();
-    const lot = (t.match(/\b(?:LOT|LT)\s*([0-9]+[A-Z]?)\b/) || [])[1] || null;
-    const blk = (t.match(/\b(?:BLOCK|BLK|BK)\s*([0-9]+[A-Z]?|[A-Z])\b/) || [])[1] || null;
+    const lot = (t.match(/\b(?:LOTS?|LTS?)\s*([0-9]+[A-Z]?)\b/) || [])[1] || null;
+    const blk = (t.match(/\b(?:BLOCKS?|BLK|BK)\s*([0-9]+[A-Z]?|[A-Z])\b/) || [])[1] || null;
+    const unit = (t.match(/\b(?:UNIT|SEC|SECTION|PH|PHASE)\s*([0-9]+)\b/) || [])[1] || null;
     const sub = t
-        .replace(/\b(?:LOT|LT)\s*[0-9]+[A-Z]?\b/g, " ")
-        .replace(/\b(?:BLOCK|BLK|BK)\s*(?:[0-9]+[A-Z]?|[A-Z])\b/g, " ")
-        .replace(/\bUNIT\s*(?:[0-9]+|[IVX]+)\b/g, " ")
-        .replace(/\bSECTION\s*[0-9]+\b/g, " ")
-        .replace(/\b(SUBDIVISION|ADDITION|SUBD|S\/D|PH|PHASE|TRACTS?)\b/g, " ")
-        .replace(/\b(AND|THE|OF|OUT|ON)\b/g, " ")
+        .replace(/\b(?:LOTS?|LTS?)\s*[0-9]+[A-Z]?\b/g, " ")
+        .replace(/\b(?:BLOCKS?|BLK|BK)\s*(?:[0-9]+[A-Z]?|[A-Z])\b/g, " ")
+        .replace(/\b(?:UNIT|SEC|SECTION|PH|PHASE)\s*(?:[0-9]+|[IVX]+)\b/g, " ")
+        .replace(/\b(SUBDIVISION|SUBD|S\/D|TRACTS?|ABST(?:RACT)?|SURVEY)\b/g, " ")
+        .replace(/\b(AND|THE|OF|OUT|ON|IN|TO|A)\b/g, " ")
         .replace(/[0-9-]/g, " ")
         .replace(/\s+/g, " ")
         .trim();
-    return { subWords: sub.split(" ").filter((w) => w.length > 2), lot, blk };
+    const subWords = sub.split(" ").filter((w) => w.length > 1);
+    const canonWords = subWords.map((w) => SUB_STOPWORD[w] || w);
+    const subCanon = canonWords.join("");
+    const distinctive = subWords.filter((w) => !SUB_STOPWORD[w] && w.length >= 3).sort((a, b) => b.length - a.length);
+    return {
+        subWords, subCanon, longestWord: distinctive[0] || null,
+        lot, blk, unit, lotIsNumeric: lot ? /^[0-9]+$/.test(lot) : false,
+    };
+}
+
+// One legal-description query. Despaced subdivision ILIKE + token regexes.
+// The lot lookahead `(?=[^0-9A-Z]|$|BLK|BLOCK|BK)` does double duty: it fixes
+// the glued-digit bug (old `\y` boundary failed "LOT 7BLOCK") AND enforces the
+// numeric-lot guard -- a purely-numeric notice lot (LOT 18) will NOT tie a
+// letter-suffixed parcel lot (LOT 18A), because after "18" an "A" satisfies
+// none of the lookahead alternatives.
+async function runLegalQuery(c, fips, subDespaced, lotPat, blkPat, unitPat) {
+    const params = [fips];
+    const clauses = [`county_fips=$1`];
+    params.push("%" + subDespaced + "%"); clauses.push(`replace(upper(legal_description),' ','') LIKE $${params.length}`);
+    params.push(lotPat); clauses.push(`legal_description ~* $${params.length}`);
+    if (blkPat) { params.push(blkPat); clauses.push(`legal_description ~* $${params.length}`); }
+    if (unitPat) { params.push(unitPat); clauses.push(`legal_description ~* $${params.length}`); }
+    clauses.push(`(owner_name IS NULL OR owner_name !~* '${GOV_OWNER_RE}')`);
+    const r = await c.query(
+        `SELECT id, ST_X(ST_Centroid(geom)) lon, ST_Y(ST_Centroid(geom)) lat
+         FROM parcels WHERE ${clauses.join(" AND ")} LIMIT 3`,
+        params
+    );
+    return r.rows;
+}
+
+// Legal-description matcher v2 (fix 2). Tries progressively-relaxed subdivision
+// keys (full canonical -> distinctive words only -> longest single word), each
+// AND'd with the lot/block token regexes; narrows a still-ambiguous hit by
+// UNIT/SEC/PHASE when the notice carries one. Unique-match-or-nothing.
+// `hint` (optional) supplies lot/blk/unit from the live doc's structured
+// `legals[]` when the free-text description omitted them.
+async function matchLegalV2(c, fips, legalStr, hint = null) {
+    const pl = parseLegalV2(legalStr);
+    if (!pl) return null;
+    let { lot, blk, unit } = pl;
+    if (!lot && hint && (hint.lowLot != null && hint.lowLot !== "")) lot = String(hint.lowLot).toUpperCase();
+    if (!blk && hint && (hint.block != null && hint.block !== "")) blk = String(hint.block).toUpperCase();
+    if (!unit && hint && (hint.block2 != null && hint.block2 !== "")) unit = String(hint.block2).replace(/[^0-9]/g, "") || null;
+    if (!lot || !pl.subWords.length) return null;
+    const lotIsNumeric = /^[0-9]+$/.test(lot);
+
+    const lotPat = `\\y(LOTS?|LTS?|L)\\s*0*${lot}(?=[^0-9A-Z]|$|BLK|BLOCK|BK)`;
+    const blkPat = blk ? `\\y(BLOCKS?|BLK|BK|B)\\s*0*${blk}(?![0-9])` : null;
+    const unitPat = unit ? `\\y(UNIT|SEC|SECTION|PH|PHASE)\\s*0*${unit}\\y` : null;
+
+    const distinctJoined = pl.subWords.filter((w) => !SUB_STOPWORD[w] && w.length >= 3).join("");
+    const subCands = [];
+    for (const cand of [pl.subCanon, distinctJoined, pl.longestWord]) {
+        if (cand && cand.length >= 3 && !subCands.includes(cand)) subCands.push(cand);
+    }
+    for (const sub of subCands) {
+        let rows = await runLegalQuery(c, fips, sub, lotPat, blkPat, null);
+        if (rows.length > 1 && unitPat) rows = await runLegalQuery(c, fips, sub, lotPat, blkPat, unitPat);
+        if (rows.length === 1) {
+            // Defensive re-check of the numeric-lot guard against a very rare
+            // regex edge (kept explicit per the spec even though the lookahead
+            // already enforces it): never a numeric notice lot -> lettered parcel lot.
+            void lotIsNumeric;
+            return { parcel_id: rows[0].id, lon: rows[0].lon, lat: rows[0].lat };
+        }
+    }
+    return null;
+}
+
+// ---------------------------------------------------------------- grantor -> owner_name (fix 4)
+
+// Words that are not part of a person's distinctive name -> excluded from the
+// token-AND so "& ET UX", "TRUSTEE", suffixes etc. don't over- or mis-constrain.
+const NAME_STOP = new Set([
+    "AND", "THE", "ETAL", "ETUX", "ETVIR", "ET", "AL", "UX", "VIR", "TRUST", "TRUSTEE",
+    "ESTATE", "LIVING", "REVOCABLE", "FAMILY", "JR", "SR", "III", "IV", "MR", "MRS", "AKA", "FKA", "DBA",
+]);
+
+function nameTokens(s) {
+    return (s || "")
+        .toUpperCase()
+        .replace(/[^A-Z ]/g, " ")
+        .split(/\s+/)
+        .filter((w) => w.length >= 3 && !NAME_STOP.has(w));
+}
+
+// Extract the grantor (borrower) name from a live doc: prefer a typed grantor
+// party; fall back to a parenthesized owner-name run in the property field
+// ("(KYLE EMERY LEAICH & ELENA REBECCA MAHLSTEDT)") -- the shape the Kofile
+// free record uses for some counties (the validated Wilson lever).
+function grantorName(doc) {
+    if (Array.isArray(doc.parties)) {
+        const g = doc.parties.find((p) => p && /GRANTOR|MORTGAGOR|DEBTOR|BORROWER|TRUSTOR/i.test(p.type || ""));
+        if (g && g.name) return g.name;
+    }
+    const legal = propLegal(doc);
+    if (legal) {
+        const m = legal.match(/\(([^)]+)\)/);
+        if (m && /[A-Z]{2,}\s+[A-Z]{2,}/i.test(m[1]) && !/\d/.test(m[1])) return m[1];
+    }
+    return null;
+}
+
+// Token-AND the grantor name against parcels.owner_name, unique-match-only.
+// Splits a multi-owner grantor ("A & B") into persons and tries each; a person
+// must contribute >=2 distinctive tokens so the LIKE-AND is selective.
+async function matchOwnerName(c, fips, grantor) {
+    const persons = grantor.split(/\s*&\s*|\s+AND\s+/i).map(nameTokens).filter((t) => t.length >= 2);
+    for (const toks of persons) {
+        const params = [fips];
+        const clauses = [`county_fips=$1`];
+        for (const tk of toks) { params.push("%" + tk + "%"); clauses.push(`upper(owner_name) LIKE $${params.length}`); }
+        clauses.push(`(owner_name IS NULL OR owner_name !~* '${GOV_OWNER_RE}')`);
+        const r = await c.query(
+            `SELECT id, ST_X(ST_Centroid(geom)) lon, ST_Y(ST_Centroid(geom)) lat
+             FROM parcels WHERE ${clauses.join(" AND ")} LIMIT 3`,
+            params
+        );
+        if (r.rows.length === 1) return { parcel_id: r.rows[0].id, lon: r.rows[0].lon, lat: r.rows[0].lat };
+    }
+    return null;
 }
 
 // ---------------------------------------------------------------- Census geocode
@@ -362,29 +722,38 @@ async function censusGeocode(street, city, zip) {
 
 async function joinParcel(c, fips, doc, opts = {}) {
     const legal = propLegal(doc);
-    const ocrStreet = streetFromOcr(doc.ocrText);
+    const ocrStreet = streetFromOcr(doc.ocrText, opts.countyName);
+    // structured lot/block from the live doc, used to fill gaps in matchLegalV2.
+    const legalHint = Array.isArray(doc.legals) && doc.legals[0] ? doc.legals[0] : null;
 
-    // (a) direct street-address match against parcels.situs_address. NOTE: in
-    // this roll situs_street is mostly NULL and the reliable field is the full
-    // situs_address, so match house-number + street-name substring there.
-    if (ocrStreet) {
-        const num = (ocrStreet.street.match(/^\d+/) || [])[0];
-        const body = streetBody(ocrStreet.street);
-        if (num && body) {
-            const r = await c.query(
-                `SELECT id, situs_address, ST_X(ST_Centroid(geom)) lon, ST_Y(ST_Centroid(geom)) lat
-                 FROM parcels
-                 WHERE county_fips=$1 AND situs_number=$2 AND upper(situs_address) LIKE '%'||$3||'%'
-                   AND (owner_name IS NULL OR owner_name !~* '${GOV_OWNER_RE}')
-                 LIMIT 2`,
-                [fips, num, body]
-            );
-            if (r.rows.length === 1)
-                return { parcel_id: r.rows[0].id, lon: r.rows[0].lon, lat: r.rows[0].lat, method: "situs_direct", street: ocrStreet };
-        }
+    // (a) ADDRESS-MATCH on the property field when it's address-shaped. This is
+    // the +181-Dallas lever: Dallas's "legalDescription" field is really a
+    // STREET ADDRESS, so run the address strategy whenever the string is
+    // address-shaped regardless of which field carried it (fix 1).
+    if (isAddressShaped(legal)) {
+        const a = await matchAddressCandidate(c, fips, legal);
+        if (a) return { ...a, method: "addr_from_legal", street: ocrStreet };
     }
 
-    // (b) geocode the street address -> spatial ST_Contains
+    // (b) ADDRESS-MATCH on the street parsed out of the OCR body (fix 1 + the
+    // fixed streetFromOcr, fix 3).
+    if (ocrStreet) {
+        const a = await matchAddressCandidate(c, fips, ocrStreet.street, { city: ocrStreet.city, zip: ocrStreet.zip });
+        if (a) return { ...a, method: "addr_from_ocr", street: ocrStreet };
+    }
+
+    // (c) LEGAL-DESCRIPTION matcher v2 (subdivision despaced-ILIKE + lot/block
+    // token regex with the glued-digit + numeric-lot-guard lookahead) -- fix 2.
+    // Only when the property field is a real legal description (not address-shaped).
+    if (legal && !isAddressShaped(legal)) {
+        const l = await matchLegalV2(c, fips, legal, legalHint);
+        if (l) return { ...l, method: "legal_v2", street: ocrStreet };
+    }
+
+    // (d) GEOCODE the OCR street address -> spatial ST_Contains. Remember a
+    // geocode-only (coords, no polygon hit) result but keep trying the
+    // owner-name lever before settling for it.
+    let geocodeOnly = null;
     if (ocrStreet) {
         const g = await censusGeocode(ocrStreet.street, ocrStreet.city, ocrStreet.zip);
         if (g) {
@@ -396,30 +765,22 @@ async function joinParcel(c, fips, doc, opts = {}) {
             );
             if (r.rows.length === 1)
                 return { parcel_id: r.rows[0].id, lon: g.lon, lat: g.lat, method: "geocode_spatial", street: ocrStreet };
-            // geocoded but no parcel polygon hit -- still keep the coordinates
-            return { parcel_id: null, lon: g.lon, lat: g.lat, method: "geocode_only", street: ocrStreet };
+            geocodeOnly = { parcel_id: null, lon: g.lon, lat: g.lat, method: "geocode_only", street: ocrStreet };
         }
     }
 
-    // (c) legal-description tuple match (subdivision + lot + block)
-    const pl = parseLegal(legal);
-    if (pl && pl.subWords.length && pl.lot) {
-        const params = [fips];
-        const clauses = [`county_fips=$1`];
-        for (const w of pl.subWords) { params.push("%" + w + "%"); clauses.push(`legal_description ILIKE $${params.length}`); }
-        params.push(`\\y(LOT|LT)\\s*${pl.lot}\\y`); clauses.push(`legal_description ~* $${params.length}`);
-        if (pl.blk) { params.push(`\\y(BLOCK|BLK|BK)\\s*${pl.blk}\\y`); clauses.push(`legal_description ~* $${params.length}`); }
-        clauses.push(`(owner_name IS NULL OR owner_name !~* '${GOV_OWNER_RE}')`);
-        const r = await c.query(
-            `SELECT id, ST_X(ST_Centroid(geom)) lon, ST_Y(ST_Centroid(geom)) lat
-             FROM parcels WHERE ${clauses.join(" AND ")} LIMIT 2`,
-            params
-        );
-        if (r.rows.length === 1)
-            return { parcel_id: r.rows[0].id, lon: r.rows[0].lon, lat: r.rows[0].lat, method: "legal_tuple", street: ocrStreet };
+    // (e) GRANTOR (borrower) name -> parcels.owner_name, token-AND, unique-only
+    // (fix 4). The validated Wilson lever and the only tie-able path left for
+    // counties whose free record carries no legal/address identifier.
+    const grantor = grantorName(doc);
+    if (grantor) {
+        const o = await matchOwnerName(c, fips, grantor);
+        if (o) return { ...o, method: "owner_name", street: ocrStreet };
     }
 
-    // (d) EXPERIMENTAL, opt-in only (--try-return-address): last-resort guess
+    if (geocodeOnly) return geocodeOnly;
+
+    // (f) EXPERIMENTAL, opt-in only (--try-return-address): last-resort guess
     // off the notice's return-to address. Tagged as its own method so it's
     // never conflated with the vetted joins above and is easy to audit/delete
     // (WHERE meta->>'matchMethod'='return_address_guess') if the false-positive
@@ -483,13 +844,13 @@ async function loadCounty(c, name, cfg, days, tryReturnAddress = false) {
         }
     }
 
-    const stats = { situs_direct: 0, geocode_spatial: 0, geocode_only: 0, legal_tuple: 0, return_address_guess: 0, unmatched: 0 };
+    const stats = { addr_from_legal: 0, addr_from_ocr: 0, legal_v2: 0, geocode_spatial: 0, geocode_only: 0, owner_name: 0, return_address_guess: 0, unmatched: 0 };
     const rows = [];
     for (const doc of notices) {
         const ref = String(doc.docNumber || doc.documentNumber || doc.instrumentNumber || doc.docId);
         if (!ref) continue;
-        const j = await joinParcel(c, cfg.fips, doc, { tryReturnAddress, returnAddrFreq });
-        stats[j.method]++;
+        const j = await joinParcel(c, cfg.fips, doc, { tryReturnAddress, returnAddrFreq, countyName: name });
+        stats[j.method] = (stats[j.method] || 0) + 1;
         rows.push({
             parcel_id: j.parcel_id,
             event_date: toISO(doc.instrumentDate) || toISO(doc.recordedDate),
@@ -497,6 +858,12 @@ async function loadCounty(c, name, cfg, days, tryReturnAddress = false) {
             address: propLegal(doc),
             lon: j.lon,
             lat: j.lat,
+            // Store the WHOLE document (fix 4). The live FETCH_DOCUMENTS frame
+            // carries far more than the old ~8 fields the loader kept -- the
+            // 2026-07-16 re-join still found +254 with only those, so persisting
+            // the full doc (parties/legals[]/parcel/marginalReferences + the OCR
+            // preview + the extracted grantor) gives future re-joins real
+            // material to work with, and unlocks the grantor->owner_name path.
             meta: JSON.stringify({
                 docNumber: ref,
                 docTypeCode: doc.docTypeCode,
@@ -504,7 +871,13 @@ async function loadCounty(c, name, cfg, days, tryReturnAddress = false) {
                 recordedDate: doc.recordedDate,
                 saleDate: doc.instrumentDate,
                 legalDescription: propLegal(doc),
+                ocrText: doc.ocrText || null,
                 ocrStreet: j.street ? `${j.street.street}, ${j.street.city}, TX ${j.street.zip}` : null,
+                parties: Array.isArray(doc.parties) ? doc.parties : null,
+                grantor: grantorName(doc) || null,
+                legals: Array.isArray(doc.legals) ? doc.legals : null,
+                parcel: doc.parcel || null,
+                marginalReferences: doc.marginalReferences || null,
                 matchMethod: j.method,
             }),
         });
@@ -603,4 +976,17 @@ async function main() {
     await c.end();
 }
 
-main();
+// Only run the live loader when invoked directly (DATABASE_URL=... node
+// load_kofile_foreclosures.mjs). Importing this module (e.g. the offline
+// matcher-validation harness) gets the exported pure/matcher functions below
+// WITHOUT kicking off a live Kofile pull.
+if (import.meta.url === pathToFileURL(process.argv[1] || "").href) {
+    main();
+}
+
+// Exported for the offline validation harness (re-run the matchers against the
+// already-stored kofile rows without re-fetching).
+export {
+    streetFromOcr, cleanOcrNoise, isAddressShaped, parseAddressCore, matchAddressCandidate,
+    parseLegalV2, matchLegalV2, grantorName, matchOwnerName, propLegal, joinParcel,
+};
