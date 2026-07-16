@@ -1,14 +1,15 @@
-"""Match permits.parcel_id -> parcels(id) for a jurisdiction. Two passes,
-key-match first (cheap, exact) then spatial fallback:
+"""Match permits.parcel_id -> parcels(id) for a jurisdiction. Three passes,
+cheapest/most-exact first, each idempotent (only fills NULL parcel_id):
 
-  1. KEY: if the permit carries the jurisdiction's own parcel id (source_parcel_key,
-     e.g. Austin tcad_id), match it to parcels.apn / source_property_id in the SAME
-     county (numeric compare, so leading-zero differences like 0100060150 vs
-     100060150 still match).
-  2. SPATIAL: for permits still unmatched that have a geom point, ST_Contains the
-     parcel polygon (county-scoped, uses the parcels GIST index).
-
-Idempotent — only fills NULL parcel_id, safe to re-run after each load.
+  1. KEY: the permit's own parcel id (source_parcel_key, e.g. Austin tcad_id) vs
+     parcels.apn / source_property_id in the same county. Uses a temp INDEXED
+     mapping table keyed on the leading-zero-stripped digits so 0100060150 (tcad)
+     == 100060150 (apn) matches — and it scales (indexed text equality, not a
+     per-row numeric cast).
+  2. SPATIAL: remaining permits with a point -> ST_Contains the parcel polygon
+     (county-scoped GIST index).
+  3. ADDRESS: remaining permits with an address -> normalized street-address
+     equality (temp indexed table; uppercase, strip unit/suite tails, collapse ws).
 
 Usage: DATABASE_URL=... python join_permits_to_parcels.py <jurisdiction>
 """
@@ -18,6 +19,11 @@ import time
 
 import psycopg2
 
+# SQL fragment: normalize an address column to a comparable street key.
+NORM = (r"regexp_replace(regexp_replace(upper({col}), "
+        r"'\s+(STE|SUITE|APT|UNIT|BLDG|BLD|#|LOT|SPACE|SPC|RM|ROOM|FL|FLOOR)\b.*$', ''), "
+        r"'\s+', ' ', 'g')")
+
 
 def main():
     juris = sys.argv[1]
@@ -25,60 +31,55 @@ def main():
                             keepalives_interval=10, keepalives_count=10, connect_timeout=20)
     cur = conn.cursor()
     cur.execute("SET lock_timeout='15s'")
-    cur.execute("SET statement_timeout='600s'")
+    cur.execute("SET statement_timeout='900s'")
 
-    cur.execute("SELECT count(*), count(*) FILTER (WHERE parcel_id IS NOT NULL) FROM permits WHERE jurisdiction=%s", (juris,))
-    tot, pre = cur.fetchone()
-    print(f"[{juris}] {tot:,} permits, {pre:,} already matched", flush=True)
+    cur.execute("SELECT count(*), count(*) FILTER (WHERE parcel_id IS NOT NULL), max(county_fips) FROM permits WHERE jurisdiction=%s", (juris,))
+    tot, pre, fips = cur.fetchone()
+    print(f"[{juris}] {tot:,} permits ({fips}), {pre:,} already matched", flush=True)
 
-    # Pass 1 — key match on apn, then source_property_id (numeric, county-scoped).
-    for keycol in ("apn", "source_property_id"):
+    # ---- Pass 1: key match via an indexed temp mapping (leading-zeros stripped).
+    cur.execute("SELECT count(*) FROM permits WHERE jurisdiction=%s AND parcel_id IS NULL AND source_parcel_key ~ '^[0-9]+$'", (juris,))
+    if cur.fetchone()[0]:
+        for keycol in ("apn", "source_property_id"):
+            t0 = time.time()
+            cur.execute("DROP TABLE IF EXISTS pk")
+            cur.execute(f"""CREATE TEMP TABLE pk AS
+                SELECT ltrim({keycol}, '0') AS k, id FROM parcels
+                WHERE county_fips=%s AND {keycol} ~ '^[0-9]+$'""", (fips,))
+            cur.execute("CREATE INDEX pk_k ON pk(k)")
+            cur.execute("ANALYZE pk")
+            cur.execute("""UPDATE permits pm SET parcel_id = pk.id FROM pk
+                           WHERE pm.jurisdiction=%s AND pm.parcel_id IS NULL
+                             AND pm.source_parcel_key ~ '^[0-9]+$'
+                             AND ltrim(pm.source_parcel_key,'0') = pk.k""", (juris,))
+            print(f"  key match ({keycol}): +{cur.rowcount:,} ({time.time()-t0:.0f}s)", flush=True)
+            conn.commit()
+
+    # ---- Pass 2: spatial fallback.
+    cur.execute("SELECT count(*) FROM permits WHERE jurisdiction=%s AND parcel_id IS NULL AND geom IS NOT NULL", (juris,))
+    if cur.fetchone()[0]:
         t0 = time.time()
-        cur.execute(f"""
-            UPDATE permits pm SET parcel_id = p.id
-            FROM parcels p
-            WHERE pm.jurisdiction=%s AND pm.parcel_id IS NULL
-              AND pm.source_parcel_key ~ '^[0-9]+$'
-              AND p.county_fips = pm.county_fips
-              AND p.{keycol} ~ '^[0-9]+$'
-              AND p.{keycol}::bigint = pm.source_parcel_key::bigint
-        """, (juris,))
-        print(f"  key match ({keycol}): +{cur.rowcount:,} ({time.time()-t0:.0f}s)", flush=True)
+        cur.execute("""UPDATE permits pm SET parcel_id = p.id FROM parcels p
+                       WHERE pm.jurisdiction=%s AND pm.parcel_id IS NULL AND pm.geom IS NOT NULL
+                         AND p.county_fips = pm.county_fips AND p.geom IS NOT NULL
+                         AND ST_Contains(p.geom, pm.geom)""", (juris,))
+        print(f"  spatial match: +{cur.rowcount:,} ({time.time()-t0:.0f}s)", flush=True)
         conn.commit()
 
-    # Pass 2 — spatial fallback for the remainder that have a point.
-    t0 = time.time()
-    cur.execute("""
-        UPDATE permits pm SET parcel_id = p.id
-        FROM parcels p
-        WHERE pm.jurisdiction=%s AND pm.parcel_id IS NULL AND pm.geom IS NOT NULL
-          AND p.county_fips = pm.county_fips
-          AND p.geom IS NOT NULL
-          AND ST_Contains(p.geom, pm.geom)
-    """, (juris,))
-    print(f"  spatial match: +{cur.rowcount:,} ({time.time()-t0:.0f}s)", flush=True)
-    conn.commit()
-
-    # Pass 3 — normalized-address fallback (for jurisdictions with no key/geom,
-    # e.g. Dallas). Normalize both sides: uppercase, strip unit/suite/bldg/apt/#
-    # tails, collapse whitespace. Exact match on the normalized street address
-    # within the county. Imperfect but honest partial coverage.
-    norm = (r"regexp_replace(regexp_replace(upper({col}), "
-            r"'\\s+(STE|SUITE|APT|UNIT|BLDG|BLD|#|LOT|SPACE|SPC|RM|ROOM|FL|FLOOR)\\b.*$', ''), "
-            r"'\\s+', ' ', 'g')")
-    have_addr = 0
+    # ---- Pass 3: normalized-address fallback via an indexed temp table.
     cur.execute("SELECT count(*) FROM permits WHERE jurisdiction=%s AND parcel_id IS NULL AND address IS NOT NULL", (juris,))
-    have_addr = cur.fetchone()[0]
-    if have_addr:
+    if cur.fetchone()[0]:
         t0 = time.time()
-        cur.execute(f"""
-            UPDATE permits pm SET parcel_id = p.id
-            FROM parcels p
-            WHERE pm.jurisdiction=%s AND pm.parcel_id IS NULL AND pm.address IS NOT NULL
-              AND p.county_fips = pm.county_fips AND p.situs_address IS NOT NULL
-              AND trim({norm.format(col='p.situs_address')}) = trim({norm.format(col='pm.address')})
-              AND trim({norm.format(col='pm.address')}) <> ''
-        """, (juris,))
+        cur.execute("DROP TABLE IF EXISTS pa")
+        cur.execute(f"""CREATE TEMP TABLE pa AS
+            SELECT DISTINCT ON (trim({NORM.format(col='situs_address')})) trim({NORM.format(col='situs_address')}) AS k, id
+            FROM parcels WHERE county_fips=%s AND situs_address IS NOT NULL
+              AND trim({NORM.format(col='situs_address')}) <> ''""", (fips,))
+        cur.execute("CREATE INDEX pa_k ON pa(k)")
+        cur.execute("ANALYZE pa")
+        cur.execute(f"""UPDATE permits pm SET parcel_id = pa.id FROM pa
+                        WHERE pm.jurisdiction=%s AND pm.parcel_id IS NULL AND pm.address IS NOT NULL
+                          AND trim({NORM.format(col='pm.address')}) = pa.k""", (juris,))
         print(f"  address match: +{cur.rowcount:,} ({time.time()-t0:.0f}s)", flush=True)
         conn.commit()
 
@@ -86,7 +87,7 @@ def main():
                           count(*) FILTER (WHERE parcel_id IS NOT NULL AND permit_category IN ('roof','solar'))
                    FROM permits WHERE jurisdiction=%s""", (juris,))
     matched, roofer = cur.fetchone()
-    print(f"[{juris}] now matched: {matched:,}/{tot:,} ({100*matched/max(tot,1):.0f}%) | roof+solar matched: {roofer:,}", flush=True)
+    print(f"[{juris}] matched {matched:,}/{tot:,} ({100*matched/max(tot,1):.0f}%) | roof+solar matched: {roofer:,}", flush=True)
     conn.close()
 
 

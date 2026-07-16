@@ -184,11 +184,13 @@ def main():
         cur.execute("""
             INSERT INTO permits (jurisdiction,source_system,permit_number,permit_type_raw,permit_category,
                 issued_date,description,valuation,address,city,zip,county_fips,lat,lon,geom,source_parcel_key)
-            SELECT jurisdiction,source_system,permit_number,permit_type_raw,permit_category,issued_date,
+            SELECT DISTINCT ON (jurisdiction, permit_number)
+                jurisdiction,source_system,permit_number,permit_type_raw,permit_category,issued_date,
                 description,valuation,address,city,zip,county_fips,lat,lon,
                 CASE WHEN lat IS NOT NULL AND lon IS NOT NULL THEN ST_SetSRID(ST_MakePoint(lon,lat),4326) END,
                 source_parcel_key
             FROM stage
+            ORDER BY jurisdiction, permit_number, issued_date DESC NULLS LAST
             ON CONFLICT (jurisdiction, permit_number) DO UPDATE SET
                 permit_type_raw=EXCLUDED.permit_type_raw, permit_category=EXCLUDED.permit_category,
                 issued_date=EXCLUDED.issued_date, description=EXCLUDED.description, valuation=EXCLUDED.valuation,

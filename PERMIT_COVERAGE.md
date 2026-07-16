@@ -1,31 +1,39 @@
 # Texas Building-Permit Coverage — the crack-the-system log
 
-**Roofer vertical #2, data lane.** Mining free public building-permit data into the `permits` table (Miner lane owns it, alongside `parcels`; app session owns `parcel_signals`). Unblocks roofer signals #2 (re-roof permit dates) + #3 (solar-permit tell), and is reusable across remodeler/solar/pool verticals. Metros first — that's where the roofs are.
+**Roofer vertical #2, data lane.** Mining free public building-permit data into the `permits` table (Miner lane owns it, alongside `parcels`; app session owns `parcel_signals`). Unblocks roofer signals #2 (re-roof permit dates) + #3 (solar-permit tell), reusable across remodeler/solar/pool verticals. Metros first.
 
-**Method (same as the CAD campaign):** identify each jurisdiction's permit SYSTEM, crack it once, apply to every jurisdiction on it. Capture ALL permit types (roof/solar flagged roofer-priority; everything else kept for other verticals). Join permit → parcel by the jurisdiction's own parcel id → else spatial `ST_Contains(parcels.geom, point)` → else normalized address.
+**Method (same as the CAD campaign):** identify each jurisdiction's permit SYSTEM, crack it once, apply to every jurisdiction on it. Capture ALL permit types (roof/solar flagged roofer-priority; everything kept for other verticals). Join permit → parcel: jurisdiction's own parcel id → else spatial `ST_Contains(parcels.geom, point)` → else normalized address.
 
-**Schema:** `data/permits_setup.py` (idempotent). Category normalizer: `data/permit_categorize.py` (roof, solar, pool, addition, remodel, new_build, hvac, electrical, plumbing, demolition, irrigation, fence, sign, other). Loaders: `data/load_socrata_permits.py` (+ `join_permits_to_parcels.py`).
+**Files:** `data/permits_setup.py` (idempotent table) · `data/permit_categorize.py` (category normalizer) · `data/load_socrata_permits.py` · `data/load_arcgis_permits.py` · `data/join_permits_to_parcels.py`.
 
-## Permit SYSTEMS in Texas (the ~handful to crack)
+## Permit SYSTEMS in Texas (crack once, apply to the family)
 | System | How to pull | Loader | Status |
 |---|---|---|---|
 | **Socrata open-data** (`data.{city}.gov`) | SODA API `/resource/{4x4}.json`, paginate `$offset` | `load_socrata_permits.py` | ✅ CRACKED (Austin, Dallas) |
-| **ArcGIS Hub / FeatureServer** | whole-layer `/query?where=1=1&outFields=*` (reuse `load_bis_gis.py` pattern) | TBD `load_arcgis_permits.py` | ⏳ survey |
-| **Accela Citizen Access** | ACA portal; often an ArcGIS/report export behind it | — | ⬜ not surveyed |
-| **Tyler EnerGov / CityView** | portal; look for an open-data/report export | — | ⬜ not surveyed |
-| **CivicPlus / other** | varies | — | ⬜ not surveyed |
+| **ArcGIS FeatureServer / MapServer** | whole-layer `/query?where=1=1&outFields=*`, paginate `resultOffset`; `outSR=4326` for coords from geometry | `load_arcgis_permits.py` | ✅ CRACKED (San Antonio, New Braunfels, San Marcos) |
+| **CKAN open-data** (`data.{city}.gov` CKAN) | whole-file CSV download, or `datastore_search` API | (SA is CKAN; its ArcGIS mirror was used) | ✅ (via ArcGIS mirror) |
+| **Accela Citizen Access** | per-permit portal — but cities usually publish an ArcGIS/CKAN MIRROR (crack the mirror, not the portal) | — | pattern known (SA/NB were Accela→mirror) |
+| **Tyler EnerGov / CityView / CivicPlus** | look for the ArcGIS/open-data export the portal feeds | — | ⬜ (NB unifies Accela+Cityworks in one ArcGIS layer) |
 
 ## Jurisdiction coverage log
-| ☑ | Jurisdiction | County | System | Dataset / URL | Rows | Join | Status |
+| ☑ | Jurisdiction | County | System | Source | Permits | roof / solar | Join |
 |---|---|---|---|---|---|---|---|
-| ☑ | **Austin** | Travis 48453 | Socrata | data.austintexas.gov `3syk-w9eu` (Issued Construction Permits) | ~2.37M | tcad_id→apn (97%) | LOADING |
-| ☐ | **Dallas** | Dallas 48113 | Socrata | www.dallasopendata.com `e7gq-4sah` (Building Permits) | ~127K | address (no coords/key in dataset; `6ik7-4gqj` Permit Points has coords if needed) | queued |
-| ☐ | **San Antonio** | Bexar 48029 | not Socrata | — | — | — | needs survey (ArcGIS/Accela) |
-| ☐ | **Houston** | Harris 48201 | not Socrata | data.houstontx.gov = ArcGIS | — | — | needs survey |
-| ☐ | **Fort Worth** | Tarrant 48439 | ArcGIS (Socrata entry is a dead legacy Hub) | — | — | — | needs survey |
-| ☐ | **El Paso** | El Paso 48141 | not Socrata | — | — | — | needs survey |
+| ✅ | **Austin** | Travis 48453 | Socrata | data.austintexas.gov `3syk-w9eu` | 2,365,555 | 30,607 / 26,940 | tcad_id→apn key |
+| ✅ | **San Antonio** | Bexar 48029 | ArcGIS (Accela mirror) | services.arcgis.com/g1fRTDLeMgspWrYp `Permits_Issued` | 116,958 | 9,519 / 1,573 | spatial + address |
+| ✅ | **Dallas** | Dallas 48113 | Socrata | www.dallasopendata.com `e7gq-4sah` | 126,840 | 11,178 / 3,465 | address |
+| ✅ | **New Braunfels** | Comal 48091 | ArcGIS (Accela+Cityworks) | gismaps.newbraunfels.gov `.../PlanningZoning/MapServer/10` | 204,301 | 6,324 / 2,959 | spatial + address |
+| ✅ | **San Marcos** | Hays 48209 | ArcGIS (MyPermitNow) | smgis.sanmarcostx.gov `.../CoSM_BuildingPermits/FeatureServer/0` | 50,600 | 1,568 / 811 | spatial + address |
 
-## Impasse / revisit notes
-- **Fort Worth** `data.fortworthtexas.gov` Socrata catalog lists "Development Permits" (`quz7-xnsy`) but the endpoint is a decommissioned ArcGIS-Hub legacy page ("site no longer supported") → their live permits are on a current ArcGIS/Accela endpoint, needs discovery.
-- **San Antonio / Houston / El Paso** have no Socrata permit dataset → ArcGIS FeatureServer or Accela. Crack-fleet survey pending (ask before dispatching, per standing rule).
-- **Dallas** rich dataset has no lat/lon or parcel key — joined by normalized address (partial). The `6ik7-4gqj` "Permit Points" set has xcoord/ycoord if a spatial join is preferred later.
+**POC total: ~2.86M permits across the San Antonio↔Austin I-35 corridor** (the exact territory the New-Braunfels roofer covers). Roofer-priority: **~59,000 roof + ~35,700 solar** permits.
+
+## Not-yet-mined metros (next targets)
+- **Houston** (Harris 48201) — no Socrata; ArcGIS/Accela mirror to survey.
+- **Fort Worth** (Tarrant 48439) — Socrata entry is a dead legacy Hub; live ArcGIS/Accela to survey.
+- **El Paso** (El Paso 48141) — no Socrata; survey.
+- + suburbs (Plano, Arlington, Frisco, Round Rock, Sugar Land …) — mostly ArcGIS/CivicPlus/EnerGov.
+
+## Notes / caveats
+- **New Braunfels & San Marcos** carry `Contractor_Name` (+ NB has `Contractor_Regnbr` license #) — bonus roofer-competitor intel (who's already working which streets).
+- **San Antonio** `X_COORD/Y_COORD` are mixed-projection in the raw CKAN CSV (some WGS84, some State-Plane-feet); the ArcGIS mirror we used returns them cleaner, and the loader rejects out-of-range coords (falls back to address join). Some SA permits will match by address only.
+- **Dallas** dataset has no coords/parcel key → address join only (partial). `6ik7-4gqj` "Permit Points" has xcoord/ycoord if a spatial join is wanted later.
+- All sources verified live/current as of 2026-07-16 (samples returned permits issued within days).
