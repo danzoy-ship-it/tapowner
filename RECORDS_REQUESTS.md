@@ -55,3 +55,51 @@ These 12 counties have real appraisal data (improvement detail / sale dates / ex
 
 ## Optional / lower priority
 - **Hidalgo** (48215) — already has sqft + deed dates + exemptions loaded; a PIA would only add the improvement *segment* detail (pool/garage/beds). Same True Prodigy "Appraisal Export" ask as Anderson/Wharton, to `cs@hidalgoad.org`, if you want the extra markers on a big (328K-parcel) county.
+
+---
+
+# BUILDING-DATA GAPS — "blind" counties (year_built / sqft / beds all missing)
+
+A 2026-07-16 field-completeness audit found **107 counties with ZERO building data** (parcels loaded, but no year_built/sqft/beds). Live re-crack verified: **only 1 (Shelby) had a free source** (now recovered) — the rest gate their CAMA/improvement file behind a records request. These block the roof-age scheme and the property cards. **The shared ask for all of them:**
+
+> *"Please provide your appraisal software's improvement/CAMA export — the PACS `APPRAISAL_IMPROVEMENT_DETAIL` + `IMPROVEMENT_DETAIL_ATTR` files (or your vendor's equivalent), which include **year built, living-area sqft, and bedroom/bath counts**. Your public GIS/roll export currently carries only owner/value/legal/exemption, not building characteristics. Electronic delivery (CSV/zip) preferred. Many Texas CADs publish this file set for free; requesting it under the Public Information Act."*
+
+**Priority tier — the 30 biggest blind counties (~1.2M parcels; worth an individual PIA):**
+
+| County | FIPS | ~Parcels | Vendor | Contact |
+|---|---|---|---|---|
+| Henderson | 48213 | 106,708 | BIS | henderson-cad.org contact form (ask for the "Data Roll" export per their fee schedule) |
+| Parker | 48367 | 100,548 | SWData | parkercad@parkercad.org · 817-596-0077 |
+| Tom Green | 48451 | 58,686 | SWData | 325-658-5575 (get PIA email off contact page) |
+| Liberty*| 48291 | 54,549 | PACS | *free roll recovered (roof/eff-yr) — verify year_built coverage |
+| Nacogdoches | 48347 | 48,003 | PACS legacy | hello@nacocad.org · 936-560-3447 (ask for the missing IMPROVEMENT_INFO + _ATTR files) |
+| Van Zandt | 48467 | 43,963 | BIS | support@vzcad.org · 903-567-6171 |
+| Rusk | 48401 | 37,967 | Harris Govern | wcook@ruskcad.org · 903-657-3578 |
+| Chambers | 48071 | 37,510 | Harris Govern | info@chamberscad.org · 409-267-3795 |
+| Matagorda | 48321 | 37,211 | (GIS+PDF only) | 979-244-2031 · matagorda-cad.org/contact-form |
+| Jim Wells | 48249 | 27,944 | True Prodigy | administration@jimwellscad.org · 361-668-9656 |
+| Jones | 48253 | 27,732 | Pritchard & Abbott | jonescad.org/home/DataRecords contact |
+| Leon | 48289 | 27,570 | Pritchard & Abbott | leoncad.org contact |
+| Houston | 48225 | 26,611 | Harris Govern/P&A | houstoncad.org contact |
+| Maverick | 48323 | 26,048 | True Prodigy | (site contact) — TP "Appraisal Export" ask |
+| Hopkins | 48223 | 25,149 | SWData | *already queued above* |
+| Montague | 48337 | 24,836 | Pritchard & Abbott | *already queued above* |
+| Erath | 48143 | 24,656 | BIS + SWData | (ask for the export behind webProperty.aspx Improvements) |
+| Freestone | 48161 | 23,979 | Pritchard & Abbott | fcad contact (note: beds not recorded; ask year/sqft) |
+| Colorado | 48089 | 22,756 | BIS | (colorado cad contact) |
+| Calhoun | 48057 | 22,678 | BIS | (calhoun cad contact) |
+| Eastland | 48133 | 21,448 | P&A/Harris Govern | eastland cad contact |
+| Shelby*| 48419 | 21,378 | PACS | *RECOVERED FREE — year_built + roof + eff-yr loaded* |
+| Bosque | 48035 | 19,975 | BIS | feedback@BosqueCAD.com |
+| Jackson | 48239 | 18,453 | BIS | info@jacksoncad.org · 361-782-7115 |
+| Robertson | 48395 | 16,935 | BIS | rcad@robertsoncad.com · 979-828-5800 |
+| Kleberg | 48273 | 14,909 | BIS | 361-595-5775 |
+| DeWitt | 48123 | 20,802 | Harris Govern | information@dewittcad.org · 361-275-5753 |
+| Gonzales | 48177 | 20,420 | Harris Govern | gonzcad@gvec.net · 830-672-2879 |
+| Hutchinson | 48233 | 18,938 | Harris Govern | hcad@hutchinsoncad.com · 806-274-2294 |
+| Panola | 48365 | 18,812 | Harris Govern | dmcphail@panolacad.org · 903-693-2891 |
+| Ward | 48475 | 15,174 | Harris Govern | wardcad@wardcadtx.org · 432-943-3224 |
+| Pecos | 48371 | 14,720 | Harris Govern | scalderon@pecoscad.org · 432-336-7587 |
+| Runnels | 48399 | 15,008 | SWData/ISW | support@runnelscad.org · 325-365-3583 |
+
+**Long tail — ~70 rural counties (<15K parcels each, ~560K total):** all confirmed gated (P&A "Accounts"/BIS value-roll/Harris-Govern exemption-CSV variants that structurally lack year_built). Individual PIAs here are impractical; **these are the strongest case for licensed data (EagleView roof-age imagery / ATTOM property backbone)** rather than 70 separate requests. Full list in `PERMIT_COVERAGE.md`-adjacent audit + `data/texas_county_system_map.md`.
