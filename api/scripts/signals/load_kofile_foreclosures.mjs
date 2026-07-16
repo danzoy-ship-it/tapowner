@@ -78,13 +78,23 @@ const SOURCES = {
     brazos:       { sub: "brazos",       fips: "48041" },
     collin:       { sub: "collin",       fips: "48085" }, // complement to the collin_cc Blazor scrape (that one only covers geocoded notices)
 
-    // --- untested prep, the .search.kofile.com host variant (found 2026-07-15/16;
-    // NOT yet confirmed to be the same app/protocol -- verify the bootstrap() GET
-    // returns a __ort token before trusting these; if it 404s/differs, skip-log it) ---
-    anderson:     { sub: "andersontx.search.kofile.com",  fips: "48001" },
-    zapata:       { sub: "zapatatx.search.kofile.com",    fips: "48505" },
-    jimwells:     { sub: "jimwellstx.search.kofile.com",  fips: "48249" },
+    // --- DISABLED: the .search.kofile.com host is a DIFFERENT, incompatible system.
+    // Tested 2026-07-16: bootstrap returns HTTP 500 (zapata/jimwells) or the socket
+    // never connects (anderson). It is NOT the same app as .tx.publicsearch.us -- do
+    // NOT re-enable without separately reverse-engineering that host. Left here so the
+    // fips/mapping isn't lost if someone cracks that variant later.
+    //   anderson:  { sub: "andersontx.search.kofile.com", fips: "48001" },
+    //   zapata:    { sub: "zapatatx.search.kofile.com",   fips: "48505" },
+    //   jimwells:  { sub: "jimwellstx.search.kofile.com", fips: "48249" },
 };
+
+// RETURN-ADDRESS LEVER RESULT (tested 2026-07-16 on hidalgo + cameron, the two 0%-tie
+// counties, with --try-return-address): 0 matches on both. After the safety guards
+// (business-name filter + batch-frequency guard), NONE of the return addresses tie to a
+// parcel -- they're trustee/law-firm offices, not the property. CONCLUSION: returnAddress
+// is NOT a safe way past the Kofile free-index paywall. The lever stays (off by default)
+// but do not expect it to rescue 0%-tie counties. The paywall ceiling is real: counties
+// whose free index carries a legalDescription tie; those that don't tie ~0%.
 
 // Government/institutional owners are not real seller leads -> drop them from
 // the parcel join. (Same guard the SIGNALS campaign uses elsewhere.)
