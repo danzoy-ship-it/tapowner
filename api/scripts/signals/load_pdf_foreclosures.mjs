@@ -2507,6 +2507,214 @@ const SOURCES = {
     // Brooks' fips is 48047, NOT 48027 (that's Bell County -- already loaded
     // as bell_cc above). Verified against the standard TX alphabetical FIPS
     // sequence (2026-07-16).
+
+    // ---- Deep East TX / Piney Woods wave (2026-07-16) ----------------------
+    // Candidate fips verified against the standard TX alphabetical FIPS
+    // sequence (cross-checked vs. already-loaded entries above: Harris=48201,
+    // Bell=48027, Ellis=48139, Wise=48497, Kerr=48265, Webb=48479, Brooks=48047,
+    // Coke=48081, Scurry=48415 all confirmed consistent) + WebSearch spot-checks
+    // on Jasper/Sabine/San Jacinto/Shelby. All 10 candidates checked out.
+
+    // Polk County clerk (easydocs/IDS app on polkcountyapps.net -- the modern
+    // polktx.gov/312/Foreclosures CivicPlus page just links out): /easydocs/
+    // foreclosure/listDocs-new.asp?year=<Y> lists showdoc.asp?year=<Y>&
+    // docName=<YYYY-MM-DD>-foreclosure-<NNN>.pdf where the docName date IS the
+    // sale date (first-Tuesdays, Upshur/Bosque semantics). Raw PDF at
+    // LinkedDir/<year>/<docName>. HTTP only (no TLS on the app host).
+    polk_cc: {
+        fips: "48373",
+        // sale venue: Dunbar Gym, 1103 Dunbar St, Livingston (effective
+        // Aug 10, 2022, per the clerk page's own venue-designation order)
+        venue: /COURT\s*HOUSE|DUNBAR\s+GYM|\b11[0O]3\s+DUNBAR\b/i,
+        discover: async () => {
+            const base = "http://polkcountyapps.net/easydocs/foreclosure/";
+            const now = new Date(), years = new Set();
+            for (let d = -(+(process.env.FC_BACK || 0)); d <= 2; d++) {
+                const t = new Date(Date.UTC(now.getFullYear(), now.getMonth() + d, 1));
+                years.add(t.getUTCFullYear());
+            }
+            const out = [];
+            for (const y of years) {
+                let html;
+                try {
+                    html = await fetchText(`${base}listDocs-new.asp?year=${y}`);
+                } catch (e) {
+                    console.error(`  polk ${y}: list fetch failed (${e.message})`);
+                    continue;
+                }
+                for (const m of html.matchAll(/docName=(((\d{4})-(\d{2})-\d{2})[^"'&<> ]*\.pdf)/gi)) {
+                    const year = +m[3], mon = +m[4];
+                    if (!mon || mon > 12 || !inWindow(year, mon)) continue;
+                    out.push({ url: `${base}LinkedDir/${y}/${m[1]}`, year, month: mon, name: `polk_${m[1]}` });
+                }
+            }
+            return out;
+        },
+    },
+    // Tyler County clerk (CivicLive, co.tyler.tx.us): /page/tyler.Forclosures
+    // is an accordion, one heading per sale MONTH ("SEPTEMBER 2026 FORECLUSRE"
+    // -- the clerk's own typo, "FORECLUSRE" not "FORECLOSURE", so match on the
+    // "FOR" stem) each followed by that month's per-notice PDFs under
+    // /upload/page/3326/ (filename = grantor names + notice type). Sequential
+    // heading->links scan like Hill/Medina/Burnet.
+    tyler_cc: {
+        fips: "48457",
+        // sale venue: under the stairs of the north entrance, Tyler County
+        // Courthouse, 100 West Bluff, Woodville (number-pinned)
+        venue: /COURT\s*HOUSE|\b1[0O][0O]\s+W(?:EST)?\.?\s*BLUFF\b/i,
+        discover: async () => {
+            const base = "https://www.co.tyler.tx.us";
+            const html = await fetchText(base + "/page/tyler.Forclosures");
+            const re = /lblTitle_\d+">\s*([A-Za-z]+)\s+(\d{4})\s+FOR|href="(\/upload\/page\/3326\/[^"]+\.pdf)"/gi;
+            const out = [], seen = new Set();
+            let cur = null, m;
+            while ((m = re.exec(html))) {
+                if (m[1]) {
+                    const mon = MONTHS.indexOf(m[1].slice(0, 3).toUpperCase()) + 1;
+                    cur = mon ? { year: +m[2], month: mon } : null;
+                } else if (cur && inWindow(cur.year, cur.month) && !seen.has(m[3])) {
+                    seen.add(m[3]);
+                    out.push({
+                        url: base + encodeURI(m[3]),
+                        year: cur.year,
+                        month: cur.month,
+                        name: `tyler_${cur.year}-${String(cur.month).padStart(2, "0")}_${path.basename(m[3]).replace(/[^\w.-]+/g, "_")}`,
+                    });
+                }
+            }
+            return out;
+        },
+    },
+    // San Jacinto County clerk (CivicLive, co.san-jacinto.tx.us): /page/
+    // sanjacinto.ForeclosureListings links ONE consolidated packet per sale
+    // month, anchor text "<MONTH> <YYYY> FORECLOSURE LISTINGS" (month+year
+    // WITH year, printed directly -- no day). A sibling "NOTICE OF CONSTABLE
+    // SALE" entry (delinquent-tax constable sale, not a mortgage trustee
+    // notice) doesn't match the FORECLOSURE-suffix requirement.
+    sanjacinto_cc: {
+        fips: "48407",
+        venue: /COURT\s*HOUSE/i,
+        discover: async () => {
+            const base = "https://www.co.san-jacinto.tx.us";
+            const html = await fetchText(base + "/page/sanjacinto.ForeclosureListings");
+            const out = [], seen = new Set();
+            for (const m of html.matchAll(/href="(\/upload\/page\/6947\/[^"]+\.pdf)">\s*([A-Za-z]+)\s+(\d{4})\s+FORECLOSURE/gi)) {
+                const mon = MONTHS.indexOf(m[2].slice(0, 3).toUpperCase()) + 1;
+                const year = +m[3];
+                if (!mon || !inWindow(year, mon) || seen.has(m[1])) continue;
+                seen.add(m[1]);
+                out.push({
+                    url: base + encodeURI(m[1]),
+                    year,
+                    month: mon,
+                    name: `sanjacinto_${year}-${String(mon).padStart(2, "0")}_${path.basename(m[1]).replace(/[^\w.-]+/g, "_")}`,
+                });
+            }
+            return out;
+        },
+    },
+    // Shelby County clerk (CivicLive, co.shelby.tx.us): /page/
+    // shelby.ForeclosureNotices lists per-notice PDFs under /upload/page/2757/
+    // docs/<year>/FC-<year>-<NNN>.pdf, each preceded by "Posted M/D/YY:" text
+    // (the FILING date, not the sale date) -> saleMonthAfter (+21d, Prop. Code
+    // 51.002), like Navarro/Milam. Sequential posted-date -> link scan.
+    shelby_cc: {
+        fips: "48419",
+        venue: /COURT\s*HOUSE/i,
+        discover: async () => {
+            const base = "https://www.co.shelby.tx.us";
+            const html = await fetchText(base + "/page/shelby.ForeclosureNotices");
+            const re = /Posted\s+(\d{1,2})\/(\d{1,2})\/(\d{2,4}):|href="(\/upload\/page\/2757\/docs\/[^"]+\.pdf)"/gi;
+            const out = [], seen = new Set();
+            let posted = null, m;
+            while ((m = re.exec(html))) {
+                if (m[1]) {
+                    let py = +m[3];
+                    if (py < 100) py += 2000;
+                    posted = { y: py, m: +m[1], d: +m[2] };
+                } else if (posted && m[4] && !seen.has(m[4])) {
+                    seen.add(m[4]);
+                    const s = saleMonthAfter(posted.y, posted.m, posted.d);
+                    if (!inWindow(s.year, s.month)) continue;
+                    out.push({
+                        url: base + encodeURI(m[4]),
+                        year: s.year,
+                        month: s.month,
+                        name: `shelby_${path.basename(m[4]).replace(/[^\w.-]+/g, "_")}`,
+                    });
+                }
+            }
+            return out;
+        },
+    },
+    // Sabine County clerk (easydocs/IDS app, sabine.easydocs.us -- the
+    // CivicLive co.sabine.tx.us site's PublicDocuments page just links out):
+    // /foreclosures/listDocs-new.asp?year=<Y> lists showdoc.asp?year=<Y>&
+    // docName=<YYYY-MM-DD>-<grantor(s)> foreclosure--<time>.pdf where the
+    // docName date IS the sale date (first-Tuesdays, Upshur/Polk semantics).
+    // Filenames carry literal SPACES (unlike Upshur/Polk's dash-only names)
+    // -> encodeURI the built URL.
+    sabine_cc: {
+        fips: "48403",
+        venue: /COURT\s*HOUSE/i,
+        discover: async () => {
+            const base = "http://sabine.easydocs.us/foreclosures/";
+            const now = new Date(), years = new Set();
+            for (let d = -(+(process.env.FC_BACK || 0)); d <= 2; d++) {
+                const t = new Date(Date.UTC(now.getFullYear(), now.getMonth() + d, 1));
+                years.add(t.getUTCFullYear());
+            }
+            const out = [];
+            for (const y of years) {
+                let html;
+                try {
+                    html = await fetchText(`${base}listDocs-new.asp?year=${y}`);
+                } catch (e) {
+                    console.error(`  sabine ${y}: list fetch failed (${e.message})`);
+                    continue;
+                }
+                for (const m of html.matchAll(/docName=(((\d{4})-(\d{2})-\d{2})[^"]*\.pdf)/gi)) {
+                    const year = +m[3], mon = +m[4];
+                    if (!mon || mon > 12 || !inWindow(year, mon)) continue;
+                    out.push({
+                        url: `${base}LinkedDir/${y}/${encodeURI(m[1])}`,
+                        year,
+                        month: mon,
+                        name: `sabine_${m[1].replace(/[^\w.-]+/g, "_")}`,
+                    });
+                }
+            }
+            return out;
+        },
+    },
+    // Liberty County: NOT here -- co.liberty.tx.us/page/liberty.Foreclosures
+    // (CivicLive, per-notice PDFs under /upload/page/4883/ with filename
+    // "F<MMDDYYYY>.<seq>.pdf" carrying the sale date) is STALE: the newest
+    // accordion heading is "AUGUST 2023" -- nearly 3 years old, no 2024/2025/
+    // 2026 content anywhere on the page. Per the >6mo staleness rule, skip
+    // (verified 2026-07-16; --parse-only confirmed 0 packets in-window).
+    // Jasper County: NOT here -- co.jasper.tx.us/page/jasper.Foreclosures is a
+    // CivicLive CALENDAR widget (client-rendered), not a static list; its own
+    // iCal feed (newtools.cira.state.tx.us/page/calendar/16795/0/calendar.ics)
+    // is STALE -- every event dated 2018 (verified 2026-07-16). No current
+    // notice system online.
+    // Newton County: NOT here -- co.newton.tx.us/page/newton.county.clerk lists
+    // per-notice foreclosure PDFs (/upload/page/3507/docs/Foreclosures/<case#>
+    // <name>.pdf) in a static side-menu widget with NO dates anywhere (not in
+    // the filename, not in the anchor text, not in a heading) -- nothing to
+    // bucket by sale month. Skip (verified 2026-07-16).
+    // Hardin County: NOT here -- hardincountytx.gov/page/Foreclosures (the
+    // co.hardin.tx.us legacy host 302s here) renders the Foreclosures content
+    // block completely EMPTY right now (just the page title, no notices, no
+    // links); historical PDFs exist at /upload/page/8842/Docs/<Y>/<MON>/ (e.g.
+    // Aug 2025) but nothing current to build a working discover() against.
+    // Re-check when postings resume (verified 2026-07-16).
+    // Trinity County: NOT here -- no foreclosure/trustee-sale page is linked
+    // from the current co.trinity.tx.us nav (checked Home, County Clerk,
+    // Public Notices); the older indexed URL (trinity.events_foreclosuresales2)
+    // 403s under both curl and Node fetch regardless of case. Only "County Tax
+    // Sales" (delinquent tax, not mortgage trustee notices) found. Skip
+    // (verified 2026-07-16).
 };
 
 // sale-month window for discovery on archive-style pages that list years of
