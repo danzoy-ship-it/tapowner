@@ -2924,6 +2924,14 @@ const ADDR_BARE = /^\W{0,4}([0-9OolIiZzSsB]{1,7})\s+([A-Za-z0-9'’. -]{4,60}?)\
 // "3206THEBES" -> "3206 THEBES": OCR drops the number/name space sometimes
 const deglue = (s) => s.replace(/\b(\d{2,7})([A-Za-z]{3,})/g, "$1 $2");
 
+// Wheeler-style "207 S Choctaw St, Shamrock, Wheeler County TX 79079": some
+// clerk templates insert a "<Name> County" token between the city and the
+// state. Strip it so the street/city/state regex matches again. Only fires on
+// the "..., <Word(s)> County TX" shape -- a correctly formatted address never
+// carries "County" immediately before the state, so a good line is untouched.
+const stripInsertedCounty = (s) =>
+    s.replace(/,\s*[A-Za-z][A-Za-z.'-]+(?:\s+[A-Za-z.'-]+){0,2}\s+County\s+(T[EI]?X)\b/i, ", $1");
+
 function splitCity(street, city) {
     if (city) return { street, city };
     // "31710 CARLISLE COVE COURT FULSHEAR": cut the street at its last suffix
@@ -2945,8 +2953,13 @@ const unglueSuffix = (street) =>
     );
 
 function parseAddrLine(line) {
-    const s = deglue(line.replace(/\s+/g, " ").trim());
+    let s = deglue(line.replace(/\s+/g, " ").trim());
     let m = s.match(ADDR_FULL);
+    // retry with an inserted "<Name> County" token stripped (Wheeler format)
+    if (!m && /\sCOUNTY\s+T[EI]?X/i.test(s)) {
+        const s2 = stripInsertedCounty(s);
+        if (s2 !== s && (m = s2.match(ADDR_FULL))) s = s2;
+    }
     if (m) {
         const { street, city } = splitCity(unglueSuffix(m[2].trim()), (m[3] || "").trim());
         return { num: fixDigits(m[1]), street, city, zip: fixDigits(m[4]) };
@@ -2968,6 +2981,20 @@ function validAddr(a) {
 // description is the only handle, and parcels.legal_description can match it.
 const LEGAL_RE =
     /L[O0]TS?\s+(?:[A-Z\- ]{2,36}\(\s*)?(\d{1,4})\s*\)?\s*[,.]?\s*(?:IN\s+)?B[LI1][O0]CK\s+(?:[A-Z\- ]{2,30}\(\s*)?(\d{1,4}|[A-Z])\s*\)?\s*[,.]?\s*(?:[O0]F\s+)?([A-Z][A-Z0-9'&. -]{3,60}?)(?:\s*,|\s+A\s+SUBDIVISION|\s+AN\s+ADDITION|\s+ACC[O0]RDING|\s+CITY\s+[O0]F|\s+PLAT\b|\s+REC[O0]RDED|\s*\.(?:\s|$))/i;
+
+// LOT-only fallback (no Block token): "Lot 1595, Rockin J Ranch, Phase 6"
+// (Blanco). Tried only when LEGAL_RE (which requires a Block) fails, so it is
+// purely additive. Matched by subdivision anchor + lot number, with the same
+// 2+-parcel ambiguity guard as the lot+block path -- wrong owner worse than none.
+const LEGAL_LOT_ONLY =
+    /L[O0]TS?\s+(?:[A-Z\- ]{2,36}\(\s*)?(\d{1,5})\s*\)?\s*,\s*(?:[O0]F\s+)?([A-Z][A-Z0-9'&. -]{3,50}?)(?:\s*,|\s+PHASE\b|\s+SEC(?:TION)?\b|\s+UNIT\b|\s+ACC[O0]RDING|\s+A\s+SUBDIVISION|\s+AN\s+ADDITION|\s+PLAT\b|\s*\.(?:\s|$))/i;
+// TRACT-in-named-place fallback: "Tract 5 ... of the WHELIHAN ESTATES",
+// "Tract No. 1 ... LOMA BLANCA GRANT" (Brooks/Newton, rural metes-and-bounds).
+// Anchored on a real place suffix so bare "tract of land" prose can't trip it.
+// The ambiguity guard drops it whenever the anchor is shared by 2+ parcels
+// (a survey/abstract almost always is) -- accuracy over recall.
+const LEGAL_TRACT =
+    /TRACTS?\s+(?:N[O0]\.?\s*)?(\d{1,3})\b[A-Z0-9,'.\- ]{0,45}?\b(?:[O0]F|IN)\s+(?:THE\s+)?([A-Z][A-Z0-9'&. -]{4,45}?\s+(?:SUBDIVISION|ESTATES?|ADDITION|RANCH|GRANT|SURVEY))\b/i;
 
 // lines that carry party/venue addresses, not the property being sold
 const PARTY_LINE = /trustee|servicer|mortgagee|attorney|law\s+firm|\bP\.?\s?C\.?\s*[,.]|\bLLP\b|\bPLLC\b|located\s+at|whose\s+address|c\/o\s|firm|bank|p\.?o\.?\s*box/i;
@@ -3056,13 +3083,44 @@ function parsePacket(text, { zipSet, citySet } = {}) {
             }
             // pass 2: address-anywhere sweep, county-zip-gated
             if (PARTY_LINE.test(lines[li])) continue;
-            const sm = deglue(lines[li].replace(/\s+/g, " ")).match(ADDR_ANY);
+            const swLine = deglue(lines[li].replace(/\s+/g, " "));
+            let sm = swLine.match(ADDR_ANY);
+            if (!sm && /\sCOUNTY\s+T[EI]?X/i.test(swLine)) sm = stripInsertedCounty(swLine).match(ADDR_ANY);
             if (!sm) continue;
             const { street, city } = splitCity(unglueSuffix(sm[2].trim()), (sm[3] || "").trim());
             const addr = { num: fixDigits(sm[1]), street, city, zip: fixDigits(sm[4]) };
             if (!validAddr(addr) || !addr.zip) continue;
             if (!zipSet) continue; // sweep only runs zip-gated (needs a DB conn)
             add(addr, pi, isTax, "sweep");
+        }
+    }
+    // caption/header fallback: a well-formed full address printed as a bare
+    // caption or repeated page header with NO cue phrase (Karnes: a two-line
+    // "2470 S US 181" / "KARNES CITY, TX 78118" header on every page). Runs
+    // only on pages that yielded no cue/sweep address, and ONLY accepts a page
+    // when EXACTLY ONE distinct in-county address occurs on it -- so it can
+    // never pick the venue or guess between two candidates. zip-gated (needs
+    // the county zip set); joins a street-only line with a following city/zip
+    // line the way the cue path already does.
+    if (zipSet) {
+        const seenPages = new Set([...found.values()].flatMap((n) => [...n.pages]));
+        for (let pi = 0; pi < pages.length; pi++) {
+            if (seenPages.has(pi)) continue;
+            const lines = pages[pi].split("\n");
+            const cands = new Map();
+            for (let li = 0; li < lines.length; li++) {
+                if (PARTY_LINE.test(lines[li])) continue;
+                let a = parseAddrLine(lines[li]);
+                if ((!a || !a.zip) && li + 1 < lines.length && !PARTY_LINE.test(lines[li + 1])) {
+                    const j = parseAddrLine(lines[li].trim() + " " + lines[li + 1].trim());
+                    if (validAddr(j) && j.zip) a = j;
+                }
+                if (!validAddr(a) || !a.zip || !zipSet.has(a.zip)) continue;
+                cands.set(`${a.num} ${nameOnly(a.street)}`, a);
+            }
+            if (cands.size !== 1) continue; // 0 = nothing; 2+ = ambiguous -> skip
+            const isTax = /TAX\s+CODE|DELINQUENT\s+TAX(?:ES)?|TAX\s+FORECLOSURE/i.test(pages[pi].toUpperCase());
+            add([...cands.values()][0], pi, isTax, "caption");
         }
     }
     // legal-description pass: only on pages that yielded NO street address
@@ -3072,28 +3130,35 @@ function parsePacket(text, { zipSet, citySet } = {}) {
     for (let pi = 0; pi < pages.length; pi++) {
         if (addrPages.has(pi)) continue;
         const flat = pages[pi].replace(/\s+/g, " ");
-        const m = flat.match(LEGAL_RE);
-        if (!m) continue;
-        const lot = m[1].replace(/^0+/, ""), blk = m[2].replace(/^0+/, "");
-        const subdiv = m[3]
+        // lot+block first (unchanged); then LOT-only, then TRACT-in-named-place.
+        // Only one fires -- the later two are additive fallbacks for the formats
+        // the block-requiring LEGAL_RE misses.
+        let lot = null, blk = null, tract = null, rawSub = null, mm;
+        if ((mm = flat.match(LEGAL_RE))) { lot = mm[1].replace(/^0+/, ""); blk = mm[2].replace(/^0+/, ""); rawSub = mm[3]; }
+        else if ((mm = flat.match(LEGAL_LOT_ONLY))) { lot = mm[1].replace(/^0+/, ""); rawSub = mm[2]; }
+        else if ((mm = flat.match(LEGAL_TRACT))) { tract = mm[1].replace(/^0+/, ""); rawSub = mm[2]; }
+        else continue;
+        const subdiv = rawSub
             .replace(/^(?:OF|IN|THE)\s+/i, "")
             .toUpperCase()
             .replace(/['’]/g, "") // MORGAN'S -> MORGANS (DB drops the quote)
             .replace(/[^A-Z0-9 ]+/g, " ")
             .replace(/\s+/g, " ")
             .trim();
-        if (!lot || !blk || !/[A-Z]{4}/.test(subdiv)) continue;
+        if (!(lot || tract) || !/[A-Z]{4}/.test(subdiv)) continue;
         // reject boilerplate captures ("...BLOCK 3, ... COUNTY, TEXAS")
         if (/^(COUNTY|CITY|TEXAS|STATE|SAID|BLOCK|PLAT|RECORDED|BELL|FORT|LOTS?)\b/.test(subdiv)) continue;
-        const key = `L${lot} B${blk} ${subdiv.split(" ").slice(0, 2).join(" ")}`;
+        const key = blk ? `L${lot} B${blk} ${subdiv.split(" ").slice(0, 2).join(" ")}`
+            : lot ? `L${lot} ${subdiv.split(" ").slice(0, 2).join(" ")}`
+                : `T${tract} ${subdiv.split(" ").slice(0, 2).join(" ")}`;
         const isTax = /TAX\s+CODE|DELINQUENT\s+TAX(?:ES)?|TAX\s+FORECLOSURE/i.test(pages[pi]);
         let n = found.get(key);
         if (!n) {
             n = {
                 key,
-                legal: { lot, blk, subdiv },
+                legal: { lot, blk, subdiv, tract },
                 subtype: isTax ? "tax" : "mortgage",
-                raw: `Lot ${lot}, Block ${blk}, ${subdiv}`,
+                raw: blk ? `Lot ${lot}, Block ${blk}, ${subdiv}` : lot ? `Lot ${lot}, ${subdiv}` : `Tract ${tract}, ${subdiv}`,
                 found: "legal",
                 pages: new Set(),
             };
@@ -3201,9 +3266,24 @@ async function legalMatch(c, fips, notices, deadline = Infinity) {
             deferred++;
             continue;
         }
-        const { lot, blk, subdiv } = n.legal;
-        let blkAlt = blk;
-        if (CONFUSE[blk.toUpperCase()]) blkAlt = `(?:${blk}|${CONFUSE[blk.toUpperCase()]})`;
+        const { lot, blk, subdiv, tract } = n.legal;
+        // Build the two positional constraint regexes ($3 = "block", $4 = "lot")
+        // so the query shape stays identical. An empty pattern (~* '') matches
+        // any non-null legal_description, i.e. "don't constrain on this axis":
+        //   lot+block -> block regex + lot regex (unchanged)
+        //   lot-only  -> no block constraint + lot regex
+        //   tract     -> no block constraint + tract-number regex
+        let blkRe = "", lotRe = "";
+        if (blk) {
+            let blkAlt = blk;
+            if (CONFUSE[blk.toUpperCase()]) blkAlt = `(?:${blk}|${CONFUSE[blk.toUpperCase()]})`;
+            blkRe = `\\m(?:BLOCK|BLK)\\s*0*${blkAlt}\\M`;
+            lotRe = `\\m(?:LOT|LT)S?\\s*(?:PT\\s*)?0*${lot}\\M`;
+        } else if (lot) {
+            lotRe = `\\m(?:LOT|LT)S?\\s*(?:PT\\s*)?0*${lot}\\M`;
+        } else if (tract) {
+            lotRe = `\\m(?:TRACTS?|TR)\\s*(?:N[O0]\\.?\\s*)?0*${tract}\\M`;
+        } else continue;
         // subdivision words can be OCR-damaged ("IDJNTERS GLEN") -- try each
         // usable word as the ILIKE anchor until something comes back
         const anchors = subdiv.split(" ").filter((w) => w.length >= 4).slice(0, 3);
@@ -3220,7 +3300,7 @@ async function legalMatch(c, fips, notices, deadline = Infinity) {
                        AND owner_name !~* $5
                      ORDER BY id
                      LIMIT 6`,
-                    [fips, `%${anchor}%`, `\\m(?:BLOCK|BLK)\\s*0*${blkAlt}\\M`, `\\m(?:LOT|LT)S?\\s*(?:PT\\s*)?0*${lot}\\M`, GOV_OWNER]
+                    [fips, `%${anchor}%`, blkRe, lotRe, GOV_OWNER]
                 ));
             } catch {
                 continue; // hostile OCR chars in the anchor -> try the next word
@@ -3228,6 +3308,10 @@ async function legalMatch(c, fips, notices, deadline = Infinity) {
             if (rows.length) break;
         }
         if (!rows.length) continue;
+        // LOT-only / tract fallbacks have no Block token to pin the parcel, so
+        // apply the strict campaign guard: a unique parcel or nothing (a shared
+        // subdivision/survey anchor that hits 2+ parcels is dropped, not guessed).
+        if (!blk && new Set(rows.map((r) => r.id)).size > 1) continue;
         // disambiguate on subdivision similarity ("PHASE ONE" vs "PHASE TWO"
         // can share block+lot): normalized levenshtein on the legal prefix
         const score = (r) => {
@@ -3438,6 +3522,7 @@ async function loadSource(c, name, cfg, parseOnly) {
         console.log(
             `  ${monthKey} (sale ${dt}): ${notices.length} notices ` +
             `(${notices.filter((n) => n.found === "cue").length} cue / ${notices.filter((n) => n.found === "sweep").length} sweep / ` +
+            `${notices.filter((n) => n.found === "caption").length} caption / ` +
             `${notices.filter((n) => n.found === "legal").length} legal-only; ` +
             `${cueMisses}/${cueHits + cueMisses} cue misses; ${boiler} boilerplate dropped)`
         );
@@ -3523,7 +3608,7 @@ async function main() {
 // without editing this file concurrently). A sibling script defines its own SOURCES
 // object and calls runSources(itsSources) after importing the helpers below; the
 // join/GOV_OWNER/upsert machinery stays single-sourced here. ---
-export { MONTHS, inWindow, saleMonthAfter, fetchText, loadSource, UA };
+export { MONTHS, inWindow, saleMonthAfter, fetchText, loadSource, UA, parsePacket };
 
 export async function runSources(sources, { parseOnly = false } = {}) {
     let c = null;
