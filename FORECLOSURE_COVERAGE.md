@@ -18,7 +18,22 @@ define a uniform URL/recipe, so each county still needs its own `discover()`; an
 (one WS protocol → ~46 counties, paywall-capped). So this campaign is closer to per-county work —
 the platform knowledge accelerates discovery but doesn't eliminate it.
 
-## STATUS: 91 / 254 counties have a foreclosure signal · 2,009 tied to parcels (as of 2026-07-16)
+## STATUS: 130 / 254 counties have a foreclosure signal · 2,100 tied to parcels (as of 2026-07-16)
+
+**All 254 counties have now been ATTEMPTED** — each is loaded, Kofile-parked, or skip-logged with a
+concrete reason. Two parallel waves (12 region agents) swept the rural tail 2026-07-16. The
+remaining ~124 with no signal are overwhelmingly deep-rural "no online posting / courthouse-door only"
+or stale/paywalled — genuine absence, not un-attempted. Wave-2 additions (each its own
+`load_fc_<region>.mjs`): Maverick 19, Brown 12, Waller 10, Jim Hogg 4, Washington 3, Hale 3, DeWitt 3,
+Franklin 3, Crane 4, Pecos, Ward, Edwards, Montague, Archer, Stephens, Eastland, Jones, Haskell,
+Robertson 2, Deaf Smith, Castro, Swisher, Lamb, Moore 3, Gray, + more (see the region files).
+**Tesseract OCR was installed** (winget) mid-wave → image-only notice PDFs now read; the earlier
+"no-OCR" gap is closed. **Revisit queue additions:** Clay (TLS-blocked on this IP → clean-IP retry),
+Mitchell (~25 real postings but needs OCR-in-discover — a small loader tweak), and re-verify any
+"unparseable/no-page" skip against the RIGHT page (Robertson was wrongly skipped — had checked the
+wrong page — now loaded).
+
+### (historical STATUS line: 91 / 2,009 before wave 2)
 
 ## ✅ LOADED (91 counties; tie count in parens; source `<name>_cc` unless noted)
 arcgis: Bexar 276.
