@@ -114,6 +114,34 @@ def parse_baths(value):
     return full, half
 
 
+# Roof-cover material from the "Roof Style"/"Roof Covering"/"ROOF COVER" attr.
+# Conservative: only unambiguous MATERIALS map; roof SHAPE codes (FLAT/HIP/GABLE/
+# RB/RC) and unknown district codes return None, so the metal-roof neighbor-envy
+# signal never gets a false positive. Unrecognized values are logged for a future
+# per-district crosswalk. Order matters (wood before composition so "WOOD SHINGLE"
+# -> wood, not composition).
+def classify_roof(value):
+    v = str(value).strip().upper()
+    if not v:
+        return None
+    head = re.split(r"[,\]\[/;]", v)[0].strip()
+    for t in (head, v):
+        if "METAL" in t or "STANDING SEAM" in t or t in ("M", "RCMT"):
+            return "metal"
+        if "WOOD" in t or "SHAKE" in t:
+            return "wood"
+        if "COMP" in t or "ASPHALT" in t or "SHINGLE" in t or t == "RCCS":
+            return "composition"
+        if "TILE" in t or "CLAY" in t or t == "RCTL":
+            return "tile"
+        if "SLATE" in t:
+            return "slate"
+        if ("BUILT" in t or t.startswith("BUR") or "TAR" in t or "GRAVEL" in t
+                or "MEMBRANE" in t or "TPO" in t or "FOAM" in t or t == "ROLL"):
+            return "built_up"
+    return None
+
+
 def main() -> None:
     args = [a for a in sys.argv[1:] if a != "--dry-run"]
     dry_run = "--dry-run" in sys.argv
@@ -134,9 +162,10 @@ def main() -> None:
     )
     started = time.time()
 
-    # pid -> {living, yr, pool, casita, shed, garage, types:set, beds, bfull, bhalf}
+    # pid -> {living, yr, eyr, pool, casita, shed, garage, types:set, beds, bfull, bhalf, roof}
     acc: dict = {}
     label_counts: dict = {}
+    roof_raw: dict = {}   # raw roof-attr value -> count (for crosswalk auditing)
 
     print(f"reading {detail}", flush=True)
     with zf.open(detail) as raw:
@@ -150,9 +179,10 @@ def main() -> None:
             cd = line[40:50].strip().upper()
             desc = line[50:75].strip()
             u = desc.upper()
-            e = acc.setdefault(pid, {"living": None, "yr": None, "pool": False,
+            e = acc.setdefault(pid, {"living": None, "yr": None, "eyr": None, "pool": False,
                                      "casita": False, "shed": False, "garage": False,
-                                     "types": set(), "beds": None, "bfull": None, "bhalf": None})
+                                     "types": set(), "beds": None, "bfull": None, "bhalf": None,
+                                     "roof": None})
             if desc:
                 e["types"].add(desc)
                 label_counts[desc] = label_counts.get(desc, 0) + 1
@@ -170,9 +200,11 @@ def main() -> None:
             if (DWELLING_RE.search(u) or cd in ("MA", "MH", "HSE", "RES")) and not EXCLUDE_RE.search(u):
                 living = to_int(line[93:108], 1, 2_000_000)
                 yr = to_int(line[85:89], 1800, 2027)
+                eyr = to_int(line[89:93], 1800, 2027)   # depreciation_yr = effective year built
                 if living:
                     e["living"] = (e["living"] or 0) + living
                 e["yr"] = e["yr"] or yr
+                e["eyr"] = e["eyr"] or eyr
             if dry_run and i >= 120_000:
                 print("dry-run: stopping detail parse", flush=True)
                 break
@@ -209,6 +241,14 @@ def main() -> None:
                         acc[pid]["bfull"] = full
                         if half:
                             acc[pid]["bhalf"] = half
+                elif "ROOF" in nu:
+                    # "Roof Style"/"Roof Covering"/"ROOF COVER" — mixes material +
+                    # shape codes; classify_roof keeps only recognized materials.
+                    if value:
+                        roof_raw[value] = roof_raw.get(value, 0) + 1
+                    rm = classify_roof(value)
+                    if rm:
+                        acc[pid]["roof"] = acc[pid]["roof"] or rm
                 if dry_run and i >= 200_000:
                     print("dry-run: stopping attr parse", flush=True)
                     break
@@ -216,7 +256,8 @@ def main() -> None:
         print("no IMPROVEMENT_DETAIL_ATTR in zip — beds/baths skipped", flush=True)
 
     acc = {k: v for k, v in acc.items()
-           if v["living"] or v["yr"] or v["pool"] or v["types"] or v["beds"] or v["bfull"]}
+           if v["living"] or v["yr"] or v["eyr"] or v["pool"] or v["types"]
+           or v["beds"] or v["bfull"] or v["roof"]}
     print(f"aggregated {len(acc):,} properties ({time.time() - started:.0f}s)", flush=True)
 
     # Fixture-count guard: some districts' 'Plumbing' attr is the plumbing
@@ -266,9 +307,9 @@ def main() -> None:
             cur = conn.cursor()
             cur.execute(
                 """CREATE TEMP TABLE pacs_attrs (
-                       pid TEXT PRIMARY KEY, living INT, yr INT, pool BOOLEAN,
+                       pid TEXT PRIMARY KEY, living INT, yr INT, eyr INT, pool BOOLEAN,
                        casita BOOLEAN, shed BOOLEAN, garage BOOLEAN, improvements JSONB,
-                       beds INT, bfull INT, bhalf INT
+                       beds INT, bfull INT, bhalf INT, roof TEXT
                    )"""
             )
             buf = io.StringIO()
@@ -278,6 +319,7 @@ def main() -> None:
                     pid,
                     r"\N" if v["living"] is None else str(v["living"]),
                     r"\N" if v["yr"] is None else str(v["yr"]),
+                    r"\N" if v["eyr"] is None else str(v["eyr"]),
                     "t" if v["pool"] else "f",
                     "t" if v["casita"] else "f",
                     "t" if v["shed"] else "f",
@@ -286,35 +328,41 @@ def main() -> None:
                     r"\N" if v["beds"] is None else str(v["beds"]),
                     r"\N" if v["bfull"] is None else str(v["bfull"]),
                     r"\N" if v["bhalf"] is None else str(v["bhalf"]),
+                    r"\N" if v["roof"] is None else v["roof"],
                 ]) + "\n")
             buf.seek(0)
             cur.copy_expert("COPY pacs_attrs FROM STDIN", buf)
 
             if dry_run:
                 cur.execute(
-                    """SELECT count(*), count(*) FILTER (WHERE a.beds IS NOT NULL)
+                    """SELECT count(*), count(*) FILTER (WHERE a.beds IS NOT NULL),
+                              count(*) FILTER (WHERE a.eyr IS NOT NULL),
+                              count(*) FILTER (WHERE a.roof IS NOT NULL),
+                              count(*) FILTER (WHERE a.roof = 'metal')
                        FROM pacs_attrs a
                        JOIN parcels p ON p.county_fips = %s AND p.source_property_id = a.pid""",
                     (fips,),
                 )
-                j, jb = cur.fetchone()
-                print(f"joinable parcel rows: {j:,} (with beds {jb:,})", flush=True)
+                j, jb, je, jr, jm = cur.fetchone()
+                print(f"joinable parcel rows: {j:,} (beds {jb:,}, eff_yr {je:,}, roof {jr:,}, metal {jm:,})", flush=True)
                 conn.rollback()
                 print("dry-run complete, rolled back")
                 return
 
             cur.execute(
                 """UPDATE parcels p SET
-                       living_area_sqft = COALESCE(a.living, p.living_area_sqft),
-                       year_built       = COALESCE(p.year_built, a.yr),
-                       has_pool         = COALESCE(p.has_pool, FALSE) OR a.pool,
-                       has_casita       = COALESCE(p.has_casita, FALSE) OR a.casita,
-                       has_shed         = COALESCE(p.has_shed, FALSE) OR a.shed,
-                       has_garage       = COALESCE(p.has_garage, FALSE) OR a.garage,
-                       improvements     = COALESCE(a.improvements, p.improvements),
-                       bedrooms         = COALESCE(a.beds, p.bedrooms),
-                       baths_full       = COALESCE(a.bfull, p.baths_full),
-                       baths_half       = COALESCE(a.bhalf, p.baths_half)
+                       living_area_sqft     = COALESCE(a.living, p.living_area_sqft),
+                       year_built           = COALESCE(p.year_built, a.yr),
+                       effective_year_built = COALESCE(a.eyr, p.effective_year_built),
+                       has_pool             = COALESCE(p.has_pool, FALSE) OR a.pool,
+                       has_casita           = COALESCE(p.has_casita, FALSE) OR a.casita,
+                       has_shed             = COALESCE(p.has_shed, FALSE) OR a.shed,
+                       has_garage           = COALESCE(p.has_garage, FALSE) OR a.garage,
+                       improvements         = COALESCE(a.improvements, p.improvements),
+                       bedrooms             = COALESCE(a.beds, p.bedrooms),
+                       baths_full           = COALESCE(a.bfull, p.baths_full),
+                       baths_half           = COALESCE(a.bhalf, p.baths_half),
+                       roof_material        = COALESCE(a.roof, p.roof_material)
                    FROM pacs_attrs a
                    WHERE p.county_fips = %s AND p.source_property_id = a.pid""",
                 (fips,),
@@ -324,15 +372,18 @@ def main() -> None:
 
             cur.execute(
                 """SELECT count(*) FILTER (WHERE living_area_sqft IS NOT NULL),
-                          count(*) FILTER (WHERE has_pool),
                           count(*) FILTER (WHERE bedrooms IS NOT NULL),
                           count(*) FILTER (WHERE baths_full IS NOT NULL),
-                          count(*) FILTER (WHERE improvements IS NOT NULL)
+                          count(*) FILTER (WHERE effective_year_built IS NOT NULL),
+                          count(*) FILTER (WHERE roof_material IS NOT NULL),
+                          count(*) FILTER (WHERE roof_material = 'metal')
                    FROM parcels WHERE county_fips = %s""",
                 (fips,),
             )
-            sqft, pools, beds, baths, improv = cur.fetchone()
-            print(f"county: sqft={sqft:,} pool={pools:,} beds={beds:,} baths={baths:,} improvements={improv:,}", flush=True)
+            sqft, beds, baths, eyr, roof, metal = cur.fetchone()
+            print(f"county: sqft={sqft:,} beds={beds:,} baths={baths:,} "
+                  f"eff_yr={eyr:,} roof_mat={roof:,} (metal={metal:,})", flush=True)
+            _dump_roof(fips, roof_raw)
             return
         except psycopg2.OperationalError as err:
             print(f"DB phase attempt {attempt + 1} failed ({err}); retrying…", flush=True)
@@ -354,6 +405,25 @@ def _dump_labels(fips: str, label_counts: dict) -> None:
             safe = label.replace("|", "\\|")
             fh.write(f"| PACS | fips {fips} | `{safe}` | {count} |\n")
     print(f"logged {len(label_counts)} distinct improvement labels", flush=True)
+
+
+def _dump_roof(fips: str, roof_raw: dict) -> None:
+    """Append roof-cover values classify_roof didn't recognize, for crosswalk work."""
+    unrec = {v: c for v, c in roof_raw.items() if classify_roof(v) is None}
+    if not unrec:
+        return
+    path = os.path.join(os.path.dirname(__file__), "roof_labels_seen.md")
+    exists = os.path.exists(path)
+    with open(path, "a", encoding="utf-8") as fh:
+        if not exists:
+            fh.write("# Roof-cover values NOT yet mapped by classify_roof (per county)\n\n")
+            fh.write("Append-only. Extend classify_roof (or a per-district crosswalk) from these "
+                     "to recover more metal/tile/etc. roofs.\n\n")
+            fh.write("| county | raw roof value | count |\n|---|---|---|\n")
+        for v, c in sorted(unrec.items(), key=lambda kv: -kv[1])[:40]:
+            safe = str(v).replace("|", "\\|")
+            fh.write(f"| fips {fips} | `{safe}` | {c} |\n")
+    print(f"logged {len(unrec)} unmapped roof values", flush=True)
 
 
 if __name__ == "__main__":
