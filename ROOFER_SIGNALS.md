@@ -47,8 +47,24 @@ last_sale_date already loaded). Buckets:
   #8 refinement, #9 reroof-age, #12 fresh-reroof clustering, #13 metal-roof, #14 solar, #15 remodel/
   addition, #16 pool, #17 storm-adjacent repair. Huge leverage — one adapter, many signals.
 - **GENUINELY NEW pipeline (not scoped):** #2 high-wind (new NWS product, same pattern as hail),
-  #11 builder-grade (plat/builder data), #19 expired/FSBO (listing data — shared w/ realtor vertical),
-  #21 code-violations (city code-enforcement open data — a new crackable source like permits).
+  #11 builder-grade (plat/builder data), #21 code-violations (city code-enforcement open data — a new
+  crackable source like permits).
+- **VENDOR BUY, not a build (reclassified per the catalog's clarifications):** #19 expired/FSBO — it's
+  a purchased daily feed (REDX/Vulcan7/Landvoice-class), integrated as a `TraceProvider`-style vendor
+  (BatchData pattern: signed terms + API + address match), NOT a scrape (MLS licensed / FSBO ToS). One
+  vendor deal feeds BOTH the roofer AND realtor verticals (expired/FSBO/pre-foreclosure are agent
+  signals too) → cost amortizes.
+
+### ⚠️ Engineering invariants (from TAPROOFERS_SIGNALS.md clarifications — bake these in)
+1. **Roof age ≠ build year when a reroof permit exists.** For the ACV-cliff/aging signals (#5/#6/#8),
+   a reroof permit's date MUST OVERRIDE `year_built` when computing roof age. Carriers get sued for
+   exactly this error — so the roof-age derivation is: `roof_age = today − COALESCE(latest_reroof_
+   permit_date, year_built_as_date)`. (Needs the Miner's `permits` reroof rows + dates.)
+2. **Never hardcode carrier-specific claims or depreciation %s into app copy.** Messaging stays
+   generic/educational ("many Texas carriers now depreciate older roofs"); the sourced specifics live
+   in TAPROOFERS_SIGNALS.md for the attorney. Insurance copy is gated on review vs. Tex. Ins. Code
+   §27.02 (deductible), §542A (claim-notice window — relevant to signal #4), and cosmetic-exclusion
+   realities. This is the same "signal never surfaces in outreach" discipline as probate/foreclosure.
 
 ## Lane assignments (2026-07-16)
 - **Miner / data session → BUILDING-PERMIT mining** into a NEW `permits` table (its lane, alongside
