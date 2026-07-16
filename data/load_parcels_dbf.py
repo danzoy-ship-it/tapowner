@@ -39,6 +39,13 @@ def to_dt(v):
     if isinstance(v, (date, datetime)):
         d = v.date() if isinstance(v, datetime) else v
         return d if 1900 <= d.year <= date.today().year else None
+    s = str(v or "").strip()
+    if len(s) == 8 and s.isdigit():          # YYYYMMDD (BIS Ownership.dbf)
+        try:
+            d = date(int(s[0:4]), int(s[4:6]), int(s[6:8]))
+            return d if 1900 <= d.year <= date.today().year else None
+        except ValueError:
+            return None
     return None
 
 
@@ -58,16 +65,24 @@ def main():
         geo = str(geo).strip() if geo not in (None, "") else ""
         if not pid and not geo:
             continue
-        dt = to_dt(field(r, "sl_dt", "sale_date", "deed_date"))
+        dt = to_dt(field(r, "sl_dt", "sale_date", "deed_date", "Deed_Date"))
         price = to_price(field(r, "sl_price", "sale_price"))
-        yr = field(r, "yr_blt", "year_built", "actual_yr")
+        yr = field(r, "yr_blt", "year_built", "actual_yr", "actualyr")
         try:
             yr = int(yr) if yr and 1800 <= int(yr) <= date.today().year + 1 else None
         except (ValueError, TypeError):
             yr = None
+        sqft = None
+        sv = field(r, "livarea", "living_area", "liv_area", "livingarea", "sqft")
+        try:
+            sqft = int(float(sv)) if sv and 1 <= float(sv) <= 2_000_000 else None
+        except (ValueError, TypeError):
+            sqft = None
+        ev = str(field(r, "exemption", "exemptions") or "").strip().upper()
+        codes = sorted({c for c in ev.replace(",", " ").split() if c and c not in ("0", "NONE")}) or None
         key = pid or geo
-        if dt or price or yr:
-            staged[key] = (pid, geo, dt, price, yr)
+        if dt or price or yr or sqft or codes:
+            staged[key] = (pid, geo, dt, price, yr, sqft, codes)
     print(f"[{fips}] read {n:,} rows -> {len(staged):,} with sale/price/year ({time.time()-t0:.0f}s)", flush=True)
     npx = sum(1 for v in staged.values() if v[3])
     print(f"[{fips}] {npx:,} carry a SALE PRICE", flush=True)
@@ -78,17 +93,19 @@ def _db_phase(fips, staged, dry):
     conn = psycopg2.connect(os.environ["DATABASE_URL"], keepalives=1, keepalives_idle=30,
                             keepalives_interval=10, keepalives_count=10, connect_timeout=20)
     cur = conn.cursor(); cur.execute("SET lock_timeout='6s'")
-    cur.execute("CREATE TEMP TABLE dbf_stage (pid TEXT, geo TEXT, sale_dt DATE, price BIGINT, yr INT)")
+    cur.execute("CREATE TEMP TABLE dbf_stage (pid TEXT, geo TEXT, sale_dt DATE, price BIGINT, yr INT, sqft INT, exemptions TEXT[])")
     buf = io.StringIO()
-    for key, (pid, geo, dt, price, yr) in staged.items():
+    for key, (pid, geo, dt, price, yr, sqft, codes) in staged.items():
+        arr = "{" + ",".join(codes) + "}" if codes else r"\N"
         buf.write("\t".join([
             pid or r"\N", geo or r"\N",
             dt.isoformat() if dt else r"\N",
             str(price) if price else r"\N",
             str(yr) if yr else r"\N",
+            str(sqft) if sqft else r"\N", arr,
         ]) + "\n")
     buf.seek(0)
-    cur.copy_expert("COPY dbf_stage (pid, geo, sale_dt, price, yr) FROM STDIN", buf)
+    cur.copy_expert("COPY dbf_stage (pid, geo, sale_dt, price, yr, sqft, exemptions) FROM STDIN", buf)
     cur.execute("ANALYZE dbf_stage")
 
     best_join, best_n = None, 0
@@ -109,17 +126,21 @@ def _db_phase(fips, staged, dry):
         conn.rollback(); conn.close(); print("dry-run"); return
 
     cur.execute(f"""UPDATE parcels p SET
-                        last_sale_date  = COALESCE(p.last_sale_date, s.sale_dt),
-                        last_sale_price = COALESCE(p.last_sale_price, s.price),
-                        year_built      = COALESCE(p.year_built, s.yr)
+                        last_sale_date   = COALESCE(p.last_sale_date, s.sale_dt),
+                        last_sale_price  = COALESCE(p.last_sale_price, s.price),
+                        year_built       = COALESCE(p.year_built, s.yr),
+                        living_area_sqft = COALESCE(p.living_area_sqft, s.sqft),
+                        exemptions       = COALESCE(s.exemptions, p.exemptions)
                     FROM dbf_stage s WHERE p.county_fips=%s AND {best_join}""", (fips,))
     print(f"  parcels updated: {cur.rowcount:,}", flush=True)
     conn.commit()
     cur.execute("""SELECT count(*) FILTER (WHERE last_sale_date IS NOT NULL),
-                          count(*) FILTER (WHERE last_sale_price IS NOT NULL)
+                          count(*) FILTER (WHERE last_sale_price IS NOT NULL),
+                          count(*) FILTER (WHERE living_area_sqft IS NOT NULL),
+                          count(*) FILTER (WHERE array_length(exemptions,1)>0)
                    FROM parcels WHERE county_fips=%s""", (fips,))
-    sd, sp = cur.fetchone()
-    print(f"[{fips}] now: sale {sd:,}, SALE PRICE {sp:,}", flush=True)
+    sd, sp, sq, ex = cur.fetchone()
+    print(f"[{fips}] now: sale {sd:,}, price {sp:,}, sqft {sq:,}, exempt {ex:,}", flush=True)
     conn.close()
 
 

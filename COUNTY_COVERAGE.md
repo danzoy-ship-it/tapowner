@@ -6,9 +6,9 @@ Regenerate with `python data/build_coverage_log.py` after each mining batch (ref
 
 ## Scoreboard (253 counties)
 
-- ☑ **Mined (has improvements/feature tags): 75** / 253
-- Full attributes (improv+dims): 43  ·  Partial: 71  ·  Geometry-only (need mining): 139  ·  Missing from DB: 0
-- Seller-signals — sale date: 100 counties  ·  exemptions (homestead/over-65/DV tenure): 122 counties  ·  **any seller-signal: 162 counties**
+- ☑ **Mined (has improvements/feature tags): 76** / 253
+- Full attributes (improv+dims): 44  ·  Partial: 79  ·  Geometry-only (need mining): 130  ·  Missing from DB: 0
+- Seller-signals — sale date: 110 counties  ·  exemptions (homestead/over-65/DV tenure): 125 counties  ·  **any seller-signal: 172 counties**
 
 Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISSING. % = share of the county's parcels with that attribute.
 
@@ -61,25 +61,24 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Erath | 48143 | 24,656 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Freestone | 48161 | 23,979 | · | · | · | · | · | 20 | GEOM-ONLY |
 | [ ] | Hudspeth | 48229 | 23,954 | 5 | · | · | 5 | 23 | 2 | GEOM-ONLY |
-| [ ] | Fayette | 48149 | 23,882 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Fayette | 48149 | 23,882 | 55 | · | · | · | 82 | 28 | PARTIAL |
 | [ ] | Sabine | 48403 | 23,352 | · | · | · | · | 89 | 18 | PARTIAL |
-| [ ] | Colorado | 48089 | 22,756 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Calhoun | 48057 | 22,678 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Austin | 48015 | 22,581 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Limestone | 48293 | 21,727 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Colorado | 48089 | 22,756 | · | · | · | · | 76 | · | PARTIAL |
+| [ ] | Calhoun | 48057 | 22,678 | · | · | · | · | 87 | · | PARTIAL |
+| [ ] | Austin | 48015 | 22,581 | · | · | · | · | 95 | · | PARTIAL |
 | [ ] | Uvalde | 48463 | 21,722 | · | · | · | · | 94 | · | PARTIAL |
 | [ ] | Eastland | 48133 | 21,448 | · | · | · | · | · | 22 | GEOM-ONLY |
 | [ ] | Shelby | 48419 | 21,378 | · | · | · | · | 82 | · | PARTIAL |
 | [ ] | Dewitt | 48123 | 20,802 | · | · | · | · | · | 20 | GEOM-ONLY |
-| [ ] | Howard | 48227 | 20,654 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Howard | 48227 | 20,654 | · | · | · | · | 16 | · | GEOM-ONLY |
 | [ ] | Gonzales | 48177 | 20,420 | · | · | · | · | · | 18 | GEOM-ONLY |
-| [ ] | Brewster | 48043 | 20,287 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Bosque | 48035 | 19,975 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Brewster | 48043 | 20,287 | 25 | · | · | 25 | 83 | 11 | PARTIAL |
+| [ ] | Bosque | 48035 | 19,975 | · | · | · | · | 98 | · | PARTIAL |
 | [ ] | Marion | 48315 | 19,841 | · | · | · | · | · | 15 | GEOM-ONLY |
-| [ ] | Hale | 48189 | 19,108 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Hale | 48189 | 19,108 | · | · | · | · | 75 | · | PARTIAL |
 | [ ] | Hutchinson | 48233 | 18,938 | · | · | · | · | · | 28 | GEOM-ONLY |
 | [ ] | Panola | 48365 | 18,812 | · | · | · | · | · | 24 | GEOM-ONLY |
-| [ ] | Falls | 48145 | 18,581 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Falls | 48145 | 18,581 | · | · | · | · | 53 | · | PARTIAL |
 | [ ] | Jackson | 48239 | 18,453 | · | · | · | · | 82 | · | PARTIAL |
 | [ ] | Presidio | 48377 | 18,436 | · | · | · | · | 85 | · | PARTIAL |
 | [ ] | Robertson | 48395 | 16,935 | · | · | · | · | 54 | · | PARTIAL |
@@ -252,6 +251,7 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [x] | Bee | 48025 | 23,864 | 38 | · | 21 | 57 | · | · | FULL |
 | [x] | Washington | 48477 | 23,475 | 65 | 36 | 38 | 74 | 17 | 41 | FULL |
 | [x] | Newton | 48351 | 23,278 | 41 | 29 | 30 | 42 | 64 | 19 | FULL+SIGNALS |
+| [x] | Limestone | 48293 | 21,727 | 57 | · | 36 | 57 | 86 | 23 | FULL+SIGNALS |
 | [x] | Milam | 48331 | 20,992 | 61 | 3 | 3 | 61 | 83 | 31 | PARTIAL |
 | [x] | Titus | 48449 | 20,833 | 53 | 1 | 1 | 65 | 82 | 33 | PARTIAL |
 | [x] | Lavaca | 48285 | 19,767 | 52 | · | 46 | 65 | 90 | 28 | FULL+SIGNALS |

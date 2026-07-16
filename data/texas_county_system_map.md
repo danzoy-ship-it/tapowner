@@ -666,3 +666,12 @@ SWData "export_collector" pipe-delimited roll (collector_* cols; collections rol
 - **Runnels 48399** — county ArcGIS SWData layer `services7.arcgis.com/ZBhj1vSHtyYLR1HF/Runnels_Parcels/FeatureServer/0` with obfuscated cols (SW_dbo_bas=prop_id, SW_dbo_b_2=geo_id, SW_dbo__18=deed date EPOCH MS). Needs a bespoke field-map loader.
 ### Records-request: Floyd 48153 (P&A iswdata 403), Red River 48387 (BIS attributes stripped/empty).
 ### Wave-9C overturned earlier records-request verdicts for Hamilton/Stephens/Willacy/Rains/Zapata — all had live BIS layers. (never-conclude-absence win.)
+
+## 2026-07-15 — parallel wave 9A (10 counties, all solved)
+### Full PACS
+- **Limestone 48293** — TP token (Bearer; office Limestone; filedownload/limestone/70107af2-d464-11f0-8db9-0242ac110007.zip = "2025 Certified Export"). improv 12K, sqft 12K, sale 19K, exempt 5K, baths avg 1.56.
+- **Brewster 48043** — brewstercotad.org (NOT brewstercad) `wp-content/uploads/2025/06/2025-APPRAISAL-DATA.zip` → NESTED inner `..._APPRAISAL_INFO.zip` = PACS. improv 5K, sqft 5K, sale 17K (sparse desert county).
+### Ownership.dbf (load_parcels_dbf.py ENHANCED to also read livarea→sqft, exemption→exemptions[], YYYYMMDD dates)
+- **Fayette 48149** — `fayettecad.org/wp-content/uploads/2025/08/FayetteCadGISData2025.zip` → Ownership.dbf (prop_id, geo_id, livarea sqft, exemption, Deed_Date YYYYMMDD). sqft 13K, sale 20K, exempt 6.7K. (BIS-WordPress Ownership.dbf pattern — recurs; richer than the deed-only FeatureServer.)
+### BIS FeatureServer deed-date (~105K sale): Colorado 48089, Calhoun 48057, Austin 48015, Hale 48189, Falls 48145 (fallscad.NET), Bosque 48035, Howard 48227. (Calhoun/Hale joined on geo.)
+### Note: Howard also has a 2022 SWData COLLECTORS _Agent.zip (homestead/dv) if we want exemptions; BIS gave deed only.
