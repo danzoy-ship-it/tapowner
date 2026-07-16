@@ -42,6 +42,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import pkg from "pg";
 const { Client } = pkg;
 
@@ -3518,4 +3519,32 @@ async function main() {
     if (c) await c.end();
 }
 
-main();
+// --- shared-core exports (added 2026-07-16 to enable parallel per-region loaders
+// without editing this file concurrently). A sibling script defines its own SOURCES
+// object and calls runSources(itsSources) after importing the helpers below; the
+// join/GOV_OWNER/upsert machinery stays single-sourced here. ---
+export { MONTHS, inWindow, saleMonthAfter, fetchText, loadSource, UA };
+
+export async function runSources(sources, { parseOnly = false } = {}) {
+    let c = null;
+    if (!parseOnly && !process.env.DATABASE_URL) throw new Error("DATABASE_URL required (or use --parse-only)");
+    if (process.env.DATABASE_URL) {
+        c = new Client({ connectionString: process.env.DATABASE_URL, statement_timeout: 180000, keepAlive: true });
+        await c.connect();
+    }
+    for (const [name, cfg] of Object.entries(sources)) {
+        try {
+            await loadSource(c, name, cfg, parseOnly);
+        } catch (e) {
+            console.error(`${name} FAILED:`, e.message);
+        }
+    }
+    if (c) await c.end();
+}
+
+// Only run the full 76-county main() when THIS file is executed directly
+// (node load_pdf_foreclosures.mjs ...). When a per-region loader imports this
+// module for its helpers, importing must NOT trigger a load run.
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+    main();
+}
