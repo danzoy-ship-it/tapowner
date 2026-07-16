@@ -61,7 +61,16 @@ last_sale_date already loaded). Buckets:
    (`permit` | `imagery_api` | `year_built_proxy` | `user_confirmed`), `roof_age_confidence`. The UI
    MUST show which tier it's displaying (e.g. year_built = "estimated — original roof assumed").
    Tier precedence (best→floor): **permit history > imagery API (CAPE/ZestyAI, vendor-pending) >
-   year_built proxy > user_confirmed override**. Rules: a reroof permit's date OVERRIDES `year_built`
+   year_built proxy > user_confirmed override**.
+   ⚠️ **REALITY CHECK (verified live 2026-07-16 — do not assume "statewide floor"):** `year_built`
+   covers only **62.3% of parcels statewide; 106 of 253 counties have ZERO year_built** (2 counties
+   ≥90%, 73 at 50–90%). Tier 3 is NOT a universal floor, and its holes OVERLAP the permit holes
+   (rural/unincorporated counties lack BOTH). Consequence: **tier-2 imagery is the ONLY true
+   254-county roof-age source** — its importance is higher than the catalog implied. The
+   insurance-cliff signals (#5/#6) ship on year_built ONLY in the ~147 counties that have it
+   (strongest in the metros); they are NOT statewide until imagery lands. (year_built coverage is the
+   Miner's lane — worth a targeted fill pass, but the rural-tail holes are largely a CAD
+   data-availability ceiling, not just un-mined.) Rules: a reroof permit's date OVERRIDES `year_built`
    (carriers get sued for that exact error); user confirmations override LOWER tiers but NEVER silently
    overwrite permit ground truth — flag conflicts for review. user_confirmed is a compounding moat
    (banked at the door, same pattern as the trace cache). Do NOT let any future schema assume roof age
