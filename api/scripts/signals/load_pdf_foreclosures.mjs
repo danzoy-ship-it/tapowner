@@ -552,6 +552,13 @@ const SOURCES = {
     // slow; PDF+text caching makes re-runs incremental).
     harris_cc: {
         fips: "48201",
+        // Fix 4 (Harris-only recall): Harris's render-on-the-fly OCR frequently
+        // garbles the "/Mailing Address:" label between the "Property Address"
+        // cue and its value ("/Mai1ing", "MaiIing"), so the street no longer
+        // sits where the primary cue parse expects it and the notice falls
+        // through to legal-only. This flag turns on a second, tolerant
+        // "Property Address" sweep over legal-only pages (see parsePacket).
+        propAddrSweep: true,
         // sale venue: Bayou City Event Center, Magnolia South Ballroom,
         // 9401 Knight Rd, Houston (older notices: Family Law Center,
         // 1115 Congress / 1001 Preston)
@@ -3007,7 +3014,7 @@ const PARTY_LINE = /trustee|servicer|mortgagee|attorney|law\s+firm|\bP\.?\s?C\.?
 // Returns unique notices keyed by normalized street line (re-postings and
 // duplicate cue hits collapse). cueMisses = cue phrases where no address
 // could be validated nearby (the honesty number for OCR damage).
-function parsePacket(text, { zipSet, citySet } = {}) {
+function parsePacket(text, { zipSet, citySet, propAddrSweep } = {}) {
     const pages = text.split("\f");
     const found = new Map();
     let cueHits = 0, cueMisses = 0;
@@ -3123,6 +3130,50 @@ function parsePacket(text, { zipSet, citySet } = {}) {
             add([...cands.values()][0], pi, isTax, "caption");
         }
     }
+    // Fix 4 (Harris-gated recall): a SECOND "Property Address" sweep for pages
+    // the primary passes left with no street address. Harris's OCR routinely
+    // garbles the "/Mailing Address:" label that sits between the "Property
+    // Address" cue and the value ("Property Address/Mai1ing Address: 3015 ..."),
+    // which shoves the house number off the line start where parseAddrLine
+    // expects it -- so the notice would otherwise resolve to legal-only. Here we
+    // strip that (garbled) label and re-parse the cue line's tail. The recovered
+    // street is still matched downstream by directMatch's token-exact/nameOnly/
+    // levenshtein tiers (never a substring), so a garbled fragment can't tie the
+    // wrong parcel -- this pass only ever ADDS recall. zip-gated via add().
+    if (propAddrSweep) {
+        const PROP_CUE = /pr[o0]pert[vy]\s+address/i;
+        const stripLabel = (s) =>
+            s.replace(/^[\s:;,.\-_/\\]+/, "")
+                // "/Mailing Address:" with heavy OCR damage to "Mailing"
+                .replace(/^(?:[/\\]\s*)?m[a4]i\S{0,4}\s*(?:address)?\s*[:.]?\s*/i, "")
+                .replace(/^[\s:;,.\-_/\\]+/, "");
+        // Harris's interleaved-column OCR often drops the NEXT field's label
+        // ("Legal Description of Property to be Sold", the grantor name) into
+        // the cue line's tail. Reject any capture whose "street" carries
+        // notice-boilerplate / field-label / owner-name tokens -- so a garbage
+        // extraction can never preempt this page's legal-description match.
+        const STREET_REJECT = /DESCRIPT|PROPERT|MAILING|\bADDRESS\b|LEGAL|MORTGAG|TRUST|GRANTOR|BENEFICIAR|SERVICER|INSTRUMENT|VOLUME|\bDEED\b|\bNOTICE\b|\bSOLD\b|\bSALE\b|\b(?:AND|OR|OF|THE)\b/i;
+        const done = new Set([...found.values()].flatMap((n) => [...n.pages]));
+        for (let pi = 0; pi < pages.length; pi++) {
+            if (done.has(pi)) continue;
+            const lines = pages[pi].split("\n");
+            for (let li = 0; li < lines.length; li++) {
+                const cm = lines[li].match(PROP_CUE);
+                if (!cm) continue;
+                const rest = stripLabel(lines[li].slice(cm.index + cm[0].length));
+                let addr = parseAddrLine(rest);
+                // house number on the cue line, city/zip continuing below
+                if ((!addr || (!addr.zip && !addr.city)) && li + 1 < lines.length) {
+                    const joined = parseAddrLine(rest + " " + lines[li + 1].trim());
+                    if (validAddr(joined)) addr = joined;
+                }
+                if (!validAddr(addr) || STREET_REJECT.test(addr.street)) continue;
+                add(addr, pi, false, "propaddr");
+                break; // one property address per page
+            }
+        }
+    }
+
     // legal-description pass: only on pages that yielded NO street address
     // (a 2-page notice with legal on p1 + address on p2 resolves to the same
     // parcel and gets merged after matching)
@@ -3494,7 +3545,7 @@ async function loadSource(c, name, cfg, parseOnly) {
                 console.error(`  ${p.name}: FAILED (${e.message})`);
                 continue;
             }
-            const res = parsePacket(text, { zipSet, citySet });
+            const res = parsePacket(text, { zipSet, citySet, propAddrSweep: cfg.propAddrSweep });
             cueHits += res.cueHits;
             cueMisses += res.cueMisses;
             for (const n of res.notices) {

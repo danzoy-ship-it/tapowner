@@ -338,7 +338,7 @@ const SUFFIX_MAP = {
     ST: "STREET", STREET: "STREET", AVE: "AVENUE", AVENUE: "AVENUE", DR: "DRIVE", DRIVE: "DRIVE",
     RD: "ROAD", ROAD: "ROAD", LN: "LANE", LANE: "LANE", BLVD: "BOULEVARD", BOULEVARD: "BOULEVARD",
     CT: "COURT", COURT: "COURT", CIR: "CIRCLE", CIRCLE: "CIRCLE", PL: "PLACE", PLACE: "PLACE",
-    TRL: "TRAIL", TRAIL: "TRAIL", TER: "TERRACE", TERRACE: "TERRACE", WAY: "WAY",
+    TRL: "TRAIL", TRAIL: "TRAIL", TER: "TERRACE", TERRACE: "TERRACE", WAY: "WAY", WY: "WAY",
     PKWY: "PARKWAY", PARKWAY: "PARKWAY", LOOP: "LOOP", RUN: "RUN", PASS: "PASS",
     PT: "POINT", POINT: "POINT", XING: "CROSSING", CROSSING: "CROSSING", HWY: "HIGHWAY",
     HIGHWAY: "HIGHWAY", SQ: "SQUARE", SQUARE: "SQUARE", RDG: "RIDGE", RIDGE: "RIDGE",
@@ -446,27 +446,97 @@ function haversineMeters(lat1, lon1, lat2, lon2) {
 // the disambiguating field is missing on the parcel side, not that none match.
 const narrowOrKeep = (all, filtered) => (filtered.length ? filtered : all);
 
-// Address-match strategy (fix 1): match a "<num> <street...>" candidate (from
-// EITHER the legal/propAddress field or the OCR-derived street -- caller's
-// choice) against parcels.situs_number (leading zeros stripped both sides) +
-// a despaced street-core ILIKE. Unique-match-only; ambiguous ties are broken
-// in order: directional -> city -> zip -> nearest stored centroid (<=250m).
+// Zero-pad variants of a house number so it matches however the CAD stored
+// situs_number (some rolls left-pad). Bounded (original + up to 3 leading
+// zeros) so the parcels query stays county_fips + house-number scoped and
+// never widens into a full-table predicate (fix 3).
+function numVariants(num) {
+    const n = String(num).replace(/^0+/, "") || "0";
+    const out = new Set([n]);
+    for (let w = n.length + 1; w <= n.length + 3; w++) out.add(n.padStart(w, "0"));
+    return [...out];
+}
+
+// Whole-word PREFIX test (fix 1). The notice's street-name core must be an
+// exact word-sequence prefix of the parcel's street-name core -- so legitimate
+// truncations still match ("FOXMOOR" -> "FOXMOOR LAKE"), but a mid-word OCR
+// fragment is rejected ("TLING" is NOT a word-prefix of "RUSTLING CHESTNUT",
+// "HERON" != "HERONS FLIGHT"). This is the false-positive class the old
+// `upper(situs_address) LIKE '%core%'` substring test let through -- a mid-word
+// fragment could match and tie the WRONG homeowner.
+function coreIsWordPrefix(noticeCore, parcelCore) {
+    if (!noticeCore || !parcelCore) return false;
+    if (!noticeCore.length || parcelCore.length < noticeCore.length) return false;
+    for (let i = 0; i < noticeCore.length; i++) if (noticeCore[i] !== parcelCore[i]) return false;
+    return true;
+}
+
+// Fix 3: ONE county-bound, house-number-keyed pull for the whole batch of
+// notices, instead of a per-candidate query that parallel-seq-scans all 14M
+// parcels (~1.4s each; "Rows Removed by Filter: 4.7M"). The old query defeated
+// the county_fips btree with `ltrim(situs_number,'0')=...` + `upper(situs_addr)
+// LIKE`; binding by county_fips + situs_number = ANY(candidate numbers) lets the
+// whole county's candidate set come back in ~1.4s total. Returns a Map keyed by
+// the zero-stripped house number -> parcel rows[].
+async function preloadParcelIndex(c, fips, nums) {
+    const idx = new Map();
+    const variants = [...new Set(nums.flatMap(numVariants))];
+    if (!variants.length) return idx;
+    const r = await c.query(
+        `SELECT id, situs_address, situs_city, situs_zip, situs_number,
+                ST_X(ST_Centroid(geom)) lon, ST_Y(ST_Centroid(geom)) lat
+         FROM parcels
+         WHERE county_fips=$1
+           AND situs_number = ANY($2::text[])
+           AND (owner_name IS NULL OR owner_name !~* '${GOV_OWNER_RE}')`,
+        [fips, variants]
+    );
+    for (const row of r.rows) {
+        const k = (row.situs_number || "").replace(/^0+/, "") || "0";
+        if (!idx.has(k)) idx.set(k, []);
+        idx.get(k).push(row);
+    }
+    return idx;
+}
+
+// Address-match strategy: match a "<num> <street...>" candidate (from EITHER
+// the legal/propAddress field or the OCR-derived street -- caller's choice)
+// against parcels sharing the same house number, then require the parcel
+// street-name core to START WITH the notice core at a word boundary (fix 1).
+// Unique-match-only; ambiguous ties are broken in order: directional -> city
+// -> zip (hard-reject on disagreement, fix 2) -> nearest stored centroid
+// (<=250m). Fix 3: candidate parcels come from a preloaded county index when
+// the caller supplies one (extra.parcelIndex); otherwise a county_fips +
+// house-number bound query (index-eligible, never a full-table scan) so the
+// exported matcher still works standalone.
 async function matchAddressCandidate(c, fips, raw, extra = {}) {
     const parsed = parseAddressCore(raw);
     if (!parsed) return null;
-    const r = await c.query(
-        `SELECT id, situs_address, situs_city, situs_zip,
-                ST_X(ST_Centroid(geom)) lon, ST_Y(ST_Centroid(geom)) lat
-         FROM parcels
-         WHERE county_fips=$1 AND situs_number IS NOT NULL AND situs_number <> ''
-           AND ltrim(situs_number,'0')=ltrim($2,'0')
-           AND upper(situs_address) LIKE $3
-           AND (owner_name IS NULL OR owner_name !~* '${GOV_OWNER_RE}')
-         LIMIT 12`,
-        [fips, parsed.num, "%" + parsed.coreStr + "%"]
-    );
-    if (!r.rows.length) return null;
-    let cands = r.rows;
+    const key = String(parsed.num).replace(/^0+/, "") || "0";
+
+    let rows;
+    if (extra.parcelIndex) {
+        rows = extra.parcelIndex.get(key) || [];
+    } else {
+        const r = await c.query(
+            `SELECT id, situs_address, situs_city, situs_zip, situs_number,
+                    ST_X(ST_Centroid(geom)) lon, ST_Y(ST_Centroid(geom)) lat
+             FROM parcels
+             WHERE county_fips=$1
+               AND situs_number = ANY($2::text[])
+               AND (owner_name IS NULL OR owner_name !~* '${GOV_OWNER_RE}')
+             LIMIT 200`,
+            [fips, numVariants(parsed.num)]
+        );
+        rows = r.rows;
+    }
+    if (!rows.length) return null;
+
+    // Fix 1: keep only parcels whose street-name core the notice core is an
+    // exact whole-word prefix of. A parcel whose situs_address can't be parsed
+    // is dropped (can't verify -> reject, accuracy over recall).
+    let cands = rows.filter((row) => coreIsWordPrefix(parsed.core, (parseAddressCore(row.situs_address) || {}).core));
+    if (!cands.length) return null;
 
     if (cands.length > 1 && parsed.directional) {
         const f = cands.filter((row) => (parseAddressCore(row.situs_address) || {}).directional === parsed.directional);
@@ -478,9 +548,13 @@ async function matchAddressCandidate(c, fips, raw, extra = {}) {
         const f = cands.filter((row) => row.situs_city && row.situs_city.toUpperCase().includes(cu));
         cands = narrowOrKeep(cands, f);
     }
-    if (cands.length > 1 && extra.zip) {
-        const f = cands.filter((row) => row.situs_zip === extra.zip);
-        cands = narrowOrKeep(cands, f);
+    // Fix 2: when the notice zip is known, a candidate whose (known) zip differs
+    // is HARD-rejected -- not merely deprioritized -- so a unique wrong-zip
+    // parcel can never be accepted. Candidates whose situs_zip is unknown are
+    // kept (the CAD often ships no zip); an empty result -> no match.
+    if (extra.zip) {
+        cands = cands.filter((row) => !row.situs_zip || row.situs_zip === extra.zip);
+        if (!cands.length) return null;
     }
     if (cands.length > 1 && !extra.noGeocode) {
         const g = await censusGeocode(
@@ -500,6 +574,17 @@ async function matchAddressCandidate(c, fips, raw, extra = {}) {
     if (cands.length !== 1) return null; // still ambiguous -> unique-match-only guard
     const row = cands[0];
     return { parcel_id: row.id, lon: row.lon, lat: row.lat };
+}
+
+// House numbers a doc could match on -- collected up-front so loadCounty can
+// preload the whole batch's parcels in ONE query (fix 3).
+function addressNums(doc, countyName) {
+    const nums = [];
+    const legal = propLegal(doc);
+    if (isAddressShaped(legal)) { const p = parseAddressCore(legal); if (p) nums.push(p.num); }
+    const os = streetFromOcr(doc.ocrText, countyName);
+    if (os) { const p = parseAddressCore(os.street); if (p) nums.push(p.num); }
+    return nums;
 }
 
 const propLegal = (doc) =>
@@ -731,14 +816,14 @@ async function joinParcel(c, fips, doc, opts = {}) {
     // STREET ADDRESS, so run the address strategy whenever the string is
     // address-shaped regardless of which field carried it (fix 1).
     if (isAddressShaped(legal)) {
-        const a = await matchAddressCandidate(c, fips, legal);
+        const a = await matchAddressCandidate(c, fips, legal, { parcelIndex: opts.parcelIndex });
         if (a) return { ...a, method: "addr_from_legal", street: ocrStreet };
     }
 
     // (b) ADDRESS-MATCH on the street parsed out of the OCR body (fix 1 + the
     // fixed streetFromOcr, fix 3).
     if (ocrStreet) {
-        const a = await matchAddressCandidate(c, fips, ocrStreet.street, { city: ocrStreet.city, zip: ocrStreet.zip });
+        const a = await matchAddressCandidate(c, fips, ocrStreet.street, { city: ocrStreet.city, zip: ocrStreet.zip, parcelIndex: opts.parcelIndex });
         if (a) return { ...a, method: "addr_from_ocr", street: ocrStreet };
     }
 
@@ -844,12 +929,18 @@ async function loadCounty(c, name, cfg, days, tryReturnAddress = false) {
         }
     }
 
+    // Fix 3: preload every candidate house number's parcels for the whole
+    // county in ONE query, so joinParcel's address matcher does an in-memory
+    // lookup instead of a per-notice full-table scan.
+    const allNums = [...new Set(notices.flatMap((doc) => addressNums(doc, name)))];
+    const parcelIndex = await preloadParcelIndex(c, cfg.fips, allNums);
+
     const stats = { addr_from_legal: 0, addr_from_ocr: 0, legal_v2: 0, geocode_spatial: 0, geocode_only: 0, owner_name: 0, return_address_guess: 0, unmatched: 0 };
     const rows = [];
     for (const doc of notices) {
         const ref = String(doc.docNumber || doc.documentNumber || doc.instrumentNumber || doc.docId);
         if (!ref) continue;
-        const j = await joinParcel(c, cfg.fips, doc, { tryReturnAddress, returnAddrFreq, countyName: name });
+        const j = await joinParcel(c, cfg.fips, doc, { tryReturnAddress, returnAddrFreq, countyName: name, parcelIndex });
         stats[j.method] = (stats[j.method] || 0) + 1;
         rows.push({
             parcel_id: j.parcel_id,
@@ -989,4 +1080,5 @@ if (import.meta.url === pathToFileURL(process.argv[1] || "").href) {
 export {
     streetFromOcr, cleanOcrNoise, isAddressShaped, parseAddressCore, matchAddressCandidate,
     parseLegalV2, matchLegalV2, grantorName, matchOwnerName, propLegal, joinParcel,
+    numVariants, coreIsWordPrefix, preloadParcelIndex, addressNums,
 };
