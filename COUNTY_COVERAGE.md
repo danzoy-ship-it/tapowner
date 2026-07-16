@@ -7,8 +7,8 @@ Regenerate with `python data/build_coverage_log.py` after each mining batch (ref
 ## Scoreboard (253 counties)
 
 - ☑ **Mined (has improvements/feature tags): 79** / 253
-- Full attributes (improv+dims): 44  ·  Partial: 114  ·  Geometry-only (need mining): 95  ·  Missing from DB: 0
-- Seller-signals — sale date: 148 counties  ·  exemptions (homestead/over-65/DV tenure): 135 counties  ·  **any seller-signal: 214 counties**
+- Full attributes (improv+dims): 44  ·  Partial: 115  ·  Geometry-only (need mining): 94  ·  Missing from DB: 0
+- Seller-signals — sale date: 149 counties  ·  exemptions (homestead/over-65/DV tenure): 136 counties  ·  **any seller-signal: 216 counties**
 
 Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISSING. % = share of the county's parcels with that attribute.
 
@@ -56,7 +56,7 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Maverick | 48323 | 26,048 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Hopkins | 48223 | 25,149 | · | · | · | · | · | · | GEOM-ONLY |
 | [ ] | Montague | 48337 | 24,836 | · | · | · | · | · | · | GEOM-ONLY |
-| [ ] | Erath | 48143 | 24,656 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Erath | 48143 | 24,656 | · | · | · | · | 96 | · | PARTIAL |
 | [ ] | Freestone | 48161 | 23,979 | · | · | · | · | · | 20 | GEOM-ONLY |
 | [ ] | Hudspeth | 48229 | 23,954 | 5 | · | · | 5 | 23 | 2 | GEOM-ONLY |
 | [ ] | Fayette | 48149 | 23,882 | 55 | · | · | · | 82 | 28 | PARTIAL |
@@ -166,7 +166,7 @@ Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISS
 | [ ] | Menard | 48327 | 5,708 | · | · | · | · | · | 10 | GEOM-ONLY |
 | [ ] | Hartley | 48205 | 5,645 | · | · | · | · | 97 | · | PARTIAL |
 | [ ] | Terrell | 48443 | 5,562 | · | · | · | · | 62 | · | PARTIAL |
-| [ ] | Shackelford | 48417 | 5,542 | · | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Shackelford | 48417 | 5,542 | · | · | · | · | · | 17 | GEOM-ONLY |
 | [ ] | Foard | 48155 | 5,393 | · | · | · | · | · | 6 | GEOM-ONLY |
 | [ ] | Stonewall | 48433 | 5,203 | · | · | · | · | · | 9 | GEOM-ONLY |
 | [ ] | Dickens | 48125 | 4,744 | · | · | · | · | · | 10 | GEOM-ONLY |
