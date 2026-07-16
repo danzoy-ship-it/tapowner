@@ -9,6 +9,11 @@
   `parcel_signals` (new `signal_type` per signal), reusing the spatial/address-join machinery already
   built for foreclosures. Reads this doc; builds what's defined + prioritized.
 
+> **Doc roles (no drift):** `TAPROOFERS_SIGNALS.md` = the full 21-signal CATALOG (product/strategy —
+> which signals exist, their pitch, priority, build-tier). THIS doc = ENGINEERING status + lane
+> coordination + feasibility (what's built, who's building what). Gap analysis mapping the catalog's
+> 21 signals to real engine capabilities is in the session that created this + summarized below.
+
 Architecture is already in place (see `VERTICALS_STRATEGY.md`): one shared engine, `parcel_signals`
 holds every vertical's signals keyed by `signal_type`, spatially joined to `parcels`. A roofer signal
 is just a new `signal_type` on the same table.
@@ -27,11 +32,35 @@ in the 9 non-storm months too. Hail is the flagship, not the whole product.
 | 4 | **Probate / inherited property** — heir inheriting an older house that likely needs roof + renovation | county probate court filings | address/legal spatial join (SAME lane as foreclosures) | REUSE (court-record machinery) | high (year-round) | ⬜ defined; cheap add |
 | 5 | **[Frederick's separate chat to add more — permit-for-addition, recent-sale-of-older-home, insurance-claim proxies, neighbor-just-replaced clustering, etc.]** | | | | | ⬜ |
 
+## Gap analysis — TAPROOFERS_SIGNALS.md 21 signals → real engine (2026-07-16)
+Reality is BETTER than the catalog's tiers assumed (hail already built, probate already cracked,
+last_sale_date already loaded). Buckets:
+- **ALREADY SUPPORTED on data we have (no new pipeline):** #1 hail (BUILT, 89,888 parcels), #5 ACV
+  cliff ⭐⭐ (approx from `year_built`), #6 non-renewal, #7 class-4 (messaging overlay), #8 (year_built
+  side), #10 subdivision cohorts ⭐, #20 absentee portfolios ⭐ (`is_absentee` × year_built × the
+  owner-portfolio grouping the realtor side already built), #3 repeat-hit (a query once ≥2 storm dates
+  accumulate — the hail loader already stores history, no expiry), #18 coarse "sold last year"
+  (`last_sale_date`), #19-probate part (CRACKED). → **Family B, the strongest pitch, is essentially
+  FREE on existing data.** The insurance-cliff signals need NO permits to ship a v1 (year_built alone);
+  permits only SHARPEN them (exclude already-reroofed homes).
+- **SUPPORTED ONCE PERMITS SHIP (the Miner's current mission — unlocks ~8 signals):** #4 claim-window,
+  #8 refinement, #9 reroof-age, #12 fresh-reroof clustering, #13 metal-roof, #14 solar, #15 remodel/
+  addition, #16 pool, #17 storm-adjacent repair. Huge leverage — one adapter, many signals.
+- **GENUINELY NEW pipeline (not scoped):** #2 high-wind (new NWS product, same pattern as hail),
+  #11 builder-grade (plat/builder data), #19 expired/FSBO (listing data — shared w/ realtor vertical),
+  #21 code-violations (city code-enforcement open data — a new crackable source like permits).
+
 ## Lane assignments (2026-07-16)
 - **Miner / data session → BUILDING-PERMIT mining** into a NEW `permits` table (its lane, alongside
-  `parcels`). Unblocks signals #2 (re-roof permit dates) + #3 (solar permits) and is reusable across
-  remodeler/solar/pool verticals. Crack-the-system survey (Socrata/ArcGIS open-data, Accela, Tyler
-  EnerGov, CivicPlus), metros first. See its mission prompt.
+  `parcels`). Unblocks ~8 roofer signals (see gap analysis) + reusable across remodeler/solar/pool.
+  Crack-the-system survey (Socrata/ArcGIS open-data, Accela, Tyler EnerGov, CivicPlus), metros first.
+  **CATALOG-SHARPENED CAPTURE SPEC (do all of these — they're what the signals need):**
+  (a) `issued_date` — REQUIRED (aging #9, recency/clustering #12, claim-window cross-ref #4);
+  (b) raw `permit_type` + `description` FREE-TEXT — REQUIRED (metal-roof #13 is detected from the
+  description naming "metal"; roof-vs-non-roof-repair #17 needs it too — do NOT collapse to a code);
+  (c) a normalized category covering at least: RE-ROOF, SOLAR, REMODEL/ADDITION, POOL, FENCE/WINDOW/
+  GUTTER (the non-roof "storm-adjacent" repairs for #17), HVAC, NEW-CONSTRUCTION;
+  (d) `valuation`, `address`, lat/lon; (e) keep the table VERTICAL-GENERIC (serves 4+ verticals).
 - **App / build session (me) → `parcel_signals` signals:** probate (reuses the foreclosure court-
   record lane — cheapest first), and the hail spatial-intersect (`roof_damage`). Roof-age (#2) is
   DERIVED from `parcels.year_built` (have) + the Miner's `permits` re-roof dates once they land.
