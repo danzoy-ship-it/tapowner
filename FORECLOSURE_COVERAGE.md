@@ -18,7 +18,21 @@ define a uniform URL/recipe, so each county still needs its own `discover()`; an
 (one WS protocol → ~46 counties, paywall-capped). So this campaign is closer to per-county work —
 the platform knowledge accelerates discovery but doesn't eliminate it.
 
-## STATUS: 142 / 254 counties have a foreclosure signal · 2,131 tied to parcels (as of 2026-07-16)
+## STATUS: 148 / 254 counties have a foreclosure signal · 2,426 tied to parcels (as of 2026-07-16)
+
+**Kofile RE-JOIN (2026-07-16): +254 ties, 75 → 329, WITHOUT re-fetching.** A Fable-5 crack proved
+the old ~5% Kofile tie rate was a JOIN failure, not a paywall wall, for the tie-able counties. Four
+untried identifier paths in the already-stored rows: (1) **address-match** — Dallas's "legalDescription"
+field is actually a street address → +181 Dallas (22→203); (2) **legal-normalizer v2** (glued-digit
+`LOT 7BLOCK` boundary fix, abbreviated-subdivision stopwords, plural/letter lot designators) → Nueces
+29→43, San Patricio 3→11; (3) **OCR street re-parse** (skip clerk stamps, take LAST number+street run)
+→ +30; (4) **grantor↔owner_name** → Wilson 0→4. Also Johnson 4→30, Midland 1→8, Denton 9→14,
+Cameron 0→3, Jefferson 0→3, Smith 4→7. All 254 stamped `meta.rejoinedAt='2026-07-16'`, auditable.
+**But the ceiling is REAL for a subset, now proven per-row:** hidalgo (all 300 rows NULL legal +
+clerk-stamp OCR + no coords), grayson, starr, walker, grimes, brazos, and ~93% of cameron/denton
+carry NO tie-able identifier in the free record → stop chasing these via the free index. **Tarrant:**
+no rows currently stored (old pull expired); its free index DOES carry legalDescription, so a clean-IP
+re-pull WITH the fixed matcher (loader fixes in flight) is what finally ties it. See FORECLOSURE_SOURCES.md.
 
 **Re-scrub pass (6 region agents over the 123 no-signal counties) added +12 counties / +31 ties.**
 Rescue wins: Chambers 12, Galveston 9 (WAF-to-curl but Node fetch passes), Hockley 4, Mitchell 3
