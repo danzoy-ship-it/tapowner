@@ -8,14 +8,14 @@ Regenerate with `python data/build_coverage_log.py` after each mining batch (ref
 
 - ☑ **Mined (has improvements/feature tags): 79** / 253
 - Full attributes (improv+dims): 44  ·  Partial: 115  ·  Geometry-only (need mining): 94  ·  Missing from DB: 0
-- Seller-signals — sale date: 149 counties  ·  exemptions (homestead/over-65/DV tenure): 136 counties  ·  **any seller-signal: 216 counties**
+- Seller-signals — sale date: 149 counties  ·  exemptions (homestead/over-65/DV tenure): 137 counties  ·  **any seller-signal: 216 counties**
 
 Status = FULL+SIGNALS (improv+dims+sale) · FULL · PARTIAL · GEOM-ONLY · MISSING. % = share of the county's parcels with that attribute.
 
 | ☑ | County | FIPS | Parcels | sqft% | beds% | baths% | improv% | sale% | exempt% | Status |
 |---|--------|------|--------:|------:|------:|-------:|--------:|------:|--------:|--------|
 | [ ] | Hidalgo | 48215 | 328,322 | 81 | · | · | · | 93 | 47 | PARTIAL |
-| [ ] | Smith | 48423 | 140,245 | 55 | · | · | · | · | · | GEOM-ONLY |
+| [ ] | Smith | 48423 | 140,245 | 55 | · | · | · | · | 13 | GEOM-ONLY |
 | [ ] | Lubbock | 48303 | 135,112 | 78 | · | · | · | 95 | · | PARTIAL |
 | [ ] | Henderson | 48213 | 106,708 | · | · | · | · | 24 | · | GEOM-ONLY |
 | [ ] | Comal | 48091 | 103,537 | · | · | · | · | 95 | · | PARTIAL |
