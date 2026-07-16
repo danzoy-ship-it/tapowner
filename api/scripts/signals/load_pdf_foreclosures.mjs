@@ -2305,6 +2305,183 @@ const SOURCES = {
             return out;
         },
     },
+    // Duval County clerk (CivicLive, co.duval.tx.us): the OLD "duval.Foreclosures"
+    // slug is a dead page (stalled at 2020); the live page is the differently-
+    // cased "/page/Foreclosures" -- accordion, one heading per sale date
+    // ("July 7, 2026") followed by that sale's per-notice PDFs under
+    // /upload/page/8842/. Sequential heading->links scan (same shape as hill_cc).
+    duval_cc: {
+        fips: "48131",
+        venue: /COURT\s*HOUSE/i,
+        discover: async () => {
+            const base = "https://www.co.duval.tx.us";
+            const html = await fetchText(base + "/page/Foreclosures");
+            const re = /lblTitle_\d+">\s*([A-Za-z]+)\s+\d{1,2},\s*(\d{4})\s*<\/span>|href="(\/upload\/page\/8842\/[^"]+\.pdf)"/gi;
+            const out = [], seen = new Set();
+            let cur = null, m;
+            while ((m = re.exec(html))) {
+                if (m[1]) {
+                    const mon = MONTHS.indexOf(m[1].slice(0, 3).toUpperCase()) + 1;
+                    if (mon) cur = { year: +m[2], month: mon };
+                } else if (cur && inWindow(cur.year, cur.month)) {
+                    const p = m[3];
+                    if (seen.has(p)) continue;
+                    seen.add(p);
+                    out.push({
+                        url: base + encodeURI(p),
+                        year: cur.year,
+                        month: cur.month,
+                        name: `duval_${cur.year}-${String(cur.month).padStart(2, "0")}_${path.basename(p).replace(/[^\w.-]+/g, "_")}`,
+                    });
+                }
+            }
+            return out;
+        },
+    },
+    // Kleberg County clerk (CivicLive, co.kleberg.tx.us): /page/kleberg.County.Clerk
+    // has a "FORECLOSURES FILED" list, one <p> per notice: "<date filed> <legal
+    // description> <date of sale>" with the PDF link wrapping the filed-date+
+    // description text (/upload/page/6331/<chaotic filename>.pdf). Unlike most
+    // sources here, the SALE date is printed directly (2nd date in the <p>) --
+    // no +21-day inference needed. Per-<p> scan avoids cross-notice date bleed.
+    kleberg_cc: {
+        fips: "48273",
+        // sale venue: westside steps of the Kleberg County Courthouse, Kingsville
+        venue: /COURT\s*HOUSE|WESTSIDE\s+STEPS/i,
+        discover: async () => {
+            const base = "https://www.co.kleberg.tx.us";
+            const html = await fetchText(base + "/page/kleberg.County.Clerk");
+            const out = [], seen = new Set();
+            for (const p of html.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)) {
+                const block = p[1];
+                const hrefm = block.match(/href="(\/upload\/page\/6331\/[^"]+\.pdf)"/i);
+                if (!hrefm || seen.has(hrefm[1])) continue;
+                const dates = [...block.matchAll(/(\d{1,2})\/(\d{1,2})\/(20\d{2})/g)];
+                if (!dates.length) continue;
+                const last = dates[dates.length - 1]; // "Date of Sale" column, always 2nd/last date in the block
+                const mon = +last[1], year = +last[3];
+                if (!mon || mon > 12 || !inWindow(year, mon)) continue;
+                seen.add(hrefm[1]);
+                out.push({
+                    url: base + encodeURI(hrefm[1]),
+                    year,
+                    month: mon,
+                    name: `kleberg_${year}-${String(mon).padStart(2, "0")}_${path.basename(hrefm[1]).replace(/[^\w.-]+/g, "_")}`,
+                });
+            }
+            return out;
+        },
+    },
+    // Brooks County clerk (CivicLive, co.brooks.tx.us): /page/brooks.county.clerk
+    // "Foreclosures" section links per-notice PDFs under /upload/page/5147/ --
+    // NO date text on the page at all, but filenames ARE the posting timestamp
+    // (YYYYMMDDHHMMSSmmm.pdf, e.g. 20260713111157767.pdf = posted 2026-07-13).
+    // Posting date, not sale date -> saleMonthAfter (like Navarro). Tiny/rural:
+    // expect a handful of notices at a time.
+    brooks_cc: {
+        fips: "48047",
+        venue: /COURT\s*HOUSE/i,
+        discover: async () => {
+            const base = "https://www.co.brooks.tx.us";
+            const html = await fetchText(base + "/page/brooks.county.clerk");
+            const out = [], seen = new Set();
+            for (const m of html.matchAll(/href="(\/upload\/page\/5147\/[^"]*?(\d{4})(\d{2})(\d{2})\d{6,9}\.pdf)"/gi)) {
+                const py = +m[2], pm = +m[3], pd = +m[4];
+                if (!pm || pm > 12 || !pd || pd > 31 || seen.has(m[1])) continue;
+                const s = saleMonthAfter(py, pm, pd);
+                if (!inWindow(s.year, s.month)) continue;
+                seen.add(m[1]);
+                out.push({
+                    url: base + encodeURI(m[1]),
+                    year: s.year,
+                    month: s.month,
+                    name: `brooks_${py}${String(pm).padStart(2, "0")}${String(pd).padStart(2, "0")}_${path.basename(m[1]).replace(/[^\w.-]+/g, "_")}`,
+                });
+            }
+            return out;
+        },
+    },
+    // Willacy County clerk (CivicLive, co.willacy.tx.us): /page/willacy.public.notices
+    // mixes all public notices; foreclosure ones are `<h2><a href="/upload/page/
+    // 6544/docs/County Clerks/<year> Nots/<chaotic filename>.pdf">Notice of Sale
+    // MM/DD/YYYY HH:MMAM/PM</a></h2>` -- sale date printed directly in the anchor.
+    willacy_cc: {
+        fips: "48489",
+        venue: /COURT\s*HOUSE/i,
+        discover: async () => {
+            const base = "https://www.co.willacy.tx.us";
+            const html = await fetchText(base + "/page/willacy.public.notices");
+            const out = [], seen = new Set();
+            for (const m of html.matchAll(/<h2>\s*<a href="(\/upload\/page\/6544\/[^"]+\.pdf)">\s*Notice of Sale\s+(\d{1,2})\/(\d{1,2})\/(\d{4})/gi)) {
+                const mon = +m[2], year = +m[4];
+                if (!mon || mon > 12 || !inWindow(year, mon) || seen.has(m[1])) continue;
+                seen.add(m[1]);
+                out.push({
+                    url: base + encodeURI(m[1]),
+                    year,
+                    month: mon,
+                    name: `willacy_${year}-${String(mon).padStart(2, "0")}_${path.basename(m[1]).replace(/[^\w.-]+/g, "_")}`,
+                });
+            }
+            return out;
+        },
+    },
+    // Live Oak County clerk (CivicLive, co.live-oak.tx.us): /page/
+    // liveoak.ForeclosureNotices links per-notice PDFs under /upload/page/1222/
+    // <year>/<chaotic filename incl. spaces>.pdf, anchor text "<Month D, YYYY>-
+    // <legal description>" (sale date WITH year, printed directly). Very rural:
+    // most notices are bare acreage/survey legal descriptions, not street
+    // addresses -> expect the legal-description match phase to carry this one.
+    liveoak_cc: {
+        fips: "48297",
+        venue: /COURT\s*HOUSE/i,
+        discover: async () => {
+            const base = "https://www.co.live-oak.tx.us";
+            const html = await fetchText(base + "/page/liveoak.ForeclosureNotices");
+            const out = [], seen = new Set();
+            for (const m of html.matchAll(/href="(\/upload\/page\/1222\/[^"]+\.pdf)"[^>]*>\s*([A-Za-z]+)\s+(\d{1,2}),\s*(\d{4})/gi)) {
+                const mon = MONTHS.indexOf(m[2].slice(0, 3).toUpperCase()) + 1;
+                const year = +m[4];
+                if (!mon || !inWindow(year, mon) || seen.has(m[1])) continue;
+                seen.add(m[1]);
+                out.push({
+                    url: base + encodeURI(m[1]),
+                    year,
+                    month: mon,
+                    name: `liveoak_${year}-${String(mon).padStart(2, "0")}_${path.basename(m[1]).replace(/[^\w.-]+/g, "_")}`,
+                });
+            }
+            return out;
+        },
+    },
+    // Webb County clerk (bespoke, webbcountytx.gov): the "Foreclosures" nav
+    // entry iframes a static Word-generated page (ForeclosuresArchives/test.htm)
+    // that -- unlike the FORECLOSURE_SOURCES.md note calling Webb a dead-end --
+    // DOES link one consolidated packet PER SALE MONTH ("2026 PDF'S/August 1-40
+    // (PDF).pdf"). Good embedded text layer (Word->PDF).
+    webb_cc: {
+        fips: "48479",
+        // sale venue: NW first-floor entrance, Webb County Justice Center,
+        // 1110 Victoria St, Laredo (number-pinned; Victoria St has real homes)
+        venue: /JUSTICE\s*CENTER|\b1110\s+VICTORIA\b/i,
+        discover: async () => {
+            const base = "https://www.webbcountytx.gov/CountyClerk/Foreclosures/ForeclosuresArchives/";
+            const html = await fetchText(base + "test.htm");
+            const out = [];
+            for (const m of html.matchAll(/href="((\d{4})(?:%20| )PDF'S\/([A-Za-z]+)[^"]*\.pdf)"/gi)) {
+                const year = +m[2];
+                const mon = MONTHS.indexOf(m[3].slice(0, 3).toUpperCase()) + 1;
+                if (!mon || !inWindow(year, mon)) continue;
+                out.push({
+                    url: new URL(m[1], base).href,
+                    year,
+                    month: mon,
+                    name: `webb_${year}-${String(mon).padStart(2, "0")}_${m[3]}.pdf`,
+                });
+            }
+            return out;
+        },
+    },
     // Callahan County: NOT here -- callahancounty.org's nav has a "Foreclosure,
     // Notices & News" menu HEADER, but it's just a category label (children:
     // Public Calendar / County News / Court Appointed Attorneys) with no
@@ -2316,6 +2493,20 @@ const SOURCES = {
     // /upload/page/0089/) but STALE -- only 5 notices total, newest Aug 5,
     // 2025 (~11 months old), nothing in the current window. Skip per the
     // >6mo staleness rule (verified 2026-07-16).
+    // RGV wave (2026-07-16) -- Zapata (48505), Starr (48427), Jim Wells (48249):
+    // NOT here -- all three counties' county-clerk foreclosure pages now point
+    // ONLY to a Kofile PublicSearch subdomain (zapatatx.search.kofile.com,
+    // starr.tx.publicsearch.us / starrtx.search.kofile.com, jimwellstx.search.
+    // kofile.com); no direct PDFs left on the county site (Jim Wells' page still
+    // lists 2018 archive PDFs, but nothing current). Per the Kofile-only skip
+    // rule -- see load_kofile_foreclosures.mjs for that platform instead.
+    // McMullen County (48311): NOT here -- mcmullencounty.org/county-clerk/ has
+    // no foreclosure/trustee-sale content at all (checked the full page); no
+    // Kofile subdomain found either. No online notice posting (verified
+    // 2026-07-16, tiny county, pop. ~700).
+    // Brooks' fips is 48047, NOT 48027 (that's Bell County -- already loaded
+    // as bell_cc above). Verified against the standard TX alphabetical FIPS
+    // sequence (2026-07-16).
 };
 
 // sale-month window for discovery on archive-style pages that list years of
