@@ -68,9 +68,20 @@ last_sale_date already loaded). Buckets:
    (rural/unincorporated counties lack BOTH). Consequence: **tier-2 imagery is the ONLY true
    254-county roof-age source** — its importance is higher than the catalog implied. The
    insurance-cliff signals (#5/#6) ship on year_built ONLY in the ~147 counties that have it
-   (strongest in the metros); they are NOT statewide until imagery lands. (year_built coverage is the
-   Miner's lane — worth a targeted fill pass, but the rural-tail holes are largely a CAD
-   data-availability ceiling, not just un-mined.) Rules: a reroof permit's date OVERRIDES `year_built`
+   (strongest in the metros); they are NOT statewide until imagery lands.
+   **UPDATE 2026-07-16 (Miner probed ALL 106 blind counties, live field-dumps not assumptions — my
+   earlier "CAD data-availability ceiling" call was WRONG):** the holes are mostly GATED, not a true
+   ceiling. The CAD software (PACS/TP/BIS/P&A) demonstrably STORES year_built in ~106 counties, just
+   behind a records request rather than a free export. Only **Shelby (48419)** had a free bulk source
+   → recovered (+10,477 loaded). So the imagery-only target is far SMALLER than "106 counties": it's
+   {gated → records-request/PIA, list drafted in RECORDS_REQUESTS.md} MINUS whatever a deeper free
+   crack-pass rescues, and only the genuine ceiling (likely just the tiniest ranching counties) is
+   imagery-or-nothing. This LOWERS the dependence on paid imagery — most blind counties are a free PIA
+   away, not a vendor away; it does NOT remove imagery (still the fastest 254-county fill and the only
+   option where PIAs stall). Final per-county split pending the Miner's Fable-5 fleet. **Enrichment now
+   free:** `parcels.roof_material` (~860K homes, ~50K metal) — use as a reroof-market filter
+   (asphalt/composition = reroof target; metal/tile = long-life, deprioritize) on the roof-age and
+   insurance-cliff signals. Rules: a reroof permit's date OVERRIDES `year_built`
    (carriers get sued for that exact error); user confirmations override LOWER tiers but NEVER silently
    overwrite permit ground truth — flag conflicts for review. user_confirmed is a compounding moat
    (banked at the door, same pattern as the trace cache). Do NOT let any future schema assume roof age
