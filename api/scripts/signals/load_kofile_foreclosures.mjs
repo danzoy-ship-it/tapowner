@@ -98,7 +98,7 @@ const SOURCES = {
 
 // Government/institutional owners are not real seller leads -> drop them from
 // the parcel join. (Same guard the SIGNALS campaign uses elsewhere.)
-const GOV_OWNER_RE = "(COUNTY OF|CITY OF|TOWN OF| COUNTY$|STATE OF TEXAS| ISD| MUD |MUNICIPAL UTIL|SCHOOL DIST|HOUSING AUTHORITY)";
+const GOV_OWNER_RE = "(COUNTY OF|CITY OF|TOWN OF| COUNTY$|STATE OF TEXAS| ISD| MUD |MUNICIPAL UTIL|SCHOOL DIST|HOUSING AUTHORITY|WATER CONTROL|DRAINAGE DIST|CORRECTIONAL|DETENTION|COUNTY FEE|HOSPITAL DIST|FIRE DIST|JUVENILE)";
 
 // The live FETCH_DOCUMENTS/v4 frame echoes the caller's PUBLIC IP in the body
 // (captured 2026-07-15 from the running SPA). Omitting it -> backend silently

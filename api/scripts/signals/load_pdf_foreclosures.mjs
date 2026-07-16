@@ -3125,7 +3125,7 @@ function parsePacket(text, { zipSet, citySet } = {}) {
 // literally named "...CITY OFFICE LLC" is skipped (a rare missed lead, never a
 // false courthouse foreclosure).
 const GOV_OWNER =
-    "(COUNTY OF|CITY OF|TOWN OF| COUNTY$|STATE OF TEXAS| ISD| MUD |MUNICIPAL UTIL|SCHOOL DIST|HOUSING AUTHORITY|WATER CONTROL|DRAINAGE DIST)";
+    "(COUNTY OF|CITY OF|TOWN OF| COUNTY$|STATE OF TEXAS| ISD| MUD |MUNICIPAL UTIL|SCHOOL DIST|HOUSING AUTHORITY|WATER CONTROL|DRAINAGE DIST|CORRECTIONAL|DETENTION|COUNTY FEE|HOSPITAL DIST|FIRE DIST|JUVENILE)";
 
 // Direct match: one batched query pulls every parcel in the county sharing a
 // house number with any notice, then streets are compared in JS.
