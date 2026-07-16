@@ -115,30 +115,43 @@ def parse_baths(value):
 
 
 # Roof-cover material from the "Roof Style"/"Roof Covering"/"ROOF COVER" attr.
-# Conservative: only unambiguous MATERIALS map; roof SHAPE codes (FLAT/HIP/GABLE/
-# RB/RC) and unknown district codes return None, so the metal-roof neighbor-envy
-# signal never gets a false positive. Unrecognized values are logged for a future
-# per-district crosswalk. Order matters (wood before composition so "WOOD SHINGLE"
-# -> wood, not composition).
+# Two-stage: (1) keyword scan for verbose values ("Composition Shingle", "Metal");
+# (2) exact compact-code lookup for districts that store codes ("C"/"CS"=comp,
+# "M"/"MT"=metal, "WS"=wood, "BU"=built-up — verified against real Caldwell/Liberty/
+# Delta rolls). Roof SHAPE values (FLAT/HIP/GABLE/GB/RC/RB) and unknown codes stay
+# None so the metal-roof neighbor-envy signal never gets a false positive; those are
+# logged to roof_labels_seen.md. Bare "M" is Metal, not Mansard — confirmed: districts
+# spell shapes out (Gable/Hip/Flat) and use "M" as a material code (Caldwell/Shelby).
+_ROOF_CODES = {
+    "composition": {"C", "CS", "CMP", "COMP", "AS", "ASP", "ASPH", "RCCS"},
+    "metal": {"M", "MT", "ME", "MTL", "RM", "RCMT"},
+    "wood": {"W", "WD", "WS"},
+    "tile": {"T", "TL", "CT", "CL", "CN", "RCTL"},
+    "slate": {"SL"},
+    "built_up": {"BU", "BUR", "TG"},
+}
+_ROOF_KEYWORDS = (
+    ("METAL", "metal"), ("STANDING SEAM", "metal"),
+    ("WOOD", "wood"), ("SHAKE", "wood"),               # before composition (WOOD SHINGLE -> wood)
+    ("COMP", "composition"), ("ASPHALT", "composition"), ("SHINGLE", "composition"),
+    ("TILE", "tile"), ("CLAY", "tile"), ("CONCRETE", "tile"),
+    ("SLATE", "slate"),
+    ("BUILT", "built_up"), ("GRAVEL", "built_up"), ("MEMBRANE", "built_up"),
+    ("TPO", "built_up"), ("FOAM", "built_up"),
+)
+
+
 def classify_roof(value):
     v = str(value).strip().upper()
     if not v:
         return None
-    head = re.split(r"[,\]\[/;]", v)[0].strip()
-    for t in (head, v):
-        if "METAL" in t or "STANDING SEAM" in t or t in ("M", "RCMT"):
-            return "metal"
-        if "WOOD" in t or "SHAKE" in t:
-            return "wood"
-        if "COMP" in t or "ASPHALT" in t or "SHINGLE" in t or t == "RCCS":
-            return "composition"
-        if "TILE" in t or "CLAY" in t or t == "RCTL":
-            return "tile"
-        if "SLATE" in t:
-            return "slate"
-        if ("BUILT" in t or t.startswith("BUR") or "TAR" in t or "GRAVEL" in t
-                or "MEMBRANE" in t or "TPO" in t or "FOAM" in t or t == "ROLL"):
-            return "built_up"
+    for kw, cat in _ROOF_KEYWORDS:
+        if kw in v:
+            return cat
+    head = re.split(r"[ ,\]\[/;\-]", v)[0].strip()
+    for cat, codes in _ROOF_CODES.items():
+        if head in codes:
+            return cat
     return None
 
 
