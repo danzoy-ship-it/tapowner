@@ -821,6 +821,315 @@ const SOURCES = {
             return out;
         },
     },
+    // Navarro County clerk (easydocs.us -- Integrated Data Services, the SAME
+    // vendor/app as Upshur's records site): /foreclosures/listDocs-new.asp?
+    // year=<Y> lists per-notice docs showdoc.asp?docName=<YYYY-MM-DD>-
+    // foreclosures-<YYYY>-<NNN>.pdf. Unlike Upshur, the docName date is the
+    // POSTING date (spread across the month, not first-Tuesdays) -> sale
+    // month = earliest legal sale via saleMonthAfter (+21d, Prop. Code
+    // 51.002). Raw PDF at LinkedDir/<year>/<docName>.
+    navarro_cc: {
+        fips: "48349",
+        // sale venue: Navarro County Courthouse, 300 W 3rd Ave, Corsicana
+        venue: /COURT\s*HOUSE|\b3[0O][0O]\s+W(?:EST)?\.?\s*3RD\b/i,
+        discover: async () => {
+            const base = "https://navarro.easydocs.us/foreclosures/";
+            const now = new Date(), years = new Set();
+            // -1 extra month back: December postings roll into January sales
+            for (let d = -(+(process.env.FC_BACK || 0)) - 1; d <= 2; d++) {
+                const t = new Date(Date.UTC(now.getFullYear(), now.getMonth() + d, 1));
+                years.add(t.getUTCFullYear());
+            }
+            const out = [];
+            for (const y of years) {
+                let html;
+                try {
+                    html = await fetchText(`${base}listDocs-new.asp?year=${y}`);
+                } catch (e) {
+                    console.error(`  navarro ${y}: list fetch failed (${e.message})`);
+                    continue;
+                }
+                for (const m of html.matchAll(/docName=((\d{4})-(\d{2})-(\d{2})-foreclosures-[^"'&<> ]*\.pdf)/gi)) {
+                    const s = saleMonthAfter(+m[2], +m[3], +m[4]);
+                    if (!inWindow(s.year, s.month)) continue;
+                    out.push({ url: `${base}LinkedDir/${m[2]}/${m[1]}`, year: s.year, month: s.month, name: `navarro_${m[1]}` });
+                }
+            }
+            return out;
+        },
+    },
+    // Bosque County clerk (easydocs/Integrated Data Services app on a BARE IP
+    // -- http://107.143.183.49/foreclosure/, linked "Foreclosure Notices
+    // (Online)" from bosquecounty.gov/171/County-Clerk): view.asp?year=<Y>
+    // lists showdoc.asp?docName=<YYYY-MM-DD>-foreclosure-<NNN>.pdf where the
+    // docName date IS the sale date (verified: all first-Tuesdays), like
+    // Upshur. Raw PDF at LinkedDir/<year>/<docName>. HTTP only. NB: parcels
+    // for 48035 ship NO situs_zip -> sweep pass disabled, cue+legal carry it.
+    bosque_cc: {
+        fips: "48035",
+        // sale venue: Bosque County Courthouse, 110 S Main St, Meridian
+        venue: /COURT\s*HOUSE|\b11[0O]\s+S(?:OUTH)?\.?\s*MAIN\b/i,
+        discover: async () => {
+            const base = "http://107.143.183.49/foreclosure/";
+            const now = new Date(), years = new Set();
+            for (let d = -(+(process.env.FC_BACK || 0)); d <= 2; d++) {
+                const t = new Date(Date.UTC(now.getFullYear(), now.getMonth() + d, 1));
+                years.add(t.getUTCFullYear());
+            }
+            const out = [];
+            for (const y of years) {
+                let html;
+                try {
+                    html = await fetchText(`${base}view.asp?year=${y}`);
+                } catch (e) {
+                    console.error(`  bosque ${y}: list fetch failed (${e.message})`);
+                    continue;
+                }
+                for (const m of html.matchAll(/docName=(((\d{4})-(\d{2})-\d{2})[^"'&<> ]*\.pdf)/gi)) {
+                    const year = +m[3], mon = +m[4];
+                    if (!mon || mon > 12 || !inWindow(year, mon)) continue;
+                    out.push({ url: `${base}LinkedDir/${y}/${m[1]}`, year, month: mon, name: `bosque_${m[1]}` });
+                }
+            }
+            return out;
+        },
+    },
+    // Hill County clerk (CivicLive, co.hill.tx.us): /page/hill.Foreclosures
+    // holds per-year accordions; inside, <strong>/<h2> SALE-DATE headings
+    // ("September 1, 2026") each followed by that sale's per-notice PDFs
+    // under /upload/page/10297/ (a few links point at the CivicLive origin
+    // newtools.cira.state.tx.us -- same paths serve from the county host).
+    // Sequential heading->links scan buckets each PDF to its sale month.
+    hill_cc: {
+        fips: "48217",
+        // sale venue: Hill County Courthouse, 1 N Waco St, Hillsboro
+        venue: /COURT\s*HOUSE|\b[1Il]\s+N(?:ORTH)?\.?\s*WACO\b/i,
+        discover: async () => {
+            const base = "https://www.co.hill.tx.us";
+            const html = await fetchText(base + "/page/hill.Foreclosures");
+            const re = /:?>\s*([A-Za-z]+)\s+\d{1,2},\s*(\d{4})\b|href="(?:https?:\/\/[a-z.]*cira\.state\.tx\.us)?(\/upload\/page\/10297\/[^"]+\.pdf)"/gi;
+            const out = [], seen = new Set();
+            let cur = null, m;
+            while ((m = re.exec(html))) {
+                if (m[1]) {
+                    const mon = MONTHS.indexOf(m[1].slice(0, 3).toUpperCase()) + 1;
+                    if (mon) cur = { year: +m[2], month: mon };
+                } else if (cur && inWindow(cur.year, cur.month)) {
+                    // cira-hosted copies of a link come PRE-encoded ("%20") --
+                    // decode first so (a) encodeURI doesn't double-encode to
+                    // %2520 (404) and (b) the dedupe key matches the plain copy
+                    let p = m[3];
+                    try {
+                        if (/%[0-9A-Fa-f]{2}/.test(p)) p = decodeURIComponent(p);
+                    } catch { /* malformed % -- keep raw */ }
+                    if (seen.has(p)) continue;
+                    seen.add(p);
+                    out.push({
+                        url: base + encodeURI(p),
+                        year: cur.year,
+                        month: cur.month,
+                        name: `hill_${cur.year}-${String(cur.month).padStart(2, "0")}_${path.basename(p).replace(/[^\w.-]+/g, "_")}`,
+                    });
+                }
+            }
+            return out;
+        },
+    },
+    // Coryell County clerk (WordPress/Elementor on its OWN domain,
+    // coryellcountyclerk.com -- the county's Revize site just links out):
+    // per-sale-month pages /<month>-<year>-fcs/ list per-notice PDFs in
+    // wp-content/uploads/<posted Y>/<posted M>/; filenames are the address/
+    // legal. The nav menu embeds evergreen form/fee PDFs on EVERY page ->
+    // filter by upload-year recency + junk keywords.
+    coryell_cc: {
+        fips: "48099",
+        // sale venue: Coryell County Courthouse, 620 E Main St, Gatesville
+        venue: /COURT\s*HOUSE|\b62[0O]\s+E(?:AST)?\.?\s*MAIN\b/i,
+        discover: async () => {
+            const FULL = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+            const now = new Date(), out = [], seen = new Set();
+            for (let d = -(+(process.env.FC_BACK || 0)); d <= 2; d++) {
+                const t = new Date(Date.UTC(now.getFullYear(), now.getMonth() + d, 1));
+                const year = t.getUTCFullYear(), mon = t.getUTCMonth() + 1;
+                let html;
+                try {
+                    html = await fetchText(`https://coryellcountyclerk.com/${FULL[mon - 1]}-${year}-fcs/`);
+                } catch {
+                    continue; // month page not created yet
+                }
+                for (const m of html.matchAll(/href="(https:\/\/coryellcountyclerk\.com\/wp-content\/uploads\/(\d{4})\/\d{2}\/([^"]+\.pdf))"/gi)) {
+                    if (+m[2] < year - 1) continue; // old upload = nav boilerplate
+                    if (/holiday|fee|request|order|checklist|affidavit|financial|budget|agenda|minute|accounting|report/i.test(m[3])) continue;
+                    const name = `coryell_${year}-${String(mon).padStart(2, "0")}_${m[3].replace(/[^\w.-]+/g, "_")}`;
+                    if (seen.has(name)) continue;
+                    seen.add(name);
+                    out.push({ url: m[1], year, month: mon, name });
+                }
+            }
+            return out;
+        },
+    },
+    // Lampasas County clerk (CivicLive): the notices live on /page/
+    // lampasas.ForeclosureSaleSite (linked "Foreclosure Sale Site" from the
+    // clerk page; PublicNotices has none) -- ONE consolidated packet per sale
+    // month at /upload/page/6696/"<Month> [26] Sale <N>.pdf", anchor text =
+    // sale date WITH year ("July 7, 2026"). A rare second packet with an
+    // EMPTY anchor is skipped (no date to bucket it by).
+    lampasas_cc: {
+        fips: "48281",
+        // sale venue: Lampasas County Courthouse, 501 E 4th St, Lampasas
+        venue: /COURT\s*HOUSE|\b5[0O][1Il]\s+E(?:AST)?\.?\s*4TH\b/i,
+        discover: async () => {
+            const base = "https://www.co.lampasas.tx.us";
+            const html = await fetchText(base + "/page/lampasas.ForeclosureSaleSite");
+            const out = [];
+            for (const m of html.matchAll(/href="(\/upload\/page\/6696\/[^"]+\.pdf)"[^>]*>\s*([A-Za-z]+)\s+\d{1,2},\s*(\d{4})/gi)) {
+                const mon = MONTHS.indexOf(m[2].slice(0, 3).toUpperCase()) + 1;
+                if (!mon || !inWindow(+m[3], mon)) continue;
+                out.push({
+                    url: base + encodeURI(m[1]),
+                    year: +m[3],
+                    month: mon,
+                    name: `lampasas_${m[3]}-${String(mon).padStart(2, "0")}_${path.basename(m[1]).replace(/[^\w.-]+/g, "_")}`,
+                });
+            }
+            return out;
+        },
+    },
+    // Burnet County clerk (CivicLive): /page/cclerk.foreclose lists bare
+    // month-name headings ("August") each followed by that sale month's
+    // per-notice PDFs under /upload/page/0085/ (chaotic filenames; the /docs/
+    // subfolder is clerk boilerplate, not notices). Headings carry NO year ->
+    // near-future roll like Bell. Case-SENSITIVE month tokens (prose "may"
+    // must not match).
+    burnet_cc: {
+        fips: "48053",
+        // sale venue: area outside the County Clerk's office, 220 S Pierce
+        // St, Burnet (east side of the courthouse) -- number-pinned
+        venue: /COURT\s*HOUSE|\b22[0O]\s+S(?:OUTH)?\.?\s*PIERCE\b/i,
+        discover: async () => {
+            const base = "https://www.burnetcountytexas.org";
+            const html = await fetchText(base + "/page/cclerk.foreclose");
+            const re = />\s*(January|February|March|April|May|June|July|August|September|October|November|December)(?:&nbsp;|\s)*<|href="(\/upload\/page\/0085\/[^"]+\.pdf)"/g;
+            const now = new Date();
+            const out = [], seen = new Set();
+            let cur = null, m;
+            while ((m = re.exec(html))) {
+                if (m[1]) {
+                    const mon = MONTHS.indexOf(m[1].slice(0, 3).toUpperCase()) + 1;
+                    let year = now.getFullYear();
+                    if (mon - (now.getMonth() + 1) < -6) year += 1;
+                    cur = { year, month: mon };
+                } else if (cur && !/\/docs\//.test(m[2]) && inWindow(cur.year, cur.month) && !seen.has(m[2])) {
+                    seen.add(m[2]);
+                    out.push({
+                        url: base + encodeURI(m[2]),
+                        year: cur.year,
+                        month: cur.month,
+                        name: `burnet_${cur.year}-${String(cur.month).padStart(2, "0")}_${path.basename(m[2]).replace(/[^\w.-]+/g, "_")}`,
+                    });
+                }
+            }
+            return out;
+        },
+    },
+    // Milam County clerk (Revize, like Bell -- site-root <base href>):
+    // foreclosures.php lists per-notice PDFs, current ones straight off the
+    // web root ("NOTICE OF TRUSTEE SALE 07-07-2026.pdf?t=<upload stamp>").
+    // Sale month from the filename's M-D-Y(YYY) date when present, else
+    // projected from the ?t= upload date via saleMonthAfter (+21d).
+    milam_cc: {
+        fips: "48331",
+        // sale venue: Milam County Courthouse, 102 S Fannin Ave, Cameron
+        venue: /COURT\s*HOUSE|\b1[0O]2\s+S(?:OUTH)?\.?\s*FANNIN\b/i,
+        discover: async () => {
+            const base = "https://www.milamcounty.net/"; // <base href> = site root
+            const html = await fetchText(base + "government/county_clerk/foreclosures.php");
+            const out = [], seen = new Set();
+            for (const m of html.matchAll(/href="([^"]*\.pdf)\?t=(\d{4})(\d{2})(\d{2})(\d*)"/gi)) {
+                if (!/foreclos|trustee/i.test(m[1])) continue;
+                const fn = path.basename(m[1]);
+                let year, mon;
+                const fd = fn.match(/\b(\d{1,2})[-.](\d{1,2})[-.](\d{2,4})\b/);
+                if (fd && +fd[1] >= 1 && +fd[1] <= 12) {
+                    mon = +fd[1];
+                    year = +fd[3] < 100 ? 2000 + +fd[3] : +fd[3];
+                } else {
+                    ({ year, month: mon } = saleMonthAfter(+m[2], +m[3], +m[4]));
+                }
+                if (!mon || mon > 12 || !inWindow(year, mon)) continue;
+                const name = `milam_${year}-${String(mon).padStart(2, "0")}_${fn.replace(/[^\w.-]+/g, "_")}`;
+                if (seen.has(name)) continue;
+                seen.add(name);
+                out.push({ url: new URL(encodeURI(m[1]), base).href + `?t=${m[2]}${m[3]}${m[4]}${m[5]}`, year, month: mon, name });
+            }
+            return out;
+        },
+    },
+    // Freestone County clerk (CivicLive): the notices sit ON the clerk page
+    // itself (/page/freestone.county.clerk), per-notice PDFs under
+    // /upload/page/1887/, anchor text carries the sale date ("Notice of
+    // Trustee Sales/Foreclosures - August 4, 2026 #2603756"; ordinals and
+    // spacing drift). Past years live on freestone.Foreclosures.Previous.Years
+    // (ignored -- inWindow gates anyway). freestone.tx.publicsearch.us also
+    // exists (Kofile) but the clerk PDFs here are free.
+    freestone_cc: {
+        fips: "48161",
+        // sale venue: south-side courthouse steps, 118 E Commerce St, Fairfield
+        venue: /COURT\s*HOUSE|\b118\s+E(?:AST)?\.?\s*COMMERCE\b/i,
+        discover: async () => {
+            const base = "https://www.co.freestone.tx.us";
+            const html = await fetchText(base + "/page/freestone.county.clerk");
+            const out = [], seen = new Set();
+            for (const m of html.matchAll(/href="(\/upload\/page\/1887\/[^"]+\.pdf)"[^>]*>[^<]{0,80}?([A-Za-z]+)\s+\d{1,2}(?:st|nd|rd|th)?\s*,?\s*(\d{4})/gi)) {
+                const mon = MONTHS.indexOf(m[2].slice(0, 3).toUpperCase()) + 1;
+                if (!mon || !inWindow(+m[3], mon) || seen.has(m[1])) continue;
+                seen.add(m[1]);
+                out.push({
+                    url: base + encodeURI(m[1]),
+                    year: +m[3],
+                    month: mon,
+                    name: `freestone_${m[3]}-${String(mon).padStart(2, "0")}_${path.basename(m[1]).replace(/[^\w.-]+/g, "_")}`,
+                });
+            }
+            return out;
+        },
+    },
+    // Limestone County clerk (CivicLive): /page/limestone.NoticeofTrusteeSales
+    // is one long page of "<Month> <Year> Sale" headings, each followed by
+    // that month's per-notice PDFs under /upload/page/5639/ (filenames
+    // "FC-<year>-<seq> <surname>.pdf"; links repeat 2-3x -> dedupe).
+    // Sequential heading->links scan. NB: 48293 parcels ship ~no situs_zip ->
+    // sweep pass disabled, cue+legal carry it.
+    limestone_cc: {
+        fips: "48293",
+        // sale venue: Limestone County Courthouse, 200 W State St, Groesbeck
+        venue: /COURT\s*HOUSE|\b2[0O][0O]\s+W(?:EST)?\.?\s*STATE\b/i,
+        discover: async () => {
+            const base = "https://www.co.limestone.tx.us";
+            const html = await fetchText(base + "/page/limestone.NoticeofTrusteeSales");
+            const re = /(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})|href="(\/upload\/page\/5639\/[^"]+\.pdf)"/g;
+            const out = [], seen = new Set();
+            let cur = null, m;
+            while ((m = re.exec(html))) {
+                if (m[1]) cur = { year: +m[2], month: MONTHS.indexOf(m[1].slice(0, 3).toUpperCase()) + 1 };
+                else if (cur && inWindow(cur.year, cur.month) && !seen.has(m[3])) {
+                    seen.add(m[3]);
+                    out.push({
+                        url: base + encodeURI(m[3]),
+                        year: cur.year,
+                        month: cur.month,
+                        name: `limestone_${cur.year}-${String(cur.month).padStart(2, "0")}_${path.basename(m[3]).replace(/[^\w.-]+/g, "_")}`,
+                    });
+                }
+            }
+            return out;
+        },
+    },
+    // Llano County: NOT here -- llanocounty.gov (CivicLive) posts NO notices:
+    // the clerk page's "Foreclosure Notices" accordion holds only the
+    // sale-location designation resolution (re-verified 2026-07-15);
+    // llano.tx.publicsearch.us (Kofile) is up -> the separate platform crack.
     // Nacogdoches County: NOT here -- the county moved to a minimal CivicPlus
     // site (nacogdochesco.gov, re-verified 2026-07-15: sitemap has NO
     // foreclosure page, /167/Public-Notices carries none); notices live only
@@ -859,6 +1168,22 @@ function inWindow(y, m, back = +(process.env.FC_BACK || 0), fwd = 2) {
     const now = new Date();
     const d = (y - now.getFullYear()) * 12 + (m - (now.getMonth() + 1));
     return d >= -back && d <= fwd;
+}
+
+// Earliest legal sale month for a notice POSTED on y-m-d: the first
+// (HB 1128-adjusted) first-Tuesday sale date >= posting + the 21-day statutory
+// window (Tex. Prop. Code 51.002(b)). For sources whose listings carry the
+// posting/upload date, not the sale date (Navarro; Milam fallback). Trustees
+// that post extra-early land a month early -- accepted, event_date is a
+// lead-freshness field, and most post 21-30 days out.
+function saleMonthAfter(y, m, d) {
+    let t = new Date(Date.UTC(y, m - 1, d + 21));
+    for (let i = 0; i < 3; i++) {
+        const sy = t.getUTCFullYear(), sm = t.getUTCMonth() + 1;
+        if (saleDate(sy, sm) >= t.toISOString().slice(0, 10)) return { year: sy, month: sm };
+        t = new Date(Date.UTC(sy, sm, 1));
+    }
+    return { year: t.getUTCFullYear(), month: t.getUTCMonth() + 1 };
 }
 
 // ------------------------------------------------------------- fetch/text --
