@@ -26,7 +26,7 @@ in the 9 non-storm months too. Hail is the flagship, not the whole product.
 ## Signal table (STRATEGY lane fills/refines; ENGINEERING lane builds)
 | # | Signal (trigger = "why they likely need a roof now") | Data source | Join method | New vs reuse | Priority | Status |
 |---|---|---|---|---|---|---|
-| 1 | **Hail/storm damage** — property sat under a recent damaging hail swath | NOAA SPC daily storm reports (free/public, carries hail SIZE) — `load_hail_roof_damage.mjs` | spatial: report buffered → ∩ parcel geom (GIST index, no full scan) | NEW (weather) | flagship | ✅ **BUILT + proven** — 89,888 parcels from the 2024-05-28 event; `signal_type='roof_damage'`, no expiry, threshold(≥1")/buffer tunable. NEXT: full recent-window backfill (window = strategy call) + optional MRMS MESH GRIB2 upgrade for true swaths |
+| 1 | **Hail/storm damage** — property sat under a recent damaging hail swath | NOAA SPC daily storm reports (free/public, carries hail SIZE) — `load_hail_roof_damage.mjs` | spatial: report buffered → ∩ parcel geom (GIST index, no full scan) | NEW (weather) | flagship | ✅ **BUILT + proven** — 89,888 parcels from the 2024-05-28 event; `signal_type='roof_damage'`, no expiry, threshold(≥1")/buffer tunable. **MRMS MESH upgrade path PROVEN 2026-07-16** (see below) — same event, true radar swath: 933,575 parcels ≥1.0in (10.4x the SPC-buffer count). NEXT: swap in as the production source + full recent-window backfill |
 | 2 | **Roof aging out of warranty** — asphalt shingle ~20–25yr life; homes built/re-roofed that long ago are due | `year_built` (ALREADY collected statewide) + re-roof permit date (source #4) | derived attribute, no join needed | REUSE (have year_built) | high (year-round) | ⬜ defined, not built |
 | 3 | **Solar-permit tell** — a filed solar permit means roof load/age is top-of-mind; many need a new roof first and don't know it | building-permit data (city/county permit portals) | address/parcel match | NEW (permits) | high (year-round) | ⬜ needs permit source |
 | 4 | **Probate / inherited property** — heir inheriting an older house that likely needs roof + renovation | county probate court filings | address/legal spatial join (SAME lane as foreclosures) | REUSE (court-record machinery) | high (year-round) | ⬜ defined; cheap add |
@@ -165,14 +165,31 @@ His call. Permit signals stay queries.
   are spatial:
   - **NOAA MRMS MESH** (Maximum Estimated Size of Hail), NOAA/NSSL — free, CONUS, 1km grids, 2-min
     cadence, GRIB2 format. Authoritative/granular but GRIB2 needs GDAL/wgrib2 to process.
-  - **Hail-swath MRMS-MESH GIS polygons/lines** republished on ArcGIS open-data hubs — the SAME REST
-    pull method already used for the Bexar foreclosure ArcGIS feed (`load_county_foreclosures.mjs`).
-    Easier path; likely the one to prototype first.
-  - **Planned build:** pull hail-swath polygons for TX → threshold to roof-damaging hail size (≈1"+;
-    tune with the strategy lane) → `ST_Intersects(parcel.geom, swath)` → upsert
-    `signal_type='roof_damage'` rows (event_date = storm date; expire/age-out policy TBD by strategy
-    lane — recent storms matter most). NEXT ENGINEERING STEP: prototype the ArcGIS hail-swath pull +
-    one real-TX-event parcel intersect to prove end-to-end, then productionize.
+  - **✅ PROVEN FREE + WORKING (2026-07-16).** Source: `s3://noaa-mrms-pds/CONUS/MESH_Max_1440min_00.50/
+    YYYYMMDD/MRMS_MESH_Max_1440min_00.50_YYYYMMDD-HHMMSS.grib2.gz` — public, anonymous/unsigned S3
+    (no AWS account needed), 30-min cadence, deep historical archive confirmed back to at least
+    2020-10 through today (not just a rolling real-time window). `MESH_Max_1440min` = trailing
+    24-hour max; the 23:30Z file of a day = that day's "daily hail swath." Grid: 0.01° (~1km),
+    regular lat/lon, values in mm (-3 = no-coverage flag). Cross-validated against the SPC
+    2024-05-28 Hockley County report (reported 5.00in): MESH showed 2.3–3.3in in that footprint —
+    consistent with MESH's documented underestimation bias at extreme sizes, not an error. One
+    unresolved anomaly noted honestly: a compact high-value cell near Brownsville (5.6in, ~37px, no
+    corroborating SPC report) — flagged as a possible coastal radar artifact, not silently dropped.
+  - **Prototype built & proven end-to-end:** `api/scripts/signals/mrms_mesh_contour.py` (fetch GRIB2 →
+    mask no-coverage → threshold at 0.75/1.0/1.5/2.0in bands → vectorize connected regions →
+    simplify ~500m → GeoJSON) + `api/scripts/signals/load_mrms_hail_swaths.mjs` (loads into new
+    `hail_swaths(event_date, min_hail_in, source, valid_time, geom MultiPolygon 4326)` table, GIST
+    indexed, then counts intersecting parcels via ST_Dump-into-parts — needed because a whole-day
+    swath's bbox can span nearly all of TX, which defeats a naive bbox prefilter; dumping to
+    per-storm-cell parts first cut the ≥0.75in band from a 3min+ timeout to ~23s on 14.3M parcels).
+  - **2024-05-28 result:** ≥0.75in: 1,580,432 parcels · ≥1.0in: 933,575 · ≥1.5in: 184,110 · ≥2.0in:
+    18,318. vs. the SPC point-buffer method's 89,888 parcels at ≥1.0in for the same day (10.4x more
+    coverage from the true radar swath vs. sparse buffered point reports). Disk footprint for the
+    WHOLE event (4 bands, table+index): 384 kB — proves the polygon-swath design stays disk-lean.
+  - **NEXT ENGINEERING STEP:** swap this in as the production loader (replace/augment
+    `load_hail_roof_damage.mjs`'s SPC buffer join with `hail_swaths` ∩ parcels), decide the final
+    band→signal mapping (probably ≥1.0in, tune with strategy lane), and backfill the recent-window
+    event list.
   - Recency/attribution note for the strategy lane: hail damage is time-sensitive (roofers want the
     last ~6–24 months); decide the look-back window + whether to keep historical swaths for the
     "your neighborhood was hit" angle.
