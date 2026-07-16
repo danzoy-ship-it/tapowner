@@ -53,6 +53,18 @@ const SOURCES = {
 // the parcel join. (Same guard the SIGNALS campaign uses elsewhere.)
 const GOV_OWNER_RE = "(COUNTY OF|CITY OF|TOWN OF| COUNTY$|STATE OF TEXAS| ISD| MUD |MUNICIPAL UTIL|SCHOOL DIST|HOUSING AUTHORITY)";
 
+// The live FETCH_DOCUMENTS/v4 frame echoes the caller's PUBLIC IP in the body
+// (captured 2026-07-15 from the running SPA). Omitting it -> backend silently
+// drops the frame (the original v6/no-ip guess was why the crack never fetched).
+let PUBLIC_IP = "";
+async function ensureIP() {
+    if (!PUBLIC_IP) {
+        try { PUBLIC_IP = (await (await fetch("https://ipinfo.io/json", { signal: AbortSignal.timeout(10000) })).json()).ip; }
+        catch { PUBLIC_IP = "0.0.0.0"; }
+    }
+    return PUBLIC_IP;
+}
+
 // ---------------------------------------------------------------- Kofile fetch
 
 // GET the SPA shell, pull the anon bootstrap token + session cookies.
@@ -125,9 +137,9 @@ class KofileSocket {
             this.pending.set(cid, { resolve, timer });
             try {
                 this.ws.send(JSON.stringify({
-                    type: "@kofile/FETCH_DOCUMENTS/v6",
-                    payload: { query, workspaceID: "p" + Math.random().toString(36).slice(2, 12) },
-                    authToken: this.ort, correlationId: cid, sync: true,
+                    type: "@kofile/FETCH_DOCUMENTS/v4",
+                    payload: { query, workspaceID: "search" },
+                    authToken: this.ort, ip: PUBLIC_IP, correlationId: cid, sync: true,
                 }));
             } catch { clearTimeout(timer); this.pending.delete(cid); resolve(null); }
         });
@@ -156,9 +168,11 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // Pull every FC notice recorded in the last `days` days, paging by offset.
 async function fetchNotices(sub, days) {
+    await ensureIP();
     const end = new Date();
     const start = new Date(end.getTime() - days * 86400000);
-    const range = `${start.toISOString().slice(0, 10)},${end.toISOString().slice(0, 10)}`;
+    const fmt = (d) => d.toISOString().slice(0, 10).replace(/-/g, ""); // YYYYMMDD (live app format)
+    const range = `${fmt(start)},${fmt(end)}`;
     const PAGE = 50;
     const out = [];
     const state = { sock: null };
@@ -166,11 +180,13 @@ async function fetchNotices(sub, days) {
         let offset = 0;
         for (let page = 0; page < 60; page++) {
             const query = {
-                department: "FC",
-                searchType: "advancedSearch",
-                recordedDateRange: range,
                 limit: String(PAGE),
                 offset: String(offset),
+                department: "FC",
+                keywordSearch: false,
+                recordedDateRange: range,
+                searchOcrText: false,
+                searchType: "advancedSearch",
             };
             const data = await fetchPageRetry(state, sub, query);
             if (!data) throw new Error(`fetch failed (Kofile backend timed out repeatedly) at offset ${offset}`);
@@ -382,20 +398,28 @@ async function loadCounty(c, name, cfg, days) {
         });
     }
 
+    // Kofile returns the same doc across pages -> dedupe by source_ref so the
+    // ON CONFLICT insert never touches one row twice ("cannot affect row a
+    // second time"). Keep the last occurrence.
+    const byRef = new Map();
+    for (const r of rows) byRef.set(r.source_ref, r);
+    const uniq = [...byRef.values()];
+
     await c.query("BEGIN");
+    try {
     await c.query(
         `CREATE TEMP TABLE fc(parcel_id bigint, source_ref text, address text, event_date date, lon float8, lat float8, meta jsonb) ON COMMIT DROP`
     );
     await c.query(
         `INSERT INTO fc SELECT * FROM unnest($1::bigint[],$2::text[],$3::text[],$4::date[],$5::float8[],$6::float8[],$7::text[]::jsonb[])`,
         [
-            rows.map((r) => r.parcel_id),
-            rows.map((r) => r.source_ref),
-            rows.map((r) => r.address),
-            rows.map((r) => r.event_date),
-            rows.map((r) => r.lon),
-            rows.map((r) => r.lat),
-            rows.map((r) => r.meta),
+            uniq.map((r) => r.parcel_id),
+            uniq.map((r) => r.source_ref),
+            uniq.map((r) => r.address),
+            uniq.map((r) => r.event_date),
+            uniq.map((r) => r.lon),
+            uniq.map((r) => r.lat),
+            uniq.map((r) => r.meta),
         ]
     );
     const { rows: ins } = await c.query(
@@ -418,13 +442,16 @@ async function loadCounty(c, name, cfg, days) {
         `DELETE FROM parcel_signals WHERE source=$1 AND signal_type='pre_foreclosure' AND event_date < current_date`,
         [source]
     );
-    await c.query("COMMIT");
-
     const tied = ins.filter((r) => r.parcel_id).length;
     console.log(
         `${name}: ${ins.length} notices upserted, ${tied} tied to a parcel (${Math.round((100 * tied) / ins.length)}%), ${expired} expired`
     );
     console.log(`${name}: match methods ->`, stats);
+    await c.query("COMMIT");
+    } catch (e) {
+        await c.query("ROLLBACK").catch(() => {});
+        throw e;
+    }
 }
 
 async function main() {
