@@ -7,7 +7,7 @@
 - `SIGNAL` — has a seller-signal (sale date and/or exemptions) but no improvement detail (sqft-only or nothing physical).
 - `GEOM-ONLY` — nothing beyond geometry/owner; either genuinely gated (records-request queue) or not yet swept.
 
-**Records-request queue (confirmed gated after an exhaustive live-site crawl, 2026-07-16 — need Frederick to send a $0 open-records/PIA request):** Smith, Anderson, Wharton, Hopkins, Montague, Goliad, Palo Pinto, Floyd, Red River, Lipscomb, Winkler, Motley, Shackelford. Plus segment/bed-specific gaps: Hidalgo (no TP export exists), Montgomery/Brazoria/Ellis/Webb/Harrison (PACS ATTR has no bedroom column), **Tarrant beds (CONFIRMED unavailable — TAD withholds counts in every file; a records-request will not help)**.
+**Records-request queue (confirmed gated after an exhaustive live-site crawl, 2026-07-16 — need Frederick to send a $0 open-records/PIA request):** Smith, Anderson, Wharton, Hopkins, Montague, Goliad, Palo Pinto, Floyd, Red River, Lipscomb, Winkler, Motley. Plus segment/bed-specific gaps: Hidalgo (no TP export exists), Montgomery/Brazoria/Ellis/Webb/Harrison (PACS ATTR has no bedroom column), **Tarrant beds (CONFIRMED unavailable — TAD withholds counts in every file; a records-request will not help)**.
 
 **Deferred (mass-harvest per-property paths, vetoed by Frederick — do NOT scrape):** JimWells, Burleson, Maverick improvements.
 
@@ -117,7 +117,7 @@
 | Trinity | 48455 | 25,952 | MINED | 31 | 1 | 55 | 14 | — | PACS | trinitycad.net; 8.0K improv sale 14.3K |
 | Hopkins | 48223 | 25,149 | GEOM-ONLY | 0 | 0 | 0 | 0 | — | RECORDS-REQUEST (confirmed 07-16) | SDS SignalR-only, no COLLECTORS.zip on any host — exhaustive crawl found nothing free |
 | Montague | 48337 | 24,836 | GEOM-ONLY | 0 | 0 | 0 | 0 | — | RECORDS-REQUEST (confirmed 07-16) | SDS Blazor SignalR-only ('MORE' dropdown opened & checked); free PDF exemption-list fallback only |
-| Erath | 48143 | 24,656 | GEOM-ONLY | 0 | 0 | 0 | 0 | — | BIS FS oversized — DEFERRED | 123K rows for 24K parcels, fetch times out; needs where-filter tuning. Domain erath-cad.com |
+| Erath | 48143 | 24,656 | SIGNAL | 0 | 0 | 96 | 0 | — | BIS FS | erath-cad.com; 5 deed-history rows/parcel (123,794 rows/24,656 parcels) — not a bug, just needed a longer fetch window. sale 23,772 (geo join) |
 | Freestone | 48161 | 23,979 | SIGNAL | 0 | 0 | 0 | 20 | — | Harris-eSearch | exemptions loaded |
 | Hudspeth | 48229 | 23,954 | SIGNAL | 5 | 0 | 23 | 2 | — | PACS — STALE | newest export is 2021 |
 | Fayette | 48149 | 23,882 | SIGNAL | 0 | 0 | 82 | 28 | — | GIS DBF (Ownership.dbf) | sqft 13K sale 20K exempt 6.7K |
@@ -246,7 +246,7 @@
 | Menard | 48327 | 5,708 | SIGNAL | 0 | 0 | 0 | 10 | — |  |  |
 | Hartley | 48205 | 5,645 | SIGNAL | 0 | 0 | 97 | 0 | — | BIS FS | sale 5,502 |
 | Terrell | 48443 | 5,562 | SIGNAL | 0 | 0 | 62 | 0 | — | BIS FS | sale 3,436 |
-| Shackelford | 48417 | 5,542 | GEOM-ONLY | 0 | 0 | 0 | 0 | — | hard case — deferred | only a formatted PRINT report, not machine-parseable |
+| Shackelford | 48417 | 5,542 | SIGNAL | 0 | 0 | 0 | 17 | — | PACS print-report | load_pacs_print_report.py parses the human-readable roll (header-line regex + forward-scan for Exemptions:); exempt 962 (join apn==geo, 85%, spot-checked) |
 | Foard | 48155 | 5,393 | SIGNAL | 0 | 0 | 0 | 6 | — |  |  |
 | Stonewall | 48433 | 5,203 | SIGNAL | 0 | 0 | 0 | 9 | — |  |  |
 | Dickens | 48125 | 4,744 | SIGNAL | 0 | 0 | 0 | 10 | — |  |  |
