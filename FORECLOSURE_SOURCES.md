@@ -42,14 +42,12 @@ foreclosure page before assuming its platform):** Ector left CivicLive → Civic
 CivicPlus feed died in 2019; Jefferson publishes no notice PDFs; Smith is search-only. All three
 → **Kofile-only** (parked, see below).
 
-**Next targets:** the ~46-county Kofile load — **UNPARKED 2026-07-15**, code ready (gov guard +
-backoff in `load_kofile_foreclosures.mjs`) but **BLOCKED on IP**: 3 Fable-5 agents confirmed this
-residential IP is rate-limited by the Kofile backend (bootstrap GET 200 + `window.__ort` token OK,
-`wss://…/ws` opens, but `FETCH_DOCUMENTS/v6` gets no reply — confirmed IP-wide via an idle
-Williamson control probe). **Resume from a CLEAN IP** (VPN / cloud runner): `node
-load_kofile_foreclosures.mjs hidalgo cameron nueces dallas denton tarrant --days=60` (hidalgo canary
-first). Still-uncracked non-Kofile metros: Collin (Blazor w/ coords — best remaining geocoded source
-after Bexar), Travis.
+**Next targets:** Kofile is now **CRACKED + RUN (2026-07-15)** but **paywall-limited** — see the
+Kofile section below for the fix, the clean-IP requirement, and the property-address paywall ceiling
+(net 60 metro ties, not the ~40-county landslide once hoped). Best remaining leads: the
+**returnAddress join lever** (below) to lift the 0%-tie Kofile counties, and the still-uncracked
+non-Kofile metros: **Collin** (Blazor w/ coords — best remaining geocoded source after Bexar) and
+**Travis**.
 
 ## Honest reality (unlike CAD, this is fragmented)
 CAD data had 2-3 dominant systems (PACS, True Prodigy) covering most counties. Foreclosure posting
@@ -146,41 +144,44 @@ system thesis holds far better than the "fragmented" read suggested:
   Travis (own), Fort Bend (free monthly PDF). Handle individually.
 - Aggregators (texasnts/foreclosure.com) + TexasFile = ToS-restricted, DO NOT scrape.
 
-**⚠️ THE CRUX (open, being verified by a Fable-5 agent now):** the Kofile INDEX is keyed on
-grantor/grantee NAMES + doc-type + date + doc#/book-page. It is NOT yet confirmed that the index
-row carries the PROPERTY ADDRESS (or a parcel-mappable legal description) WITHOUT opening the
-paywalled image. If the address IS in the free index → ~46 counties fall to one crack (join via
-address-match/geocode). If the address is ONLY in the paywalled image → we get names+dates but not
-the parcel tie, and the crack is far less useful. The Fable-5 Kofile agent is confirming exactly
-this. Revised outlook: NOT a multi-week fragmented slog IF the index has addresses — potentially
-~80 counties via two platform cracks + a few metro one-offs.
+**✅ THE CRUX — ANSWERED (2026-07-15):** the Kofile FREE index does NOT carry the property street
+address. `ocrText` in the search response is a **~199-char header PREVIEW** (clerk boilerplate), NOT
+the notice body; `returnAddress` is the FILER's mailing address (trustee/law-firm/borrower — not
+reliably the property); the full text + address are in the **paywalled** document image. So parcels
+tie ONLY via `legalDescription`, which SOME counties' index includes (Tarrant, Nueces) and many do
+NOT (Hidalgo, Cameron → 0% tie). Verdict: Kofile is a **partial** unlock — great for foreclosure
+ACTIVITY (who/when across ~46 counties), limited for parcel-MAPPING. NOT the ~40-county landslide.
 
-## 🗄️ KOFILE — CRACKED, PARKED (Frederick 2026-07-16: "get back to it later"). Don't re-derive.
-A Fable-5 agent FULLY reverse-engineered Kofile/GovOS PublicSearch. The hard part is DONE and
-saved here + in `api/scripts/signals/load_kofile_foreclosures.mjs` (parameterized for all 6 counties;
-join half validated, fetch blocked by rate-limiting). To resume later, just run the loader from a
-FRESH IP with a polite single-connection + backoff — no re-cracking needed.
-- **Access = YES**, free, no login, no CAPTCHA. It is NOT GraphQL / not `api.publicsearch.us`.
-- **Transport = WebSocket** `wss://<county>.tx.publicsearch.us/ws` (redux-actions-over-socket).
-- **Token:** `GET https://<county>.tx.publicsearch.us/` → SPA embeds `window.__ort="<uuid>"` (also
-  httponly `authToken` cookie). That's the only credential.
-- **Search frame:** `{type:"@kofile/FETCH_DOCUMENTS/v6", payload:{query:{department:"FC",
-  searchType:"advancedSearch", recordedDateRange:"YYYY-MM-DD,YYYY-MM-DD", limit:"50", offset:"0"},
-  workspaceID:"<rand>"}, authToken:<ort>, correlationId:<uuid>, sync:true}` → reply
-  `@kofile/FETCH_DOCUMENTS_FULFILLED/v6`. **`FC` = the Foreclosures department** (every trustee-sale
-  notice, no keyword guessing). Confirmed on Nueces/Cameron/Hidalgo → all 6 counties, swap subdomain.
-- **Free fields per notice:** docNumber (dedup), recordedDate, `instrumentDate` (= SALE date,
-  first-Tuesdays), docTypeCode "FCN", `propAddress.address1` (a LEGAL DESCRIPTION — DO NOT join on
-  it, 0/19 matched our roll), and **`ocrText` (full notice body — the STREET address lives here,
-  "...commonly known as 7914 LABRADOR DR...")**. Image PDF is paywalled but we don't need it.
-- **Join that WORKS:** regex the street address out of `ocrText` → exact `parcels.situs_address`
-  match (validated 75% / 6-of-6 on real addresses). Census-geocode fallback is imprecise. Expected
-  overall tie ≈ 50-75% (some notices are legal-desc-only / N/A) — vs Bexar's 97%.
-- **The ONLY blocker:** the Kofile backend timed out ~40 min straight after ~30 reverse-eng
-  connections (its own website timed out too) = IP rate-limit / degradation window, NOT a code
-  problem. Resume from a clean IP, one reused connection, PING keepalive, backoff.
-- **Prize:** ~46 counties incl. Dallas/Tarrant/Collin/Denton/Hidalgo/Nueces/Williamson/Montgomery/
-  Bell/Smith. Parked behind the reliable PDF path for now.
+## 🗄️ KOFILE — CRACKED + RUN, PAYWALL-LIMITED (2026-07-15). Don't re-derive the frame.
+Kofile/GovOS PublicSearch is fully working in `api/scripts/signals/load_kofile_foreclosures.mjs`.
+The earlier "parked, blocked on rate-limit" note was HALF WRONG: the fetch had NEVER actually run,
+and the reverse-engineered frame was STALE. Both fixed below.
+- **Access = YES**, free, no login, no CAPTCHA. Transport = **WebSocket** `wss://<county>.tx.publicsearch.us/ws` (redux-actions-over-socket, NOT GraphQL).
+- **Token:** `GET https://<county>.tx.publicsearch.us/` → SPA embeds `window.__ort="<uuid>"` (+ httponly `authToken` cookie). Only credential.
+- **THE REAL WORKING FRAME (captured from the live app 2026-07-15; the old v6 guess got silence):**
+  `{type:"@kofile/FETCH_DOCUMENTS/v4", payload:{query:{limit:"50", offset:"0", department:"FC",
+  keywordSearch:false, recordedDateRange:"YYYYMMDD,YYYYMMDD", searchOcrText:false,
+  searchType:"advancedSearch"}, workspaceID:"search"}, authToken:<ort>, ip:"<caller public IP>",
+  correlationId:<uuid>, sync:true}` → reply `@kofile/FETCH_DOCUMENTS_FULFILLED/v6`, data in
+  `payload.data.byOrder` / `byHash`. **The `ip` field (your echoed public IP) and `/v4` and the
+  `YYYYMMDD` (undashed) dates are all REQUIRED — omit any and the backend silently drops the frame.**
+  `department:"FC"` = Foreclosures (docType "NOTICE OF FORECLOSURE").
+- **CLEAN IP REQUIRED:** datacenter/VPN IPs (NordVPN etc.) are **TLS-handshake-blocked** by the CDN
+  (`schannel: failed to receive handshake`). Home residential IP gets rate-limited after ~30 conns.
+  A **phone CELLULAR HOTSPOT** clears both (used 2026-07-15). See [[cracking-blocked-records-apis]].
+- **Free fields:** docNumber (dedup), recordedDate, `instrumentDate` (= SALE date, first-Tuesday),
+  docType/docTypeCode, `legalDescription` (some counties), `returnAddress` (filer, not property),
+  199-char `ocrText` preview. Loader upsert fixes applied: dedupe by source_ref (docs repeat across
+  pages), per-county BEGIN/try/ROLLBACK, gov-owner guard on all 3 join queries.
+- **Result (6 metros, --days=60):** notices pulled tarrant 569/dallas 744/denton 224/hidalgo 543/
+  cameron 108/nueces 137; net TIED+live = dallas 22, denton 9, nueces 29 (= **60**); tarrant all
+  past-sale (expired), hidalgo/cameron 0 (no legalDescription). source = `<county>_kofile`.
+- **NEXT LEVER (unverified, main way to raise ties):** add `returnAddress.address1/city/zip` as an
+  IN-COUNTY join candidate (situs + geocode) — it's sometimes the property; guard against out-of-
+  county trustee/law-firm false matches (require in-county + house-number agreement).
+- Run: `node load_kofile_foreclosures.mjs <county...> --days=60` from a clean IP (hidalgo canary).
+  Configured: nueces cameron hidalgo dallas denton tarrant (+ add grayson/collin/montgomery/etc.,
+  one `{sub,fips}` line each).
 
 ## Signal status
 - ✅ **pre_foreclosure** — 15 counties live (Bexar arcgis + 14 CivicPlus/CivicLive PDF; table up
