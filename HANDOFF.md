@@ -173,6 +173,9 @@ transcription artifacts; give layman step-by-step for anything he must do):**
   `keepalives=1, keepalives_idle=30, keepalives_interval=10, keepalives_count=10` +
   whole-phase retry (pattern in `load_prodigy_json_attributes.py`). Never leave a connection
   idle through a long parse — parse first, connect after.
+- **This DB's `/dev/shm` (container shared memory) is TINY (~67 MB)** → PARALLEL vacuum / parallel
+  index maintenance fails with `DiskFull` on `/dev/shm` regardless of data-volume size. Always run
+  `VACUUM (PARALLEL 0)` (single-threaded); avoid parallel workers on index builds. (Found 2026-07-17.)
 - E2E auth tests: mint a JWT with `JWT_SECRET` from railway vars,
   payload `{userId, email}` (user **5** has an agent profile + real sub; user **18** = demo).
 - NEVER print secrets; env vars only; delete `_tmp_*.mjs` scripts after use.
