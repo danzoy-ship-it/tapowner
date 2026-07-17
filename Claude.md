@@ -8,4 +8,6 @@
 
 **Before ANY app / product / UX work (any change to the iOS app), read `TAPOWNER_APP_BIBLE.md` in full** — the deep onboarding brain: every screen + data flow, the API surface and trace/billing/entitlement logic, the data model, the invariants, the ship rituals, and how to work with Frederick. Then **read the actual screen/route before you edit it** — never answer a change request from a shallow first look. That "read before you act" discipline is what keeps handoffs from failing.
 
+**For any vertical-2 / roofer work, read `ROOFER_SIGNALS.md` in full** — the V2 canonical "come-to-Jesus" handoff (the engineering + current-state entry point for the roofer engine; it points onward to `TAPROOFERS_SIGNALS.md` for the signal catalog and `VERTICALS_STRATEGY.md` for strategy). Same read-before-you-edit discipline applies.
+
 Ground truth of what actually works: `CURRENT_STATE.md`. Running log: `PROGRESS.md`.

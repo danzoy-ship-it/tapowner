@@ -1,222 +1,415 @@
-# Roofer Vertical — Signal Portfolio (vertical #2)
+# ROOFER_SIGNALS.md — TapOwner Vertical #2 (Roofers): the canonical handoff
 
-**The shared coordination doc for TapOwner vertical #2 (roofers).** Two lanes work off this file
-(same clean-split model as the realtor Miner/Product sessions):
-- **Signal STRATEGY lane** (Frederick + a separate brainstorm chat): defines WHICH signals, their
-  trigger logic ("why they need a roof now"), priority, and GTM angle. Writes definitions into the
-  table below.
-- **Data ENGINEERING lane** (this build session): implements each signal as a loader into
-  `parcel_signals` (new `signal_type` per signal), reusing the spatial/address-join machinery already
-  built for foreclosures. Reads this doc; builds what's defined + prioritized.
+**This is the "come-to-Jesus" doc for V2 — the airtight WHAT + WHY a zero-memory session can fully
+rebuild the roofer vertical from.** It is to V2 what `TAPOWNER_APP_BIBLE.md` is to V1: the single
+ENGINEERING + STATE entry point. It was hardened on **2026-07-17** by re-deriving every claim from the
+LIVE code and the LIVE DB (read-only proxy) — not from prior doc claims. Where a number came from
+another session's analysis and was NOT re-checked here, it is flagged `[sourced, not re-verified]`.
 
-> **Doc roles (no drift):** `TAPROOFERS_SIGNALS.md` = the full 21-signal CATALOG (product/strategy —
-> which signals exist, their pitch, priority, build-tier). THIS doc = ENGINEERING status + lane
-> coordination + feasibility (what's built, who's building what). Gap analysis mapping the catalog's
-> 21 signals to real engine capabilities is in the session that created this + summarized below.
+> **Read order for any V2 / roofer work:** this doc first (engineering + current state) → then
+> `TAPROOFERS_SIGNALS.md` (the 21-signal product CATALOG: which signals exist, their pitch, build-tier)
+> → then `VERTICALS_STRATEGY.md` (the shared-engine strategy + sequencing). This doc is the truth about
+> what is BUILT and what the code actually does; the other two are catalog and strategy. If they
+> disagree with this doc on a *built* fact, this doc + the live code win. **Then read the actual file
+> before you edit it** — same "read before you act" discipline that keeps handoffs from failing.
 
-Architecture is already in place (see `VERTICALS_STRATEGY.md`): one shared engine, `parcel_signals`
-holds every vertical's signals keyed by `signal_type`, spatially joined to `parcels`. A roofer signal
-is just a new `signal_type` on the same table.
+> **Doc roles (no drift):**
+> - `ROOFER_SIGNALS.md` (this) = engineering state, API shapes, live counts, invariants, where-to-start.
+> - `TAPROOFERS_SIGNALS.md` = the 21-signal catalog + insurance-family facts (for the attorney) + the
+>   FSBO/#19 buy-not-build note + the roof-age data strategy. Product/planning.
+> - `VERTICALS_STRATEGY.md` = why one shared engine, what's shared vs per-vertical, anti-conflict rules.
+> - `JOBNIMBUS_INTEGRATION.md` = the CRM-export spec (reference impl built, not wired).
 
-## ⭐ The core insight (Frederick, 2026-07-16)
-**Storms are seasonal and reactive — do NOT build a hail-only app.** Every roofer competitor chases
-the same hail maps. The moat is a PORTFOLIO of year-round, always-on signals so the app produces leads
-in the 9 non-storm months too. Hail is the flagship, not the whole product.
+---
 
-## Signal table (STRATEGY lane fills/refines; ENGINEERING lane builds)
-| # | Signal (trigger = "why they likely need a roof now") | Data source | Join method | New vs reuse | Priority | Status |
-|---|---|---|---|---|---|---|
-| 1 | **Hail/storm damage** — property sat under a recent damaging hail swath | NOAA SPC daily storm reports (free/public, carries hail SIZE) — `load_hail_roof_damage.mjs` | spatial: report buffered → ∩ parcel geom (GIST index, no full scan) | NEW (weather) | flagship | ✅ **BUILT + proven** — 89,888 parcels from the 2024-05-28 event; `signal_type='roof_damage'`, no expiry, threshold(≥1")/buffer tunable. **MRMS MESH upgrade path PROVEN 2026-07-16** (see below) — same event, true radar swath: 933,575 parcels ≥1.0in. ⚠️ **The "10.4x" is that SINGLE date, NOT the general case** — corrected-window sampling shows blended ≈1.6x (≥1.0in) and MRMS<SPC on ~38% of dates; see the 2026-07-16 CORRECTIONS entry in the feasibility log. Per-parcel replace is **BLOCKED on disk (~770 MB free)**; MRMS **swaths** loaded to `hail_swaths` (corrected windowing) with `hail_spc` KEPT — plan is UNION-at-query, deferred to Frederick |
-| 2 | **Roof aging out of warranty** — asphalt shingle ~20–25yr life; homes built/re-roofed that long ago are due | `year_built` (ALREADY collected statewide) + re-roof permit date (source #4) | derived attribute, no join needed | REUSE (have year_built) | high (year-round) | ⬜ defined, not built |
-| 3 | **Solar-permit tell** — a filed solar permit means roof load/age is top-of-mind; many need a new roof first and don't know it | building-permit data (city/county permit portals) | address/parcel match | NEW (permits) | high (year-round) | ⬜ needs permit source |
-| 4 | **Probate / inherited property** — heir inheriting an older house that likely needs roof + renovation | county probate court filings | address/legal spatial join (SAME lane as foreclosures) | REUSE (court-record machinery) | high (year-round) | ⬜ defined; cheap add |
-| 5 | **[Frederick's separate chat to add more — permit-for-addition, recent-sale-of-older-home, insurance-claim proxies, neighbor-just-replaced clustering, etc.]** | | | | | ⬜ |
+## 0. TL;DR for a fresh session (read this, then §3)
 
-## Gap analysis — TAPROOFERS_SIGNALS.md 21 signals → real engine (2026-07-16)
-Reality is BETTER than the catalog's tiers assumed (hail already built, probate already cracked,
-last_sale_date already loaded). Buckets:
-- **ALREADY SUPPORTED on data we have (no new pipeline):** #1 hail (BUILT, 89,888 parcels), #5 ACV
-  cliff ⭐⭐ (approx from `year_built`), #6 non-renewal, #7 class-4 (messaging overlay), #8 (year_built
-  side), #10 subdivision cohorts ⭐, #20 absentee portfolios ⭐ (`is_absentee` × year_built × the
-  owner-portfolio grouping the realtor side already built), #3 repeat-hit (a query once ≥2 storm dates
-  accumulate — the hail loader already stores history, no expiry), #18 coarse "sold last year"
-  (`last_sale_date`), #19-probate part (CRACKED). → **Family B, the strongest pitch, is essentially
-  FREE on existing data.** The insurance-cliff signals need NO permits to ship a v1 (year_built alone);
-  permits only SHARPEN them (exclude already-reroofed homes).
-- **SUPPORTED ONCE PERMITS SHIP (the Miner's current mission — unlocks ~8 signals):** #4 claim-window,
-  #8 refinement, #9 reroof-age, #12 fresh-reroof clustering, #13 metal-roof, #14 solar, #15 remodel/
-  addition, #16 pool, #17 storm-adjacent repair. Huge leverage — one adapter, many signals.
-- **GENUINELY NEW pipeline:** #2 high-wind — actually BUILT (SPC wind, 3.04M `wind_spc` rows, 2.02M
-  parcels); #11 builder-grade (plat/builder data) still not scoped.
-- **#21 code-violations — BUILT 2026-07-16.** `signal_type='code_violation'`, `load_code_violations.mjs`.
-  Roof/structure-relevant code-enforcement cases from city open-data portals (filtered to dangerous/
-  substandard structure + deteriorated roof; open or closed ≤180d): **Austin 5,441, San Antonio 2,259,
-  Fort Worth 1,172 = 8,872 parcels tied**, 0 gov-owner leakage. One of the highest-intent signals (the
-  CITY has flagged the roof/structure). Dallas + Houston have datasets but they're STALE (frozen 2017–18,
-  same open-data discontinuation as Dallas permits) → documented as genuine absence, NOT loaded. NEXT:
-  extend to the other major TX cities to exhaust the source.
-- **VENDOR BUY, not a build (reclassified per the catalog's clarifications):** #19 expired/FSBO — it's
-  a purchased daily feed (REDX/Vulcan7/Landvoice-class), integrated as a `TraceProvider`-style vendor
-  (BatchData pattern: signed terms + API + address match), NOT a scrape (MLS licensed / FSBO ToS). One
-  vendor deal feeds BOTH the roofer AND realtor verticals (expired/FSBO/pre-foreclosure are agent
-  signals too) → cost amortizes.
+- **V2 is a year-round, multi-signal roofing-lead engine**, NOT a seasonal hail map. The moat is a
+  PORTFOLIO of always-on signals (Frederick's core insight, 2026-07-16).
+- **The V2 BACKEND is BUILT, tested, deployed-capable, and DARK by default.** A pure resolver core +
+  DB resolver + two API endpoints (`/roofer/signals/at`, `/roofer/signals/within`), gated behind a
+  `ROOFER_ENABLED` flag that defaults OFF so V1 users can never hit it. Unit tests + a dedicated smoke
+  test are green.
+- **The roofer APP (UI) is NOT built.** That is the next phase and it needs Frederick (his on-device
+  UX direction drives app design). See §10.
+- **Roof age is a deliberate pluggable STUB** that returns `unknown` today — one function
+  (`resolveRoofAge`) is the single wiring point, waiting on a pay-per-call vendor go/no-go and the free
+  `year_built` floor (EARS PIA, ~2026-07-31).
+- **Pricing/tiers are null on purpose** — the founder's business call, never inferred in code.
+- **INVARIANT:** additive only; never modify V1; V1 `npm run smoke` MUST be green before AND after any
+  V2 change (the tripwire). See §7 and §8.
 
-### ⚠️ Engineering invariants (from TAPROOFERS_SIGNALS.md clarifications — bake these in)
-1. **Roof age is a SOURCE-TIERED field, never one number** (upgraded 2026-07-16 per TAPROOFERS
-   roof-age strategy). Schema when built: `roof_age_year`, `roof_age_source` enum
-   (`permit` | `imagery_api` | `year_built_proxy` | `user_confirmed`), `roof_age_confidence`. The UI
-   MUST show which tier it's displaying (e.g. year_built = "estimated — original roof assumed").
-   Tier precedence (best→floor): **permit history > imagery API (CAPE/ZestyAI, vendor-pending) >
-   year_built proxy > user_confirmed override**.
-   ⚠️ **REALITY CHECK (verified live 2026-07-16 — do not assume "statewide floor"):** `year_built`
-   covers only **62.3% of parcels statewide; 106 of 253 counties have ZERO year_built** (2 counties
-   ≥90%, 73 at 50–90%). Tier 3 is NOT a universal floor, and its holes OVERLAP the permit holes
-   (rural/unincorporated counties lack BOTH). **tier-2 imagery is the fastest ZERO-human-effort
-   254-county roof-age source** — but NOT the only one (see FINAL below: the blind counties are
-   PIA-recoverable, not data-less). The insurance-cliff signals (#5/#6) ship on year_built ONLY in the
-   ~147 counties that have it (strongest in the metros); they are NOT statewide until year_built is
-   backfilled (PIA or imagery).
-   **FINAL 2026-07-16 (Miner EXHAUSTED the free-crack pass on all 106 blind counties — BIS Orion-direct,
-   True-Prodigy token, SWData webbld, StratMap, cloud+Wayback; note my earlier "statewide floor" AND
-   "CAD data-availability ceiling" calls were BOTH wrong):**
-   - **TRUE CEILING (CAD never recorded the year): 0 counties.** Every blind county's CAD demonstrably
-     HAS year_built, confirmed live per-property (BIS eSearch GetImprovements returns Year Built; TP
-     `/improvement details[]` carries actualYearBuilt). It is an ACCESS gap, not a data gap.
-   - **FREE-RECOVERABLE & loaded: Shelby (48419) only** (+10,477). The deep pass cracked 0 further free
-     bulk sources.
-   - **GATED → records-request: the remaining ~105.** year_built exists but only per-property
-     (mass-harvest is ethics-vetoed) or behind a PIA. PIA list w/ contacts + exact ask drafted for the
-     30 biggest in RECORDS_REQUESTS.md; the ~70 rural tail is impractical to PIA individually.
-   **What this means for the CAPE/ZestyAI decision:** imagery is NOT filling "data that was never
-   recorded" — it is buying BULK ACCESS to data that provably exists but has no free bulk export. So the
-   honest imagery target = the ~70 rural-tail counties where a PIA isn't practical (plus an optional
-   speed play for the 30 PIA-able ones). That is a smaller, more precise target than "106 counties," and
-   it reframes imagery as convenience/speed over free-but-manual PIAs — not the sole path to the data.
-   **One remaining free lever:** Van Zandt (48467, 43,963 parcels) advertises a weekly standalone
-   appraisal DBF — a $0 records-ask to admin@vzcad.org for that DBF is worth trying before imagery there.
-   **Enrichment now free:** `parcels.roof_material` (~860K homes, ~50K metal) — use as a reroof-market
-   filter (asphalt/composition = reroof target; metal/tile = long-life, deprioritize) on the roof-age and
-   insurance-cliff signals. Rules: a reroof permit's date OVERRIDES `year_built`
-   (carriers get sued for that exact error); user confirmations override LOWER tiers but NEVER silently
-   overwrite permit ground truth — flag conflicts for review. user_confirmed is a compounding moat
-   (banked at the door, same pattern as the trace cache). Do NOT let any future schema assume roof age
-   is a single authoritative value. Vendor tier-2 (imagery) ships only if a vendor lands <~$2/lookup
-   with redistribution terms (Frederick's ZestyAI + CAPE inquiries sent 2026-07-16, awaiting reply).
-2. **Never hardcode carrier-specific claims or depreciation %s into app copy.** Messaging stays
-   generic/educational ("many Texas carriers now depreciate older roofs"); the sourced specifics live
-   in TAPROOFERS_SIGNALS.md for the attorney. Insurance copy is gated on review vs. Tex. Ins. Code
-   §27.02 (deductible), §542A (claim-notice window — relevant to signal #4), and cosmetic-exclusion
-   realities. This is the same "signal never surfaces in outreach" discipline as probate/foreclosure.
+---
 
-## Lane assignments (2026-07-16)
-- **Miner / data session → BUILDING-PERMIT mining** into a NEW `permits` table (its lane, alongside
-  `parcels`). Unblocks ~8 roofer signals (see gap analysis) + reusable across remodeler/solar/pool.
-  Crack-the-system survey (Socrata/ArcGIS open-data, Accela, Tyler EnerGov, CivicPlus), metros first.
-  **CATALOG-SHARPENED CAPTURE SPEC (do all of these — they're what the signals need):**
-  (a) `issued_date` — REQUIRED (aging #9, recency/clustering #12, claim-window cross-ref #4);
-  (b) raw `permit_type` + `description` FREE-TEXT — REQUIRED (metal-roof #13 is detected from the
-  description naming "metal"; roof-vs-non-roof-repair #17 needs it too — do NOT collapse to a code);
-  (c) a normalized category covering at least: RE-ROOF, SOLAR, REMODEL/ADDITION, POOL, FENCE/WINDOW/
-  GUTTER (the non-roof "storm-adjacent" repairs for #17), HVAC, NEW-CONSTRUCTION;
-  (d) `valuation`, `address`, lat/lon; (e) keep the table VERTICAL-GENERIC (serves 4+ verticals).
-- **App / build session (me) → `parcel_signals` signals:** probate (reuses the foreclosure court-
-  record lane — cheapest first), and the hail spatial-intersect (`roof_damage`). Roof-age (#2) is
-  DERIVED from `parcels.year_built` (have) + the Miner's `permits` re-roof dates once they land.
-- No table collision: Miner writes `parcels`/`permits`; app writes `parcel_signals`.
+## 1. What V2 is + the thesis
 
-## Notes for the engineering lane
-- **Probate is the cheapest first non-storm signal** — it's the exact `parcel_signals` + court-record
-  pattern already running for foreclosures; a new `signal_type='probate'` + a probate-notice loader.
-- **Permit data (#3, and #2's re-roof dates)** is the one genuinely new data-mining problem — city
-  building-permit portals (Accela, Tyler EnerGov, CivicPlus, Socrata open-data). Crack-the-platform,
-  like the foreclosure CMS families. Worth a system survey once prioritized.
-- **Ethics carry over verbatim**: bulk/public data only, no per-property scraping, and the
-  outreach-copy guard (a signal like probate must NEVER surface in AI-drafted outreach — same rule as
-  foreclosure/tenure on the realtor side).
-- **Do NOT build the roofer APP or launch until TapOwner #1 is live/earning** (VERTICALS_STRATEGY.md
-  sequencing). This doc is the DATA foundation only.
+**TapOwner vertical #2 sells roofers a reason to knock on a specific door, year-round.** Same engine as
+the realtor app (V1): the shared property/owner dataset, the contact-trace cache, billing, referrals,
+AI drafting, and the `products` config. The ONLY things that make it a *roofer* app are (a) a `roofer`
+`products` config row, (b) its lead-trigger signals, and (c) its templates/branding. The engine is not
+forked. (`VERTICALS_STRATEGY.md` is the full argument.)
 
-## ⚙️ Permit signals validated as QUERIES, not materialized rows (2026-07-16) — and why that matters
-The Miner's `permits` table landed (3.6M rows, 2.95M tied, 6-county SA↔Austin corridor; cols:
-permit_category/issued_date/description/valuation/address/parcel_id/geom). The permit-derived roofer
-signals are **read-time queries joining permits × parcels × parcel_signals — they create NO new rows**:
-- #14 solar-tell: `permits WHERE permit_category='solar' AND issued_date >= now()-24mo` → 4,251 parcels
-- #12 fresh-reroof: `permit_category='roof' AND issued_date >= now()-6mo` → 2,697
-- #4 claim-window ⭐: roof_damage hit 6–20mo ago `AND NOT EXISTS (roof permit since the storm)` →
-  **502,709 parcels** (in the 6 permit counties alone)
-- #8 roof-age: `roof_age = now() − COALESCE(latest roof-permit issued_date, year_built)` (the invariant)
-**DESIGN RULE (disk-driven):** materialize signals only when they can't be a query. Storm signals
-SHOULD live as store-the-swath + intersect-at-query (a few thousand polygon rows) — leaner and tunable.
-**REALITY (corrected 2026-07-16 by the claims audit):** BOTH storm signals are currently MATERIALIZED
-in `parcel_signals` — hail 3,394,527 rows (`hail_spc`) AND wind 3,038,919 rows (`wind_spc`), 6.43M
-roof_damage rows ≈ 3.5GB. The earlier "wind backfill FAILED / do not re-materialize wind" note was
-WRONG: the wind rows are live and are a primary driver of the disk pressure below. De-materialization
-to swaths has NOT happened. (A wind backfill run did hit an `mdzeroextend` disk-full at one point, but
-3.04M rows had already landed.)
-**DISK / COST decision for Frederick (LIVE — this is the real blocker):** DB is 24GB on Railway
-(parcels 18GB is inherent, storm rows ~3.5GB, permits 3GB) — at/near the volume ceiling. Two paths to
-unblock a statewide permit expansion (which would grow the permits table ~10–40×): (a) **de-materialize
-the storm signals to swaths** — reclaims ~3GB for free and reverts to the intended design, but needs a
-runtime swath-intersect query path built; or (b) **upgrade the Railway volume** — a cost/plan decision.
-His call. Permit signals stay queries.
+**The thesis (Frederick, 2026-07-16 — bake this in):** storms are seasonal and reactive. Every roofer
+competitor chases the same hail maps 3 months a year. TapOwner's edge is a **multi-signal portfolio**
+that produces leads in the 9 non-storm months too — roof age / insurance-cliff, permits (solar-tell,
+claim-window, fresh-reroof clustering), code violations, probate, pre-foreclosure. **Hail is the
+flagship, not the whole product.**
 
-## Feasibility log
-- 2026-07-16: **hail-data (#1) feasibility CONFIRMED (green light).** Free public sources exist and
-  are spatial:
-  - **NOAA MRMS MESH** (Maximum Estimated Size of Hail), NOAA/NSSL — free, CONUS, 1km grids, 2-min
-    cadence, GRIB2 format. Authoritative/granular but GRIB2 needs GDAL/wgrib2 to process.
-  - **✅ PROVEN FREE + WORKING (2026-07-16).** Source: `s3://noaa-mrms-pds/CONUS/MESH_Max_1440min_00.50/
-    YYYYMMDD/MRMS_MESH_Max_1440min_00.50_YYYYMMDD-HHMMSS.grib2.gz` — public, anonymous/unsigned S3
-    (no AWS account needed), 30-min cadence, deep historical archive confirmed back to at least
-    2020-10 through today (not just a rolling real-time window). `MESH_Max_1440min` = trailing
-    24-hour max; the 23:30Z file of a day = that day's "daily hail swath." Grid: 0.01° (~1km),
-    regular lat/lon, values in mm (-3 = no-coverage flag). Cross-validated against the SPC
-    2024-05-28 Hockley County report (reported 5.00in): MESH showed 2.3–3.3in in that footprint —
-    consistent with MESH's documented underestimation bias at extreme sizes, not an error. One
-    unresolved anomaly noted honestly: a compact high-value cell near Brownsville (5.6in, ~37px, no
-    corroborating SPC report) — flagged as a possible coastal radar artifact, not silently dropped.
-  - **Prototype built & proven end-to-end:** `api/scripts/signals/mrms_mesh_contour.py` (fetch GRIB2 →
-    mask no-coverage → threshold at 0.75/1.0/1.5/2.0in bands → vectorize connected regions →
-    simplify ~500m → GeoJSON) + `api/scripts/signals/load_mrms_hail_swaths.mjs` (loads into new
-    `hail_swaths(event_date, min_hail_in, source, valid_time, geom MultiPolygon 4326)` table, GIST
-    indexed, then counts intersecting parcels via ST_Dump-into-parts — needed because a whole-day
-    swath's bbox can span nearly all of TX, which defeats a naive bbox prefilter; dumping to
-    per-storm-cell parts first cut the ≥0.75in band from a 3min+ timeout to ~23s on 14.3M parcels).
-  - **2024-05-28 result:** ≥0.75in: 1,580,432 parcels · ≥1.0in: 933,575 · ≥1.5in: 184,110 · ≥2.0in:
-    18,318. vs. the SPC point-buffer method's 89,888 parcels at ≥1.0in for the same day (10.4x more
-    coverage from the true radar swath vs. sparse buffered point reports). Disk footprint for the
-    WHOLE event (4 bands, table+index): 384 kB — proves the polygon-swath design stays disk-lean.
-  - **NEXT ENGINEERING STEP:** swap this in as the production loader (replace/augment
-    `load_hail_roof_damage.mjs`'s SPC buffer join with `hail_swaths` ∩ parcels), decide the final
-    band→signal mapping (probably ≥1.0in, tune with strategy lane), and backfill the recent-window
-    event list.
-  - Recency/attribution note for the strategy lane: hail damage is time-sensitive (roofers want the
-    last ~6–24 months); decide the look-back window + whether to keep historical swaths for the
-    "your neighborhood was hit" angle.
-- 2026-07-16 **MRMS migration — CORRECTIONS + honest coverage + disk reality (read before quoting "10.4x"):**
-  Attempted to swap MRMS in as the production per-parcel hail source. Two things surfaced that revise the
-  earlier optimism; the swaps were done conservatively (see below).
-  - **⚠️ WINDOWING BUG (fixed in `mrms_mesh_contour.py`).** SPC dates storm reports to the **12Z–12Z
-    convective day**, NOT the calendar day. The prototype grabbed the **23:30Z-of-D** file, which
-    misaligns and can badly under/over-count (SPC 2025-06-01: the 23:30Z-of-D file tied only 10,140
-    parcels ≥1.0in; the correct **12Z-of-D+1** file tied **177,903**, matching SPC's 180,936). The
-    contour script now defaults to the convective-day-aligned 12Z-of-D+1 file and stamps
-    `event_date = SPC storm-day D` (pass `--no-shift` for old behavior). All numbers below use the fix.
-  - **⚠️ "10.4x better coverage" was the SINGLE most favorable date (2024-05-28), NOT the general case.**
-    A 16-date corrected-window sample gives a blended **MRMS/SPC ≈ 1.6x at ≥1.0in and ≈2.8x at ≥0.75in**,
-    and it is **NOT uniform**: at ≥1.0in MRMS ties **FEWER** parcels than SPC on **~38% of sampled dates
-    (6/16)** (e.g. 2025-03-25: MRMS 74,091 vs SPC 154,171; confirmed not a windowing artifact — the MESH
-    footprint genuinely plateaus below SPC's buffered-point coverage some days). ≥0.75in is much safer
-    (MRMS<SPC on only ~2 dates) but is the biggest row count. **Implication: a straight REPLACE at ≥1.0in
-    would LOSE coverage on ~38% of storm-days — so the plan is UNION SPC + MRMS at query time, keep both.**
-  - **⚠️ DISK: Railway db-volume is 29,230 MB / 30,000 MB used = ~770 MB FREE.** Materializing per-parcel
-    MRMS for all 149 dates ≈ **5.5–6.5M rows (~3.5 GB) at ≥1.0in / ~10–12M rows (~5.8 GB) at ≥0.75in** —
-    does NOT fit even after reclaiming hail_spc's ~2 GB (net growth ~1.5–3.8 GB ≫ 770 MB free). Per-parcel
-    materialization is therefore **BLOCKED on disk** and was NOT done. This is the disk/cost decision
-    already flagged above ("(a) de-materialize to swaths vs (b) upgrade the volume — his call").
-  - **✅ WHAT WAS DONE (safe, non-destructive):** loaded the corrected MRMS **swaths** (all target
-    storm-days, bands 0.75/1.0/1.5/2.0in, convective-day windowing) into the small **`hail_swaths`** table
-    (polygons, not per-parcel rows — disk-lean). **`hail_spc` was KEPT fully intact** (3,394,527 rows);
-    nothing deleted or altered. The runtime UNION-at-query path and any hail_spc retirement are DEFERRED
-    to Frederick (needs the app swath-intersect query built + the volume decision). hail_swaths totals +
-    date coverage recorded in the session report.
+**Shared-engine architecture.** Every vertical's lead triggers live in ONE table, `parcel_signals`,
+keyed by `signal_type` and spatially/ID-joined to `parcels`. A roofer signal is just a `signal_type`
+value (or a query over permits/hail_swaths) resolved through the same spatial-join machinery built for
+foreclosures. V2 reads `parcels`, `parcel_signals`, `permits`, and `hail_swaths`; it writes nothing at
+request time except append-only `events` analytics.
+
+---
+
+## 2. Architecture — the V2 code stack (all verified 2026-07-17)
+
+V2 mirrors V1's "pure core + DB layer + thin route" shape exactly (the same split as
+`lib/ownerSignals.ts` on the realtor side), so the derivation logic stays unit-testable with zero DB.
+
+| Layer | File | Role |
+|---|---|---|
+| **Pure resolver core** | `api/src/lib/rooferSignals.ts` | Given raw rows already fetched, composes the roofer signal bundle for one parcel. **No DB access** — fully unit-tested. Owns the roof-age pluggable slot. |
+| **DB resolver** | `api/src/lib/rooferResolver.ts` | Fetches the raw rows (parcel_signals, permits, hail_swaths) and feeds the pure core. Three entry points: by id, by lat/lon, by area. Index-disciplined (never full-scans 14M parcels). |
+| **Product config** | `api/src/lib/rooferConfig.ts` | FLAGGED, DISABLED placeholder. `enabled` off by default; `pricing`/`tiers` null; `hail_swath_min_in` default 1.0. 60s cache. |
+| **Routes** | `api/src/routes/roofer.ts` | `GET /roofer/signals/at`, `POST /roofer/signals/within`. Both 404 unless enabled; both `requireAuth`. No billing/entitlement here on purpose. |
+| **Registration** | `api/src/index.ts` (line ~62) | `await app.register(rooferRoutes);` registered LAST, additive, with a comment noting it's dark by default. |
+| **Smoke** | `api/scripts/smoke_roofer.mjs` | `npm run smoke:roofer`. Proves dark-by-default + the full engine against the real DB. |
+| **CRM export (NOT wired)** | `api/src/integrations/jobnimbus.ts` | Reference impl for pushing a lead to JobNimbus. Built ahead of the app; no route, no key storage. |
+| **Unit tests** | `api/src/lib/rooferSignals.test.ts`, `api/src/integrations/jobnimbus.test.ts` | Run via `npm test` in `api/`. |
+
+**Data model touchpoints (live schema, key columns):**
+- **`parcels`** (14,336,257 rows) — owned by the Miner. V2 reads: `id, county_fips, situs_address,
+  owner_name, roof_material, year_built, effective_year_built, geom, is_protected`. `year_built` /
+  `effective_year_built` are carried for the FUTURE roof-age slot; **the resolver does NOT derive age
+  from them yet** (see §4).
+- **`parcel_signals`** — owned by the app lane. Columns used: `parcel_id` (nullable), `county_fips`,
+  `signal_type`, `subtype`, `source`, `event_date`, `meta` (jsonb; V2 reads
+  `meta->>'hail_size_in'`, `meta->>'wind_speed_kt'`, `meta->>'status'`). Gov-owner guard is applied at
+  WRITE time by the loaders, not read time (§8).
+- **`permits`** — owned by the Miner. V2 reads `parcel_id, permit_category, issued_date` (aggregated
+  `max(issued_date)` per category, filtered to `roof`/`solar`).
+- **`hail_swaths`** — MRMS radar hail polygons: `event_date, min_hail_in, source, geom` (MultiPolygon
+  4326), GIST-indexed (`ix_hail_swaths_geom`). Small table (~4.5 MB), disk-lean by design.
+
+---
+
+## 3. What's BUILT (verified) — signals, sources, live counts, API shapes
+
+### 3.1 The two API endpoints (exact shapes, from `routes/roofer.ts` + `rooferResolver.ts`)
+
+Both routes require a V1 session (`requireAuth`, reuses V1 auth — no new auth). Both return HTTP 404
+`{"error":"Not found"}` when the roofer product is disabled (the default). No pricing/entitlement gate.
+
+**`GET /roofer/signals/at?lat=<>&lng=<>`  OR  `?parcel_id=<>`**
+Resolves ONE parcel (by point-in-polygon, smallest-area-first tie-break identical to V1 `/parcels/at`,
+or by id) and returns its full signal bundle:
+
+```jsonc
+{
+  "parcel": {
+    "id": 12345, "county_fips": "48029", "situs_address": "…", "owner_name": "…",
+    "roof_material": "composition" | null,
+    "year_built": 2004 | null, "effective_year_built": null,   // carried, NOT used for age yet
+    "lat": 29.4, "lon": -98.5
+  },
+  "signals": {
+    "hail":  { "hit": true, "max_hail_in": 1.75, "last_event_date": "2024-05-28",
+               "event_count": 2, "sources": ["spc","mrms_swath"], "repeat_hit": true },
+    "wind":  { "hit": false, "max_wind_kt": null, "last_event_date": null, "event_count": 0 },
+    "roof_age": { "age_years": null, "base_year": null, "source": "unknown",
+                  "confidence": null, "acv_cliff": null, "non_renewal_risk": null },  // §4
+    "permits": {
+      "last_roof_permit_date": "2019-03-01" | null,
+      "last_solar_permit_date": null,
+      "solar_recent": false,                                   // #14: solar permit ≤24mo
+      "claim_window": { "open": true, "hail_event_date": "2024-05-28", "months_since": 13 }  // #4
+    },
+    "roof_material": { "value": "composition", "market": "reroof" },  // reroof | long_life | null
+    "distress": {
+      "code_violation":  [ { "signal_type":"code_violation","subtype":"…","source":"austin_code",
+                             "event_date":"…","status":"O" } ],
+      "pre_foreclosure": [ … ],   // recency-gated: only notices with event_date >= today
+      "probate":         [ … ]
+    },
+    "signal_types": ["hail","hail_repeat","claim_window","reroof_material","code_violation"]
+  }
+}
+```
+
+`signal_types` is the flat badge/filter vocabulary. The full set the composer can emit:
+`hail`, `hail_repeat`, `wind`, `claim_window`, `solar_intent`, `roof_permit`, `reroof_material`,
+`code_violation`, `pre_foreclosure`, `probate`.
+
+**`POST /roofer/signals/within`** — body `{ "polygon": [[lng,lat],…], "signal_types"?: string[] }`.
+Returns every parcel inside the drawn polygon with its bundle, optionally filtered to leads firing at
+least one requested `signal_type`:
+
+```jsonc
+{ "count": 137, "capped": false, "leads": [ { "parcel": {…}, "signals": {…} }, … ] }
+```
+
+Area caps mirror V1 farm mode so a roofer query can never scan a county: **≤500 parcels, ≤25 km²,
+3–50 polygon vertices.** The area query also enforces `is_protected = false AND owner_name IS NOT NULL`
+(protected-record + placeholder-owner guards, same as V1). Events `roofer_signals_at` /
+`roofer_within` are logged (append-only analytics).
+
+### 3.2 Each signal — data SOURCE, derivation, and LIVE count (DB proxy, 2026-07-17)
+
+**`parcel_signals` totals: 6,448,477 rows** across 4 signal types. Everything below is live-verified.
+
+| Signal | `signal_type` / source | Derivation (in `rooferSignals.ts`) | LIVE count (2026-07-17) |
+|---|---|---|---|
+| **Hail (#1, flagship)** | `roof_damage`/`hail_spc` (point-buffer) **UNION** `hail_swaths` (MRMS radar) | `deriveHail`: a parcel is hit if EITHER source fires; max size + most-recent date + distinct-date count fall out of the union. | SPC rows **3,394,527**; MRMS swaths **557 rows / 148 dates** (2024-05-28→2026-07-12), production band ≥1.0in = **146 date-swaths** |
+| **Repeat-hit (#3)** | derived from the hail union | `repeat_hit = (distinct hail dates ≥ 2)` → `hail_repeat` badge | (query-time; ≥2 distinct storm dates on a parcel) |
+| **Wind (#2)** | `roof_damage`/`wind_spc` (subtype `wind`) | `deriveWind`: max gust kt + most-recent date. | **3,038,919** rows |
+| **Permit — last roof-permit date** | `permits` where `permit_category='roof'` | `max(issued_date)` → surfaced (NOT turned into an age) | roof permits **111,426** (106,002 tied) |
+| **Permit — solar-tell (#14)** | `permits` where `permit_category='solar'` | `solar_recent = latest solar permit ≤ 24 months` → `solar_intent` | solar permits **69,181** (65,671 tied) |
+| **Permit — claim-window (#4)** ⭐ | hail union × roof permits | `claim_window.open` = a hail event **6–20 months** old with **NO** roof permit filed since it → `claim_window` | query-time (per-parcel) |
+| **roof_material enrichment** | `parcels.roof_material` | `classifyRoofMaterial`: composition/wood/asphalt/shingle/built-up → `reroof`; metal/tile/slate/clay/concrete → `long_life` (deprioritise). `reroof` → `reroof_material` badge | roof_material present on **860,228** parcels (6.0%) |
+| **code_violation (#21)** | `parcel_signals`/`code_violation` | surfaced as-is to the ROOFER (distress bucket) | **9,161** across **5 cities**: Austin 5,441 · San Antonio 2,259 · Fort Worth 1,172 · Plano 261 · Arlington 28 |
+| **pre_foreclosure** | `parcel_signals`/`pre_foreclosure` | surfaced, **recency-gated**: only notices with `event_date >= today` (V1 invariant) | **4,820** across **151 county sources** |
+| **probate** | `parcel_signals`/`probate` | surfaced (distress bucket) | **1,050** across 4 sources: Harris 623 · Bexar 425 · Collin 1 · Tarrant 1 |
+
+**Why hail is a UNION, not a replace (important — do not "simplify" it):** MRMS radar swaths cover more
+area than SPC's sparse buffered point reports on a big storm day, BUT MRMS ties **fewer** parcels than
+SPC on ~38% of sampled dates at ≥1.0in `[sourced from the 2026-07-16 MRMS sampling, not re-derived
+here]`. A straight replace would LOSE coverage on those days. So the resolver keeps `hail_spc` (all
+3.39M rows intact) AND intersects `hail_swaths`, and unions the two at query time. This is the design
+the earlier feasibility log recommended — **it is now BUILT** (in `rooferResolver.ts` +
+`deriveHail`), not deferred.
+
+**How hail vs wind are stored (a gotcha):** both live under `signal_type='roof_damage'`. Wind is
+`source='wind_spc'` (subtype `wind`); hail is `source='hail_spc'` (subtype NULL). `bucketRows()` in
+`rooferResolver.ts` splits them. MRMS hail is separate — it lives in `hail_swaths`, not
+`parcel_signals`.
+
+### 3.3 Config — dark by default, pricing null
+
+`rooferConfig.ts`: `enabled = (process.env.ROOFER_ENABLED === "true") || products.config.roofer.enabled
+=== true`. Both default off → the routes 404 → **V1 is untouched**. `pricing` and `tiers` are hard
+`null` placeholders (the founder sets them in `products.config.roofer`; never inferred in code).
+`hail_swath_min_in` defaults to **1.0** (the production band), tunable via config with no redeploy.
+
+### 3.4 JobNimbus CRM export — BUILT, unit-tested, NOT wired
+
+`api/src/integrations/jobnimbus.ts` + `JOBNIMBUS_INTEGRATION.md` (full spec). `mapLeadToContact()`
+(pure) maps a TapOwner lead → a JobNimbus `/contacts` payload; `pushLeadToJobNimbus()` POSTs it with
+Bearer auth, 15s timeout, 2 retries (429/5xx/network/timeout only), and typed errors (never throws).
+**18 unit tests, all with a stubbed `fetchImpl` — zero real HTTP calls.** It is **NOT wired**: no
+route registers it, no per-account key storage exists, and there is no live JobNimbus account/key. The
+day the roofer app is built, wire it behind e.g. `POST /leads/:id/export/jobnimbus` per the spec.
+**Ethics guard baked in:** it reads the `signalType` CODE to pick a generic bucket label (e.g.
+`code_violation` → "Property-condition flag") and **structurally never reads** the raw `signalLabel`
+— a unit test asserts this. Same "signal never surfaces in outreach" rule as §8.
+
+### 3.5 Tests + smoke (the proof it works)
+
+- **`npm test`** (in `api/`) runs `rooferSignals.test.ts` (hail union, repeat-hit, claim-window, solar
+  recency, roof_material classification, distress recency-gate, roof-age-stays-unknown invariant, full
+  compose) + `jobnimbus.test.ts` (mapping + ethics guard + retry/timeout, all mocked).
+- **`npm run smoke:roofer`** boots the current `src` via `tsx` on scratch ports (3097 off / 3098 on)
+  against the real Postgres proxy, with vendor/mail env stripped. It proves: (1) **dark by default** —
+  flag off → `/roofer/*` 404s AND V1 `/parcels/at` still 200s (additive + inert); (2) **enabled** —
+  anonymous 401, a known hail parcel resolves (`hail.hit=true`, size+date), `roof_age.source==="unknown"`
+  is asserted (the vendor-pending invariant), a code-violation parcel surfaces its distress signal, and
+  `/roofer/signals/within` returns leads + honors the `signal_types` filter.
+
+---
+
+## 4. The roof-age PLUGGABLE STUB — the single wiring point
+
+Roof age is the one signal the code deliberately leaves unresolved. `resolveRoofAge()` in
+`rooferSignals.ts` **returns `UNKNOWN_ROOF_AGE` today** (verified live: the smoke test asserts
+`roof_age.source === "unknown"`). Everything downstream already consumes the typed `RoofAge` shape, so
+when a source is chosen it drops into this ONE function with zero rework elsewhere.
+
+**The locked type (do not change the shape, only fill the function):**
+```ts
+type RoofAgeSource = "permit" | "vendor_api" | "year_built_proxy" | "unknown";
+interface RoofAge {
+  age_years: number | null; base_year: number | null;
+  source: RoofAgeSource; confidence: "high"|"medium"|"low"|null;
+  acv_cliff: boolean | null;         // ≥15yr — null (not false) while unknown, so the UI can tell
+  non_renewal_risk: boolean | null;  // ≥20yr — "we don't know" apart from "no cliff"
+}
+```
+
+**Tier precedence when wired (best → floor), from the function's own comment:**
+1. **permit history** → latest roof-permit issued year, `confidence:"high"`.
+2. **vendor_api** → imagery/satellite roof-age lookup (pay-per-call), `confidence:"high"`.
+3. **year_built_proxy** → `COALESCE(effective_year_built, year_built)`, `confidence:"low"`, UI label
+   "estimated — original roof assumed".
+Then `acv_cliff = age >= 15; non_renewal_risk = age >= 20`. **A reroof-permit date ALWAYS overrides
+`year_built`** (carriers get sued for that exact error).
+
+> **Correction vs the old catalog:** `TAPROOFERS_SIGNALS.md` describes a 4-tier scheme with
+> `imagery_api` and a `user_confirmed` tier. The **actually built** enum is
+> `permit | vendor_api | year_built_proxy | unknown` — note `vendor_api` (not `imagery_api`) and that
+> `user_confirmed` is **not** in the shipped type (it's a future moat idea in the catalog, not yet a
+> code tier). Wire to the built enum; extend it deliberately if/when user-confirmation ships.
+
+**Why unknown, not year_built, today:** roof-age sourcing is pending Frederick's pay-per-call vendor
+go/no-go. The code does NOT silently fall back to `year_built` because a wrong "original roof assumed"
+age shown as fact is exactly the error to avoid. `effective_year_built` is being backfilled (live: 9.5%
+coverage, 1,356,404 parcels) and `year_built` is at 62.3% (8,931,944), but **neither is wired into age
+until the decision lands.**
+
+---
+
+## 5. What's DEFERRED / BLOCKED (honest state)
+
+- **Roof age (the pluggable stub).** Blocked on Frederick's **pay-per-call satellite/AI roof-age vendor
+  go/no-go** (CAPE Analytics / ZestyAI inquiries out 2026-07-16, awaiting reply — for the ~70 rural
+  counties EARS/PIA can't reach). Free floor = `year_built`, which goes statewide when **EARS lands**
+  (see below). Decision rule (from `TAPROOFERS_SIGNALS.md`): if any vendor lands < ~$2/lookup with
+  redistribution-compatible terms → tier-2 ships in a roofer Pro tier; else ship tiers permit+proxy and
+  revisit at scale.
+- **The roofer APP (UI).** **NOT built.** Needs Frederick's on-device UX direction (his instincts drive
+  app design — §10). This doc + the API are the foundation only.
+- **Pricing / tiers / GTM.** The founder's call — null in code until he sets `products.config.roofer`.
+- **EARS year_built statewide roll.** Frederick SENT the Comptroller PIA **2026-07-17**, confirmed
+  received, ~10 business days (~**2026-07-31**). Field **AJR23**. Loader pre-built + self-verifying:
+  `data/load_ears_roll.py` (one command when the CSV lands). This fills the **106 year_built-blind
+  counties** `[county count sourced from the Miner's prior analysis, not re-derived here]` FREE → the
+  insurance-cliff signals (#5 ACV cliff / #6 non-renewal) go from ~147 counties to statewide. Regrid
+  (~$15–30K) is PARKED in favor of this.
+- **roof_material CEILING — EARS does NOT carry roof_material.** This is the key limit: `roof_material`
+  is capped at the ~20 free-roll counties (**860,228 parcels live**, 6.0%) until per-county CAMA PIAs
+  fold a roof-cover line into them. EARS lifts `year_built`, not roof material. So the reroof-vs-
+  long-life filter stays metro-weighted for now.
+- **FSBO / expired-listing (#19).** A VENDOR BUY, not a build (REDX/Vulcan7/Landvoice-class daily
+  feed, integrated `TraceProvider`-style — signed terms + API + address match). One vendor deal feeds
+  BOTH roofer and realtor verticals. Not started.
+- **Builder-grade inference (#11).** Not scoped (needs plat/builder-name data).
+
+---
+
+## 6. INVARIANTS / rules (bake these in — do NOT quietly break)
+
+1. **Additive only.** V2 must not modify any V1 app source or behavior. The routes are registered last
+   and are inert while disabled.
+2. **V1 `npm run smoke` MUST be green before AND after any V2 change — the tripwire.** Run it in `api/`
+   (it boots the current src against the real DB proxy). If it's red, stop. Also keep `npm run
+   smoke:roofer` green.
+3. **Dark by default.** `ROOFER_ENABLED` / `products.config.roofer.enabled` default OFF. Never flip
+   them on in a way that reaches V1 users without Frederick's say-so.
+4. **The ETHICS rule (non-negotiable).** The raw sensitive trigger (probate, pre-foreclosure, code
+   violation, insurance cliff) **NEVER surfaces to the homeowner** — outreach stays generic/educational
+   ("many Texas carriers now depreciate older roofs"), never the specific trigger. This is enforced
+   structurally: the resolver reads signal TYPE codes, not raw labels, and the JobNimbus mapper reads
+   `signalType` (code) → generic bucket, never `signalLabel` (raw). Insurance copy is additionally
+   gated on attorney review vs Tex. Ins. Code §27.02 (deductible), §542A (claim-notice window), and
+   cosmetic-exclusion realities — never hardcode carrier-specific claims or depreciation %s in app copy.
+5. **The two-lane split (no cross-writes).** The **Miner** (data session) writes `parcels` + `permits`.
+   The **app session** writes `parcel_signals`. Neither writes the other's table — this prevents the
+   ACCESS-EXCLUSIVE lock contention that caused live incidents. A new signal goes in `parcel_signals`,
+   never as a new `parcels` column.
+6. **Gov-owner guard is WRITE-time.** Loaders filter government-owned parcels before inserting to
+   `parcel_signals`; the read path trusts every row. Any new loader MUST apply the shared
+   `GOV_OWNER` regex or a courthouse/ISD will render as a lead.
+7. **Disk discipline.** Railway DB volume is now **50 GB with ~20.8 GB free** `[volume-level figure
+   from ops/founder; pg_database_size shows 25 GB logical — the mount's free space is not visible from
+   SQL, so not independently re-derived here]`. The DB's **`/dev/shm` is tiny (~67 MB)** (HANDOFF.md,
+   found 2026-07-17) → any VACUUM / index maintenance MUST be single-threaded **`VACUUM (PARALLEL 0)`**;
+   parallel workers fail with `DiskFull` on `/dev/shm` regardless of volume size. Bulk UPDATEs in
+   50–100K batches; `CREATE INDEX CONCURRENTLY` only.
+
+---
+
+## 7. V1 relationship — FROZEN and protected
+
+V1 (the realtor app) is the earning product and is **frozen relative to V2 work**:
+- Canonical doc: **`TAPOWNER_APP_BIBLE.md`** (V1's deep brain — every screen, the API surface, the data
+  model, invariants, ship rituals).
+- Audit tag: **`v1-realtor-audited-2026-07-17`** (verified present in git).
+- Tripwire: **`npm run smoke`** (= `scripts/smoke_v1.mjs`) must be green before and after any change.
+- **V2 must NOT modify V1 code** and MUST keep V1 smoke green. The whole V2 backend was built additive
+  precisely so this holds — the smoke test's Phase 1 exists to prove it (V1 `/parcels/at` still 200s
+  with the roofer routes loaded-but-dark).
+
+---
+
+## 8. Coordination — the Miner is a separate persistent session
+
+The **data Miner** is a SEPARATE long-running session:
+- Name: **"TAPOWNER SESSION2"**; sessionId **`local_5e86abaa-a194-40fc-9c06-dd46016f3a1e`**.
+- It **owns `parcels` and `permits`** (all county-data hunts, bulk loads, county verdicts in
+  `data/texas_county_system_map.md`). The app/V2 lane owns `parcel_signals`.
+- **Current status: holding for triggers** — EARS (~2026-07-31), the roof-age vendor reply, and the
+  roof_material per-county CAMA PIAs.
+- **How to coordinate:** cross-session message + the shared docs (this file, `HANDOFF.md`,
+  `texas_county_system_map.md`). If V2 needs a data change in the Miner's lane, message SESSION2
+  directly with a measured task — do NOT route it through Frederick, and do NOT write `parcels`/
+  `permits` yourself.
+
+---
+
+## 9. Competitive context + integration facts
+
+**Three shareable artifacts were produced in the V2-build session** (signal portfolio, roof-type map
+concept, competitive landscape) for Frederick to use in positioning/GTM. `[These are session-level
+Claude artifacts (shareable web pages), not committed to the repo — this doc-writing session could not
+locate stored URLs in the repo. A fresh session should ask Frederick for the links or pull them from
+the originating V2-build session before relying on them.]`
+
+**Integration facts (verified in code + `JOBNIMBUS_INTEGRATION.md`):**
+- **JobNimbus = open REST + static per-account Bearer key** (Settings → API). Self-serve, easy. The
+  module is BUILT and unit-tested (§3.4), ready to wire.
+- **AccuLynx = same REST + Bearer shape, but PARTNER-GATED** (their API needs an approved partner
+  relationship, not a self-serve key). So a second `integrations/acculynx.ts` is a business-development
+  item (an agreement), not an engineering one — don't start until that gate clears.
+
+---
+
+## 10. WHERE TO START NEXT
+
+The backend is done and dark. **The next phase is the roofer APP UI, and it needs Frederick** — his
+on-device UX direction drives app design (same as V1). Concrete first steps, per
+`VERTICALS_STRATEGY.md`'s "how to build vertical #2" sequencing:
+
+1. **Gate check first:** confirm V1 is live/earning enough that starting #2 is right (the build doc is
+   explicit: don't start #2 until #1 is live and earning; the real bottleneck is V1's business/legal
+   launch runway, not V2 data).
+2. **Get Frederick's UX direction** for the roofer app surface (map + draw-area + lead list + the
+   signal badges/filters the API already emits: hail, claim_window, solar_intent, code_violation, …).
+   His instincts drive this — do not design it blind.
+3. **Add the `roofer` row to `products`** (tiers, pricing, templates) — no schema change. Frederick
+   sets pricing/tiers; the code already reads them from `products.config.roofer`.
+4. **Build the roofer app** (own branding/App Store listing) pointing at the SAME API, reusing V1's
+   shared components; flip `ROOFER_ENABLED` on for that app's builds only.
+5. **Wire JobNimbus** (`POST /leads/:id/export/jobnimbus` + per-account encrypted key storage) once the
+   app has a lead list to export from.
+6. **When EARS lands (~2026-07-31):** run `data/load_ears_roll.py` (Miner's lane) → `year_built`
+   statewide → then decide the roof-age tier-3 wiring in `resolveRoofAge()` (the free proxy floor)
+   alongside the vendor go/no-go.
+
+---
+
+## 11. Verification log — what I checked (2026-07-17)
+
+Everything in §2–§4 was re-derived from the live code (`rooferSignals.ts`, `rooferResolver.ts`,
+`rooferConfig.ts`, `routes/roofer.ts`, `index.ts`, `smoke_roofer.mjs`, `jobnimbus.ts`, both `*.test.ts`,
+`api/package.json`) and the live DB via the read-only proxy. Counts are as of 2026-07-17.
+
+**Corrections made vs the prior ROOFER_SIGNALS.md / catalog:**
+- **code_violation is 5 cities / 9,161 parcels** (was documented 3 cities / 8,872) — Plano (261) and
+  Arlington (28) were added since.
+- **permits grew to 4,308,597 total / 3,559,041 tied** (was ~3.6M); roof 111,426, solar 69,181 (these
+  are all-time totals — the old "4,251 solar / 2,697 reroof" figures were 24mo/6mo *windowed queries*, a
+  different metric, not a contradiction).
+- **The disk crisis is resolved.** The old doc's "~770 MB free / per-parcel MRMS BLOCKED on disk"
+  (30 GB volume) is stale: volume is now 50 GB (~20.8 GB free), DB 25 GB logical. The lean **swath +
+  union-at-query** design is now BUILT (`rooferResolver.ts` intersects `hail_swaths` and unions with
+  `hail_spc`), not "deferred to Frederick." `HANDOFF.md` still carries an older "30GB/770MB" line in its
+  pending-decisions section that should be refreshed.
+- **The built `RoofAgeSource` enum is `permit | vendor_api | year_built_proxy | unknown`** — corrected
+  from the catalog's `imagery_api` + `user_confirmed` description (§4).
+- Confirmed the wind signal is live (`wind_spc` 3,038,919 rows) and read by the resolver — the old
+  "wind backfill FAILED / do not re-materialize" note was already known-wrong and is not carried here.
+
+**NOT independently re-verified (flagged inline above):** the "106 year_built-blind counties" and
+"MRMS < SPC on ~38% of dates / ~1.6x blended" figures (sourced from prior Miner/feasibility analyses);
+the 50 GB volume free-space (volume-level, not visible from `pg_database_size`); the `/dev/shm ~67 MB`
+(from HANDOFF.md); and the 3 shareable artifact URLs (session artifacts, not in the repo).
