@@ -52,11 +52,11 @@ backlog section for the full resolved/open breakdown.
 **A whole new workstream exists that predates this doc: the COURTHOUSE-SIGNALS
 campaign** (pre-foreclosure, and later probate/tax-delinquency/etc.), running in
 `parcel_signals` — a table separate from the CAD `parcels` table by design (two-session
-no-collision rule, HANDOFF §3b). As of 2026-07-16: **71 foreclosure sources live
-(1 ArcGIS + ~65 CivicPlus/CivicLive/Granicus/WordPress/AgendaSuite/etc. PDF counties +
-Collin [368 tied, 100%, coordinate-based] + Travis [sample] + Kofile [paywall-limited,
-~60 tied across Dallas/Denton/Nueces]), ~1,950+ foreclosures tied to real parcels**,
-zero gov-owned false positives, surfaced as a "Pre-foreclosure" badge/farm-filter in the
+no-collision rule, HANDOFF §3b). As of 2026-07-17 (re-verified live): **150 counties with a foreclosure signal ·
+2,485 tied to real parcels** (1,138 both tied AND still-pending = today's live badge count).
+Sources: Bexar ArcGIS + ~80 CivicPlus/CivicLive/Granicus/WordPress/PDF counties + Collin
+[368, browser-scrape] + Kofile [329 tied via the +254 rejoin] + bespoke cracks (Orange AS400,
+Harris, Leon/Rains fixes). Zero gov-owned false positives, surfaced as a "Pre-foreclosure" badge/farm-filter in the
 app (only while the sale date is still pending — past auctions correctly drop the label).
 Still expanding; see PROGRESS.md for the latest wave count. Kofile's biggest lever
 (a `returnAddress` join, code-complete but untested) needs a clean/cellular IP to validate.
@@ -177,8 +177,10 @@ casitas / 587K beds+baths). Bexar's genuine remaining gap is sale-date/exemption
   parcel_signals 3.5 GB, permits 3 GB) — at/near the Railway volume ceiling, NOT 10 GB with headroom**
   (corrected 2026-07-16 by the claims audit; a wind backfill already hit `mdzeroextend` disk-full).
   Any statewide expansion (permits, storm materialization) is disk-gated. GIST index used, point
-  lookup ~10 ms. **Caveat:** ~51 counties (~580K parcels, 4%) are mis-projected and effectively
-  invisible (see fix D1).
+  lookup ~10 ms. **(The old "~51 mis-projected counties" caveat is OBSOLETE — D1 is resolved and
+  re-verified live 2026-07-17: 0 counties fall outside Texas bounds, 0 degenerate geocoding. The
+  map-tap-to-owner core is genuinely statewide: 253/253 counties, 100% geom, 97.2% owner_name — the
+  405K owner gaps are all §25.025 protected records, not data holes.)**
 - **Web** — signup→OTP→Stripe-checkout flow, referral landing, partner dashboard, ToS/privacy
   drafts (all 5 mandated clauses present), config-driven data-broker notice. Deployed.
   **Redesigned + rebranded 2026-07-14 (per BRAND_AND_PRODUCT_BRIEF.md):** real TapOwner logo
