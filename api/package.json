@@ -13,7 +13,7 @@
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
     "sync:crosswalk": "node scripts/sync-crosswalk.mjs",
-    "test": "tsx --test src/cadattr/trueprodigy.test.ts src/lib/improvementTags.test.ts src/lib/ownerSignals.test.ts src/lib/format.test.ts"
+    "test": "tsx --test src/cadattr/trueprodigy.test.ts src/lib/improvementTags.test.ts src/lib/ownerSignals.test.ts src/lib/format.test.ts src/integrations/jobnimbus.test.ts"
   },
   "dependencies": {
     "@fastify/cors": "^11.3.0",
