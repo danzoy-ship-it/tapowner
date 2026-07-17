@@ -143,12 +143,26 @@ hour; treat parcels as production, always:
   scaffolded a stray root app.json — delete it if it reappears).
 
 ### Verification rituals (what "done" means here)
-1. `npx tsc --noEmit` clean in api/ AND mobile/ (strict; exactOptionalPropertyTypes bites).
-2. Deploy → curl the live endpoint with real cases (grace/401/200 triads for auth work).
-3. For data loads: **dry-run join-rate first, and sample RANDOMLY across the whole file — the
+1. **V1 smoke test — run before/after touching shared code (api/src, db schema,
+   products.config):** `cd api && npm run smoke` (~10s, one command, prints a PASS/FAIL
+   table + nonzero exit on any failure). Boots the CURRENT source tree (via `tsx`, not a
+   stale deploy) against the real DB, using a dedicated fixture user
+   (`v1-smoke-test@tapowner.com`, reset to a known-good state and swept of its rows every
+   run — never touches Frederick's or the demo reviewer's data). Covers the whole V1 core
+   loop end-to-end: health/config, a real `/auth/otp/*` round-trip (demo account), owner
+   lookup, the pre-foreclosure signal, farm-area query, tiles, geocode, the $0.29 trace
+   unlock (seeds its own cache row and asserts `charged_via=included`, so it never calls
+   the real skip-trace vendor or Stripe's network), AI draft, and the mini-CRM
+   save/list/detail/status/note flow — plus proves every one of those routes 401s when
+   called anonymously (registration/route-alive check). Verified to actually catch
+   breakage: temporarily disabling a route registration turned the trace/draft/CRM/401
+   rows red immediately. Script: `api/scripts/smoke_v1.mjs`.
+2. `npx tsc --noEmit` clean in api/ AND mobile/ (strict; exactOptionalPropertyTypes bites).
+3. Deploy → curl the live endpoint with real cases (grace/401/200 triads for auth work).
+4. For data loads: **dry-run join-rate first, and sample RANDOMLY across the whole file — the
    head of a file lied twice** (Fort Bend 92.7%→32%, El Paso 74.7%→5%).
-4. Loads are COALESCE-fill-only → partial/wrong-key loads never corrupt, only under-fill.
-5. Mobile features: no PASSED until Frederick confirms on-device (covenant #2).
+5. Loads are COALESCE-fill-only → partial/wrong-key loads never corrupt, only under-fill.
+6. Mobile features: no PASSED until Frederick confirms on-device (covenant #2).
 
 ---
 
