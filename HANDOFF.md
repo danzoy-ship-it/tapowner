@@ -59,8 +59,9 @@ fix) + a `ROOFER_SIGNALS.md` note UNCOMMITTED — commit them.
 
 **Pending DECISIONS (Frederick's):** (1) the business/legal runway = V1's REAL launch gate (the actual
 bottleneck, not data); (2) roof-age route = free EARS (in motion) vs paid imagery for the rural tail;
-(3) Railway DB volume (30GB, ~770MB free) — MRMS chose the lean swath design to avoid needing more; a
-bigger volume is optional (my rec: skip).
+(3) Railway DB volume — ✅ RESOLVED 2026-07-17: Frederick upgraded 30GB→50GB (~20.8GB free after a
+single-threaded VACUUM reclaimed the session's 1.54M dead tuples). Disk is no longer a constraint;
+both lanes are back to normal loads. (Keep VACUUM single-threaded — see the /dev/shm note below.)
 
 **NEXT (unless Frederick redirects):** build the V2 roofer product on the loaded data — start with the
 roofer signals API + product config (additive, flag-gated), smoke-test V1 green before/after. When
