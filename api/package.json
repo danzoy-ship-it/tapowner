@@ -15,7 +15,8 @@
     "sync:crosswalk": "node scripts/sync-crosswalk.mjs",
     "test": "tsx --test src/cadattr/trueprodigy.test.ts src/lib/improvementTags.test.ts src/lib/ownerSignals.test.ts src/lib/rooferSignals.test.ts src/lib/format.test.ts src/integrations/jobnimbus.test.ts",
     "smoke": "node scripts/smoke_v1.mjs",
-    "smoke:v1": "node scripts/smoke_v1.mjs"
+    "smoke:v1": "node scripts/smoke_v1.mjs",
+    "smoke:roofer": "node scripts/smoke_roofer.mjs"
   },
   "dependencies": {
     "@fastify/cors": "^11.3.0",
