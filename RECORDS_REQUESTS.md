@@ -1,5 +1,23 @@
 # Public Information Act requests — the gated counties
 
+## ★★★ #1 PRIORITY — ONE request replaces the whole list: Comptroller EARS (all 254 counties' year_built)
+**Discovered 2026-07-16.** Every TX CAD must submit its certified appraisal roll to the Texas Comptroller (PTAD) annually in one standardized electronic format (EARS). The layout manual **confirms field `AJR23 Year Built`** (four-digit construction year of the oldest improvement) + `AJR22` main-improvement sqft + improvement value. So a SINGLE PIA request to the Comptroller yields **year_built for ALL 254 counties** — cost-of-reproduction only. This is how Regrid/CoreLogic get statewide data. **Send this ONE email instead of 100 county requests:**
+
+> **To:** open.records@cpa.texas.gov (or file at fyiopenrecords.com → agency CPA)
+> **Subject:** Public Information Act Request — Electronic Appraisal Roll Submission (EARS) data, current year
+>
+> Under the Texas Public Information Act (Gov't Code Ch. 552), I request an electronic copy of the current-year **Electronic Appraisal Roll Submission (EARS)** appraisal-roll (AJR) records that appraisal districts submit to the Property Tax Assistance Division, **for all counties**, in the standardized fixed-width text-file format already held on your systems.
+>
+> I specifically need the appraisal-roll fields including **AJR23 (Year Built), AJR22 (square footage of main improvement), the property/account identifier, situs, category code, and improvement market value.** I do **not** need and you may exclude any confidential sales-price / EPTS fields protected under §552.149.
+>
+> Please deliver electronically (email, download link, or FTP) to keep this at cost-of-reproduction, and let me know any charge before processing. Thank you.
+
+Then load with a new `data/load_ears_roll.py` (fixed-width AJR parser, join AJR account → parcels.source_property_id). Caveat: `AJR23` may be null where a CAD didn't submit it — sanity-check per-county fill on receipt; the per-county fallbacks below cover any gaps. See memory `texas-ears-statewide-roll` + `DATA_ACCESS_CRACKS.md` for the full mechanism + the GIS≠CAMA lesson.
+
+---
+
+## Per-county fallbacks (only if EARS has gaps)
+
 These 12 counties have real appraisal data (improvement detail / sale dates / exemptions) that is **NOT posted for free download** anywhere — confirmed after multiple exhaustive crack passes (2026-07-16). The only way to get their data is a **Texas Public Information Act (PIA)** request to the appraisal district. This is the checklist to knock them out one by one.
 
 ## How this works (Texas PIA basics)
