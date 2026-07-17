@@ -6,11 +6,12 @@ FEASIBILITY (proven 2026-07-16): free public source, deep historical archive:
     s3://noaa-mrms-pds/CONUS/MESH_Max_1440min_00.50/YYYYMMDD/MRMS_MESH_Max_1440min_00.50_YYYYMMDD-HHMMSS.grib2.gz
   - Anonymous/unsigned S3 (no AWS creds needed). Confirmed data back to at least
     2020-10 (likely deeper -- not exhaustively probed) through today, 30-min cadence.
-  - MESH_Max_1440min = trailing 24-hour max MESH at each timestamp -- taking the
-    LAST file of a UTC day (23:30Z) gives a same-day rolling "daily hail swath"
-    (standard practice; note TX storms near UTC midnight can bleed across the
-    23:30Z cut -- for near-midnight-UTC (evening Central time) storms, also check
-    the following day's early files if precision at the day boundary matters).
+  - MESH_Max_1440min = trailing 24-hour max MESH at each timestamp. To match a
+    SPC STORM-DAY (SPC dates reports to the 12Z-12Z convective day, NOT the
+    calendar day), take the 12Z file of the NEXT day: its trailing-24h max covers
+    12Z D -> 12Z D+1 = SPC storm-day D exactly. THIS IS NOW THE DEFAULT (see main;
+    the old 23:30Z-of-D choice misaligned with SPC dating and under/over-counted
+    depending on storm timing -- pass --no-shift for the old calendar-day behavior).
   - Grid: regular lat/lon, 0.01 deg (~1km) spacing, CONUS (lat 20.005-54.995,
     lon -129.995..-60.005 i.e. stored as 230.005-299.995 in 0-360 convention).
     Values are millimeters; -3 = "no coverage" flag (masked to 0 here); ceiling
@@ -32,7 +33,8 @@ millions" per the disk-lean design rule), clip to a generous Texas bbox, and
 emit one GeoJSON FeatureCollection per event for the Node loader to ingest.
 
 Usage:
-    python mrms_mesh_contour.py <event_date YYYY-MM-DD> [--hhmm 2330] [--out FILE]
+    python mrms_mesh_contour.py <SPC storm-day YYYY-MM-DD> [--hhmm 1200] [--no-shift] [--out FILE]
+    (default fetches the convective-day-aligned 12Z-of-D+1 file; event_date stamped = D)
 
 Requires: boto3, rasterio, xarray, cfgrib, shapely (pip-installed this session).
 """
@@ -42,6 +44,7 @@ import json
 import shutil
 import sys
 import tempfile
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import numpy as np
@@ -125,16 +128,30 @@ def band_polygons(inch, transform, threshold):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("event_date")
-    ap.add_argument("--hhmm", default="2330", help="HHMM UTC snapshot (default 2330 = end-of-day rolling 24h max)")
+    ap.add_argument("event_date", help="SPC storm-day (YYYY-MM-DD). By default the MRMS file fetched is the 12Z snapshot of the NEXT day, whose trailing-24h MESH max covers this storm-day's 12Z-12Z SPC convective window.")
+    ap.add_argument("--hhmm", default="1200", help="HHMM UTC of the fetched file (default 1200 = 12Z, the SPC convective-day boundary)")
+    ap.add_argument("--no-shift", action="store_true", help="fetch the literal event_date file (old calendar-day behavior) instead of the convective-day-aligned 12Z-of-next-day file")
     ap.add_argument("--out", default=None)
     args = ap.parse_args()
+
+    # CONVECTIVE-DAY ALIGNMENT (fix, 2026-07-16): SPC dates storm reports to the
+    # 12Z-12Z convective day, NOT the calendar day. MESH_Max_1440min at 12Z of D+1
+    # = trailing-24h max over 12Z D -> 12Z D+1 = exactly SPC storm-day D. The old
+    # default (23:30Z of D) misaligned with SPC dating and could under- OR over-count
+    # depending on storm timing (e.g. SPC 2025-06-01: 23:30Z-of-D gave 10k parcels,
+    # the aligned 12Z-of-D+1 gave 178k, matching SPC). Stamp event_date = the SPC
+    # storm-day D so swaths join cleanly to hail_spc's event_date. See ROOFER_SIGNALS.md.
+    if args.no_shift:
+        fetch_date = args.event_date
+    else:
+        fetch_date = (datetime.strptime(args.event_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+    print(f"  SPC storm-day {args.event_date} -> MRMS file {fetch_date} {args.hhmm}Z (conv-day aligned={'no' if args.no_shift else 'yes'})", file=sys.stderr)
 
     out_path = Path(args.out) if args.out else Path(f"_tmp_mesh_{args.event_date}.geojson")
 
     with tempfile.TemporaryDirectory() as td:
         workdir = Path(td)
-        grib_path = fetch_grib(args.event_date, args.hhmm, workdir)
+        grib_path = fetch_grib(fetch_date, args.hhmm, workdir)
         inch, lats, lons, valid_time = load_tx_inches(grib_path)
 
     print(f"  grid: {inch.shape}, valid_time={valid_time}, TX max={inch.max():.2f}in", file=sys.stderr)

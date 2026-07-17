@@ -26,7 +26,7 @@ in the 9 non-storm months too. Hail is the flagship, not the whole product.
 ## Signal table (STRATEGY lane fills/refines; ENGINEERING lane builds)
 | # | Signal (trigger = "why they likely need a roof now") | Data source | Join method | New vs reuse | Priority | Status |
 |---|---|---|---|---|---|---|
-| 1 | **Hail/storm damage** — property sat under a recent damaging hail swath | NOAA SPC daily storm reports (free/public, carries hail SIZE) — `load_hail_roof_damage.mjs` | spatial: report buffered → ∩ parcel geom (GIST index, no full scan) | NEW (weather) | flagship | ✅ **BUILT + proven** — 89,888 parcels from the 2024-05-28 event; `signal_type='roof_damage'`, no expiry, threshold(≥1")/buffer tunable. **MRMS MESH upgrade path PROVEN 2026-07-16** (see below) — same event, true radar swath: 933,575 parcels ≥1.0in (10.4x the SPC-buffer count). NEXT: swap in as the production source + full recent-window backfill |
+| 1 | **Hail/storm damage** — property sat under a recent damaging hail swath | NOAA SPC daily storm reports (free/public, carries hail SIZE) — `load_hail_roof_damage.mjs` | spatial: report buffered → ∩ parcel geom (GIST index, no full scan) | NEW (weather) | flagship | ✅ **BUILT + proven** — 89,888 parcels from the 2024-05-28 event; `signal_type='roof_damage'`, no expiry, threshold(≥1")/buffer tunable. **MRMS MESH upgrade path PROVEN 2026-07-16** (see below) — same event, true radar swath: 933,575 parcels ≥1.0in. ⚠️ **The "10.4x" is that SINGLE date, NOT the general case** — corrected-window sampling shows blended ≈1.6x (≥1.0in) and MRMS<SPC on ~38% of dates; see the 2026-07-16 CORRECTIONS entry in the feasibility log. Per-parcel replace is **BLOCKED on disk (~770 MB free)**; MRMS **swaths** loaded to `hail_swaths` (corrected windowing) with `hail_spc` KEPT — plan is UNION-at-query, deferred to Frederick |
 | 2 | **Roof aging out of warranty** — asphalt shingle ~20–25yr life; homes built/re-roofed that long ago are due | `year_built` (ALREADY collected statewide) + re-roof permit date (source #4) | derived attribute, no join needed | REUSE (have year_built) | high (year-round) | ⬜ defined, not built |
 | 3 | **Solar-permit tell** — a filed solar permit means roof load/age is top-of-mind; many need a new roof first and don't know it | building-permit data (city/county permit portals) | address/parcel match | NEW (permits) | high (year-round) | ⬜ needs permit source |
 | 4 | **Probate / inherited property** — heir inheriting an older house that likely needs roof + renovation | county probate court filings | address/legal spatial join (SAME lane as foreclosures) | REUSE (court-record machinery) | high (year-round) | ⬜ defined; cheap add |
@@ -193,3 +193,30 @@ His call. Permit signals stay queries.
   - Recency/attribution note for the strategy lane: hail damage is time-sensitive (roofers want the
     last ~6–24 months); decide the look-back window + whether to keep historical swaths for the
     "your neighborhood was hit" angle.
+- 2026-07-16 **MRMS migration — CORRECTIONS + honest coverage + disk reality (read before quoting "10.4x"):**
+  Attempted to swap MRMS in as the production per-parcel hail source. Two things surfaced that revise the
+  earlier optimism; the swaps were done conservatively (see below).
+  - **⚠️ WINDOWING BUG (fixed in `mrms_mesh_contour.py`).** SPC dates storm reports to the **12Z–12Z
+    convective day**, NOT the calendar day. The prototype grabbed the **23:30Z-of-D** file, which
+    misaligns and can badly under/over-count (SPC 2025-06-01: the 23:30Z-of-D file tied only 10,140
+    parcels ≥1.0in; the correct **12Z-of-D+1** file tied **177,903**, matching SPC's 180,936). The
+    contour script now defaults to the convective-day-aligned 12Z-of-D+1 file and stamps
+    `event_date = SPC storm-day D` (pass `--no-shift` for old behavior). All numbers below use the fix.
+  - **⚠️ "10.4x better coverage" was the SINGLE most favorable date (2024-05-28), NOT the general case.**
+    A 16-date corrected-window sample gives a blended **MRMS/SPC ≈ 1.6x at ≥1.0in and ≈2.8x at ≥0.75in**,
+    and it is **NOT uniform**: at ≥1.0in MRMS ties **FEWER** parcels than SPC on **~38% of sampled dates
+    (6/16)** (e.g. 2025-03-25: MRMS 74,091 vs SPC 154,171; confirmed not a windowing artifact — the MESH
+    footprint genuinely plateaus below SPC's buffered-point coverage some days). ≥0.75in is much safer
+    (MRMS<SPC on only ~2 dates) but is the biggest row count. **Implication: a straight REPLACE at ≥1.0in
+    would LOSE coverage on ~38% of storm-days — so the plan is UNION SPC + MRMS at query time, keep both.**
+  - **⚠️ DISK: Railway db-volume is 29,230 MB / 30,000 MB used = ~770 MB FREE.** Materializing per-parcel
+    MRMS for all 149 dates ≈ **5.5–6.5M rows (~3.5 GB) at ≥1.0in / ~10–12M rows (~5.8 GB) at ≥0.75in** —
+    does NOT fit even after reclaiming hail_spc's ~2 GB (net growth ~1.5–3.8 GB ≫ 770 MB free). Per-parcel
+    materialization is therefore **BLOCKED on disk** and was NOT done. This is the disk/cost decision
+    already flagged above ("(a) de-materialize to swaths vs (b) upgrade the volume — his call").
+  - **✅ WHAT WAS DONE (safe, non-destructive):** loaded the corrected MRMS **swaths** (all target
+    storm-days, bands 0.75/1.0/1.5/2.0in, convective-day windowing) into the small **`hail_swaths`** table
+    (polygons, not per-parcel rows — disk-lean). **`hail_spc` was KEPT fully intact** (3,394,527 rows);
+    nothing deleted or altered. The runtime UNION-at-query path and any hail_spc retirement are DEFERRED
+    to Frederick (needs the app swath-intersect query built + the volume decision). hail_swaths totals +
+    date coverage recorded in the session report.
