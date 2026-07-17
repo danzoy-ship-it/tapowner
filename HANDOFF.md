@@ -4,9 +4,71 @@
 to feature-complete beta with a 20-county data moat. **Purpose:** zero loss of focus, vision,
 or operational knowledge between sessions.
 
-**Read in this order:** `TAPOWNER_BUILD.md` (the constitution — it wins all conflicts) →
-`CURRENT_STATE.md` (ground truth snapshot) → this file (how to operate) → `PROGRESS.md`
-(skim the newest entries for recent nuance).
+**Read in this order:** §0 CURRENT PICKUP just below (today's reality) → `TAPOWNER_BUILD.md`
+(the constitution — it wins all conflicts) → `CURRENT_STATE.md` (ground truth snapshot) →
+`TAPOWNER_APP_BIBLE.md` (**the V1 "come to Jesus" doc** — the airtight what+why for the realtor
+app) → the runbook below (how to operate) → `PROGRESS.md` (recent nuance). Then re-derive from the
+LIVE code/DB before acting — memory drifts, code doesn't.
+
+---
+
+## ⭐ 0. CURRENT PICKUP — 2026-07-17 (read FIRST; §1+ below is the durable runbook)
+
+**V1 (realtor app) = SHIP-READY and FROZEN.** Sanity-checked live 2026-07-17 (parallel read-only
+audits vs the DB): 253/253 counties, 97.2% owner_name, 100% geom; the core loop (tap → owner FREE →
+$0.29 trace → AI draft → mini-CRM → farm) is built and verified end-to-end. The old "~51 mis-projected
+counties" caveat is OBSOLETE (0 counties out of bounds on re-check).
+- **Safety kit — USE THESE:** V1 is frozen at git tag **`v1-realtor-audited-2026-07-17`** (restore
+  point; diff/rollback against it). **`cd api && npm run smoke`** = a 13-check tripwire (~10s) proven
+  to catch breakage — RUN IT before AND after any change to shared code (api/src, schema,
+  products.config). Green = V1 core loop intact. Script: `api/scripts/smoke_v1.mjs`.
+- **The V1 come-to-Jesus doc is `TAPOWNER_APP_BIBLE.md`** — read it + the code + run smoke to fully
+  re-ground on V1. (Being hardened 2026-07-17.)
+- **V1's ONLY remaining blockers are BUSINESS/LEGAL, not data/code** (see §6): Stripe live mode
+  (LLC→EIN→bank), the legal gate (attorney ToS/privacy, TX Data Broker registration, E&O/cyber
+  insurance, a signed BatchData reseller addendum). The founding-agent TestFlight can ship NOW in
+  Stripe TEST mode.
+
+**V2 (roofers) = DATA FOUNDATION ONLY — no product built.** No roofer app screen, no roofer API route,
+no roofer product config exist yet. Frederick decided 2026-07-17 to build V2 in parallel with V1 (safe
+now: the tag + smoke test protect V1; V2 must stay ADDITIVE — new signal_types/routes/screens behind a
+roofer flag, NEVER editing V1's paths).
+- **Loaded (parcel_signals + hail_swaths):** roof_damage hail_spc 3.39M / wind_spc 3.04M; MRMS hail
+  swaths (136 storm dates, lean polygons — designed for a UNION-with-SPC-at-query, query path NOT
+  built; note MRMS is ~1.6-2.8x SPC on average, NOT the cherry-picked 10.4x, and LOWER on ~38% of
+  dates → union, don't replace); code_violation 9,161 (Austin/SA/FtWorth/Plano/Arlington); probate
+  ~1,050; pre_foreclosure 2,485 (shared w/ V1). `permits` 3.9M (roof 71,782 / solar 52,381 parcels,
+  6-county corridor).
+- **Not built:** the roofer app; the insurance-cliff/permit-derived signal QUERIES (computable from
+  year_built/permits, just unsurfaced); the SPC∪MRMS runtime hail query. Catalog+status:
+  `ROOFER_SIGNALS.md` + `TAPROOFERS_SIGNALS.md`. Integration: `JOBNIMBUS_INTEGRATION.md` +
+  `api/src/integrations/jobnimbus.ts` (built + unit-tested, NOT wired; AccuLynx = same REST pattern,
+  partner-gated).
+
+**IN FLIGHT / EXTERNAL (not blocked on code):**
+- **EARS statewide roll** (year_built for ALL 254 counties, field AJR23): Frederick SENT the
+  Comptroller PIA 2026-07-17, confirmed received, ~10-business-day delivery (~2026-07-31). Loader
+  pre-built + self-verifying: `data/load_ears_roll.py` (one command when the CSV lands). This fills the
+  106 year_built-blind counties FREE → the roofer insurance-cliff signals go statewide. **Regrid
+  (~$15-30K) is PARKED in favor of this.**
+- **Roof-age imagery (CAPE/ZestyAI):** inquiries out 2026-07-16, awaiting reply — for the ~70 rural
+  counties EARS/PIA can't reach.
+
+**LOOSE ENDS to tidy:** MRMS left `api/scripts/signals/mrms_mesh_contour.py` (12Z-of-D+1 windowing
+fix) + a `ROOFER_SIGNALS.md` note UNCOMMITTED — commit them.
+
+**Pending DECISIONS (Frederick's):** (1) the business/legal runway = V1's REAL launch gate (the actual
+bottleneck, not data); (2) roof-age route = free EARS (in motion) vs paid imagery for the rural tail;
+(3) Railway DB volume (30GB, ~770MB free) — MRMS chose the lean swath design to avoid needing more; a
+bigger volume is optional (my rec: skip).
+
+**NEXT (unless Frederick redirects):** build the V2 roofer product on the loaded data — start with the
+roofer signals API + product config (additive, flag-gated), smoke-test V1 green before/after. When
+EARS lands, run `load_ears_roll.py`. Two Frederick terms: a **"sanity check"** = a full ground-truth
+audit (agents re-derive from LIVE code/DB, don't trust docs); a **"come to Jesus document"** = an
+airtight what+why record a zero-memory session can rebuild from.
+
+---
 
 **⚡ DATA ACCESS — both sessions:** `DATA_ACCESS_CRACKS.md` is the canonical reusable
 reference for HOW to pull Texas CAD data from each vendor system (True Prodigy / BIS /
